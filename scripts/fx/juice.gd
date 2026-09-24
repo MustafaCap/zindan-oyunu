@@ -5,6 +5,8 @@ class_name Juice
 extends Node2D
 
 var camera: Camera2D
+## Otomatik testlerde (matris) kapatılır: hitstop gerçek zamana bağlı olduğu için hızlandırılmış simülasyonu yavaşlatır.
+var hitstop_enabled: bool = true
 var _feel: Dictionary
 var _trauma: float = 0.0
 var _hitstop_until_usec: int = 0
@@ -45,7 +47,7 @@ func _process(_delta: float) -> void:
 
 
 func hitstop(seconds: float) -> void:
-	if seconds <= 0.0:
+	if seconds <= 0.0 or not hitstop_enabled:
 		return
 	Engine.time_scale = 0.02
 	_hitstop_until_usec = maxi(_hitstop_until_usec, Time.get_ticks_usec() + int(seconds * 1_000_000.0))

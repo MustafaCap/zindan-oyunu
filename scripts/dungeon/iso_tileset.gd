@@ -1,5 +1,6 @@
 ## IsoTileset — placeholder izometrik karo setini koddan üretir (Aşama 8'de gerçek karolar gelecek).
 ## Kaynak 0: zemin (iki ton, dama deseni). Kaynak 1: duvar ve sütun blokları (çarpışmalı).
+## Çarpışma katmanları: duvarlar 1 (hiçbir şey geçemez), sütun/engeller 8 (Magical'ın Uçuş'u üstünden geçer).
 class_name IsoTileset
 extends RefCounted
 
@@ -13,6 +14,8 @@ const FLOOR_A := Vector2i(0, 0)
 const FLOOR_B := Vector2i(1, 0)
 const WALL := Vector2i(0, 0)
 const PILLAR := Vector2i(1, 0)
+const WALL_LAYER := 1
+const OBSTACLE_LAYER := 8
 
 
 static func build(floor_color: Color) -> TileSet:
@@ -21,8 +24,11 @@ static func build(floor_color: Color) -> TileSet:
 	ts.tile_layout = TileSet.TILE_LAYOUT_DIAMOND_DOWN
 	ts.tile_size = Vector2i(W, H)
 	ts.add_physics_layer()
-	ts.set_physics_layer_collision_layer(0, 1)
+	ts.set_physics_layer_collision_layer(0, WALL_LAYER)
 	ts.set_physics_layer_collision_mask(0, 0)
+	ts.add_physics_layer()
+	ts.set_physics_layer_collision_layer(1, OBSTACLE_LAYER)
+	ts.set_physics_layer_collision_mask(1, 0)
 
 	# Zemin
 	var floor_img := Image.create(W * 2, H, false, Image.FORMAT_RGBA8)
@@ -51,8 +57,9 @@ static func build(floor_color: Color) -> TileSet:
 		var td := block_src.get_tile_data(coord, 0)
 		# Doku bloğun tabanı karoya otursun diye yukarı kaydırılır.
 		td.texture_origin = Vector2i(0, WALL_HEIGHT / 2)
-		td.add_collision_polygon(0)
-		td.set_collision_polygon_points(0, 0, footprint)
+		var phys := 0 if coord == WALL else 1
+		td.add_collision_polygon(phys)
+		td.set_collision_polygon_points(phys, 0, footprint)
 	return ts
 
 
