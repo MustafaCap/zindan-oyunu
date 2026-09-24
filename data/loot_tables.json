@@ -1,0 +1,16 @@
+{
+  "floors": {
+    "1": { "rarity_weights": { "common": 0.75, "rare": 0.22, "epic": 0.03, "legendary": 0.00 }, "weapon_level": [1, 1] },
+    "2": { "rarity_weights": { "common": 0.55, "rare": 0.33, "epic": 0.12, "legendary": 0.00 }, "weapon_level": [10, 10] },
+    "3": { "rarity_weights": { "common": 0.35, "rare": 0.38, "epic": 0.22, "legendary": 0.05 }, "weapon_level": [25, 40] },
+    "4": { "rarity_weights": { "common": 0.20, "rare": 0.38, "epic": 0.32, "legendary": 0.10 }, "weapon_level": [50, 50] }
+  },
+  "legendary_from_floor": 3,
+  "upper_rarity_boost": {
+    "_note": "Elit düşmanlar ve gizli odalar üst nadirlik şanslarını iki katına çıkarır; fark Yaygın'dan düşülür.",
+    "sources": ["elite", "secret_room"],
+    "rarities": ["epic", "legendary"],
+    "multiplier": 2.0
+  },
+  "boss_min_rarity": { "3": "epic", "4": "epic" }
+}

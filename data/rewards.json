@@ -1,0 +1,48 @@
+{
+  "choices_per_offer": 2,
+  "level_reward_every": 5,
+  "level_pool": {
+    "attack_speed":       { "name": "Saldırı hızı", "value": 0.05 },
+    "damage":             { "name": "Hasar", "value": 0.05 },
+    "element_damage":     { "name": "Element hasarı", "value": 0.06 },
+    "skill_damage":       { "name": "Skill hasarı (sağ tık, Q, E)", "value": 0.05 },
+    "max_hp":             { "name": "Maks can", "value": 0.08 },
+    "crit_chance":        { "name": "Kritik şansı", "value": 0.03 },
+    "crit_damage":        { "name": "Kritik hasarı", "value": 0.10 },
+    "attack_range":       { "name": "Saldırı menzili", "value": 0.04 },
+    "move_speed":         { "name": "Hareket hızı", "value": 0.04 },
+    "cooldown_reduction": { "name": "Bekleme süresi azaltma", "value": 0.03 },
+    "dash_cooldown_reduction": { "name": "Space bekleme süresi azaltma", "value": 0.05 },
+    "damage_reduction":   { "name": "Hasar azaltma", "value": 0.03 },
+    "lifesteal":          { "name": "Can emme", "value": 0.01 },
+    "xp_gain":            { "name": "Deneyim kazanımı", "value": 0.08 },
+    "gold_find":          { "name": "Altın bulma", "value": 0.10 }
+  },
+  "boss_major_pool": {
+    "attack_speed":       { "name": "Saldırı hızı", "value": 0.10 },
+    "damage":             { "name": "Hasar", "value": 0.12 },
+    "element_damage":     { "name": "Element hasarı", "value": 0.15 },
+    "skill_damage":       { "name": "Skill hasarı (sağ tık, Q, E)", "value": 0.15 },
+    "max_hp":             { "name": "Maks can", "value": 0.20 },
+    "crit_chance":        { "name": "Kritik şansı", "value": 0.08 },
+    "crit_damage":        { "name": "Kritik hasarı", "value": 0.25 },
+    "attack_range":       { "name": "Saldırı menzili", "value": 0.10 },
+    "move_speed":         { "name": "Hareket hızı", "value": 0.10 },
+    "cooldown_reduction": { "name": "Bekleme süresi azaltma", "value": 0.08 },
+    "damage_reduction":   { "name": "Hasar azaltma", "value": 0.08 },
+    "lifesteal":          { "name": "Can emme", "value": 0.03 }
+  },
+  "boss_special_pool": {
+    "double_hit":        { "name": "Çift vuruş", "description": "Normal saldırı %25 ihtimalle iki kez vurur", "chance": 0.25 },
+    "extra_projectile":  { "name": "Ek mermi", "description": "Normal saldırı %30 hasarlı küçük bir mermi daha fırlatır (yakın silahta kılıç dalgası)", "damage_pct": 0.30 },
+    "piercing":          { "name": "Delici", "description": "Mermiler ve dalgalar 1 düşmanı deler", "pierce": 1 },
+    "element_trail":     { "name": "Element izi", "description": "Space sonrası aktif silahın elementinde yerde iz kalır" },
+    "combo_master":      { "name": "Kombo ustası", "description": "Kombo hasarı +%30", "combo_damage": 0.30 },
+    "crit_chain":        { "name": "Kritik zinciri", "description": "Kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır", "chance": 0.20, "seconds": 1.0 },
+    "resonance_boost":   { "name": "Rezonans güçlendirme", "description": "Rezonans bonusu kilitliyken %15, açıkken %10 olur", "locked": 0.15, "unlocked": 0.10 },
+    "wrath":             { "name": "Hiddet", "description": "Öfke tavanı %6'dan %10'a çıkar", "fury_max": 0.10 },
+    "executioner":       { "name": "Cellat", "description": "İnfaz eşiği +%2 (boss'larda +%1)", "threshold_bonus": 0.02, "boss_threshold_bonus": 0.01 },
+    "spare_potion":      { "name": "Yedek iksir", "description": "İksir kapasitesi +1 ve tüm iksirler dolar", "capacity": 1 },
+    "second_chance":     { "name": "İkinci şans", "description": "Ölünce bir kez %30 canla dirilir", "revive_hp": 0.30 }
+  }
+}
