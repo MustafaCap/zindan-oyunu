@@ -11,11 +11,11 @@ func test_all_files_load_without_errors() -> void:
 
 func test_content_counts() -> void:
 	assert_eq(DataDB.table("races").size(), 4, "4 ırk")
-	assert_eq(DataDB.table("weapon_types").size(), 12, "12 silah tipi")
+	assert_eq(DataDB.records(DataDB.table("weapon_types")).size(), 12, "12 silah tipi")
 	assert_eq(DataDB.table("rarities").size(), 4, "4 nadirlik")
 	assert_eq(DataDB.table("elements")["elements"].size(), 6, "6 element")
 	assert_eq(DataDB.table("elements")["combos"].size(), 7, "7 kombo")
-	assert_eq(DataDB.table("traits").size(), 5, "5 özellik")
+	assert_eq(DataDB.records(DataDB.table("traits")).size(), 5, "5 özellik")
 	assert_eq(DataDB.table("talismans").size(), 3, "3 tılsım")
 	assert_eq(DataDB.table("enemies")["enemies"].size(), 17, "17 düşman")
 	assert_eq(DataDB.table("bosses")["bosses"].size(), 4, "4 boss")

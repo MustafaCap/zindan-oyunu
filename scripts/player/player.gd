@@ -1,6 +1,7 @@
-## Player — oyuncu karakteri (Aşama 1 prototipi: Warrior + yaygın kılıç).
+## Player — oyuncu karakteri (Aşama 2: Warrior + iki aktif kılıç, Tab ile anında geçiş).
 ## WASD ile 8 yönde yürür, fareye bakar, Space ile atılır; sol tık yay vuruşu, sağ tık Dönen kesik.
-## Tüm sayılar DataDB'den okunur. autoplay açıkken bir bot oynar (smoke testi için).
+## Vuruşlar HitResolver'dan geçer (hasar formülü, element durumları, kombolar, özellikler).
+## Tüm sayılar DataDB'den okunur. autoplay açıkken bir bot oynar (smoke testi için; kombo da yapar).
 class_name Player
 extends CharacterBody2D
 
@@ -10,8 +11,9 @@ signal health_changed(hp: float, max_hp: float)
 const SlashFx := preload("res://scripts/fx/slash_fx.gd")
 
 var race_id: String = "warrior"
-var weapon_type_id: String = "sword"
-var rarity_id: String = "common"
+## İki aktif silah (GDD: Kontroller ve Slotlar). Test odası kurar; boşsa yaygın kılıç verilir.
+var weapons: Array[Weapon] = []
+var active_index: int = 0
 
 var max_hp: float
 var hp: float
@@ -33,20 +35,23 @@ var autoplay: bool = false
 
 var rng := RandomNumberGenerator.new()
 var visual: PlaceholderBody
+var defense: DamageCalc.Defense
+var combos_done: int = 0
 
 var _race: Dictionary
-var _weapon: Dictionary
 var _combat: Dictionary
 var _feel: Dictionary
 var _caps: Dictionary
 var _lean_t: float = 0.0
 var _bot_dash_timer: float = 0.0
+var _bot_swap_cd: float = 0.0
 
 
 func _ready() -> void:
 	add_to_group("player")
 	_race = DataDB.table("races")[race_id]
-	_weapon = DataDB.table("weapon_types")[weapon_type_id]
+	if weapons.is_empty():
+		weapons.append(Weapon.make("sword", "common"))
 	_combat = DataDB.get_value("progression", "combat")
 	_feel = DataDB.get_value("progression", "feel")
 	_caps = DataDB.get_value("progression", "stat_caps")
@@ -54,6 +59,8 @@ func _ready() -> void:
 	max_hp = float(_race["base_hp"])
 	hp = max_hp
 	armor = float(_race["armor"])
+	defense = _make_defense()
+	Events.combo_triggered.connect(func(_id: String, _t: Node) -> void: combos_done += 1)
 	move_speed_tiles = float(_combat["base_move_speed"]) * float(_race["move_speed"])
 	radius_tiles = float(_combat["player_radius"])
 	dash_cd_max = float(_combat["dash_cooldown"])
@@ -72,6 +79,7 @@ func _ready() -> void:
 	visual.body_color = Color(0.25, 0.55, 0.95)
 	visual.head_color = Color(0.93, 0.8, 0.66)
 	add_child(visual)
+	refresh_weapon_visual()
 	health_changed.emit(hp, max_hp)
 
 
@@ -90,6 +98,7 @@ func _physics_process(delta: float) -> void:
 	var want_attack := false
 	var want_heavy := false
 	var want_dash := false
+	var want_swap := false
 	if autoplay:
 		var bot := _bot_think(delta)
 		move_cart = bot["move"]
@@ -97,12 +106,17 @@ func _physics_process(delta: float) -> void:
 		want_attack = bot["attack"]
 		want_heavy = bot["heavy"]
 		want_dash = bot["dash"]
+		want_swap = bot["swap"]
 	else:
 		move_cart = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 		aim_cart = Iso.to_cart(get_global_mouse_position() - global_position)
 		want_attack = Input.is_action_pressed("attack_primary")
 		want_heavy = Input.is_action_just_pressed("attack_secondary")
 		want_dash = Input.is_action_just_pressed("dash")
+		want_swap = Input.is_action_just_pressed("swap_weapon")
+
+	if want_swap:
+		swap_weapon()
 
 	if aim_cart.length() > 0.01:
 		facing_cart = aim_cart.normalized()
@@ -138,14 +152,33 @@ func _start_dash(move_cart: Vector2) -> void:
 	tw.tween_callback(ghost.queue_free)
 
 
+func weapon() -> Weapon:
+	return weapons[active_index]
+
+
+## Tab: iki aktif silah arasında anında geçiş (kombolar için ana araç).
+func swap_weapon() -> void:
+	if weapons.size() < 2:
+		return
+	active_index = (active_index + 1) % weapons.size()
+	visual.weapon_color = Weapon.kind_color(weapon().element)
+	Events.weapon_swapped.emit(active_index)
+
+
+## Silahlar değişince (test odası hata ayıklama tuşları) görseli tazeler.
+func refresh_weapon_visual() -> void:
+	visual.weapon_color = Weapon.kind_color(weapon().element)
+
+
 ## Sol tık: fare yönünde yay şeklinde vuruş.
 func _swing() -> void:
-	attack_cd = 1.0 / float(_weapon["attacks_per_sec"])
+	var wt := weapon().type_data()
+	attack_cd = 1.0 / float(wt["attacks_per_sec"])
 	_lean_t = 0.12
-	var range_tiles := float(_weapon["range"])
-	var arc := float(_weapon["arc_degrees"])
+	var range_tiles := float(wt["range"])
+	var arc := float(wt["arc_degrees"])
 	var fx := SlashFx.new()
-	fx.setup(facing_cart, range_tiles, arc, false)
+	fx.setup(facing_cart, range_tiles, arc, false, Weapon.kind_color(weapon().element))
 	get_parent().add_child(fx)
 	fx.global_position = global_position + Vector2(0, -6)
 	_hit_enemies(range_tiles, arc, 1.0, false)
@@ -155,44 +188,72 @@ func _swing() -> void:
 func _spin_slash() -> void:
 	heavy_cd = heavy_cd_max
 	_lean_t = 0.12
-	var heavy: Dictionary = _weapon["heavy"]
+	var heavy: Dictionary = weapon().type_data()["heavy"]
 	var radius := float(heavy["radius"])
 	var fx := SlashFx.new()
-	fx.setup(facing_cart, radius, 360.0, true)
+	fx.setup(facing_cart, radius, 360.0, true, Weapon.kind_color(weapon().element))
 	get_parent().add_child(fx)
 	fx.global_position = global_position + Vector2(0, -6)
 	_hit_enemies(radius, 360.0, float(heavy["damage_mult"]), true)
 
 
 func _hit_enemies(range_tiles: float, arc: float, mult: float, heavy: bool) -> void:
-	var base := float(DataDB.table("rarities")[rarity_id]["base_damage"]) * float(_weapon["damage_mult"]) * mult
-	for node: Node in get_tree().get_nodes_in_group("enemies"):
+	var all := get_tree().get_nodes_in_group("enemies")
+	var hits: Array[Node2D] = []
+	for node: Node in all:
 		var e := node as Node2D
-		if e == null or not e.has_method("take_hit") or e.get("dead"):
+		if e == null or not e.has_method("apply_damage") or e.get("dead"):
 			continue
-		if not CombatMath.in_arc(global_position, facing_cart, e.global_position, range_tiles, arc, float(e.get("radius_tiles"))):
+		if CombatMath.in_arc(global_position, facing_cart, e.global_position, range_tiles, arc, float(e.get("radius_tiles"))):
+			hits.append(e)
+	for e: Node2D in hits:
+		if e.get("dead"):
 			continue
-		var crit := CombatMath.roll_crit(float(_combat["base_crit_chance"]), rng)
-		var dmg := base * (float(_combat["base_crit_mult"]) if crit else 1.0)
 		var dir := Iso.to_cart(e.global_position - global_position)
 		if dir.length() < 0.01:
 			dir = facing_cart
-		e.call("take_hit", dmg, crit, dir.normalized(), heavy)
+		var opts := {"skill_mult": mult, "heavy": heavy, "dir": dir.normalized()}
+		HitResolver.resolve(self, weapon(), e, opts, all, rng)
 
 
-## Düşmandan gelen hasar.
-func take_damage(amount: float, _from_dir_cart: Vector2) -> void:
+## Can Emme (ırk izin veriyorsa). Ghost'un özel iyileşme kuralı Aşama 3'te.
+func heal(amount: float) -> void:
+	if dead or amount <= 0.0 or not bool(_race["healing"]["lifesteal"]):
+		return
+	var before := hp
+	hp = minf(hp + amount, max_hp)
+	if hp - before >= 1.0:
+		Events.damage_number.emit(global_position + Vector2(14, -52), hp - before, false, true, "heal")
+	health_changed.emit(hp, max_hp)
+
+
+## Düşmandan gelen hasar (hasar formülünden geçer: ırk direnci ve zırh).
+func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCalc.PHYSICAL) -> void:
 	if dead or iframes > 0.0:
 		return
-	var dmg := CombatMath.apply_reduction(amount, armor, float(_caps["damage_reduction"]))
+	var hit := DamageCalc.Hit.new()
+	hit.base_damage = amount
+	hit.kind = kind
+	var dmg := DamageCalc.compute(hit, defense)
 	hp = maxf(hp - dmg, 0.0)
 	iframes = float(_combat["player_hurt_iframes"])
 	visual.flash(float(_feel["flash_duration"]) * 1.5, Color(1.0, 0.25, 0.25))
 	Events.player_damaged.emit(dmg)
-	Events.damage_number.emit(global_position + Vector2(0, -40), dmg, false, true)
+	Events.damage_number.emit(global_position + Vector2(0, -40), dmg, false, true, kind)
 	health_changed.emit(hp, max_hp)
 	if hp <= 0.0:
 		_die()
+
+
+func _make_defense() -> DamageCalc.Defense:
+	var d := DamageCalc.Defense.new([], [], [], armor)
+	var res: Dictionary = _race["resistances"]
+	for k: String in res.keys():
+		match str(res[k]):
+			"immune": d.immune.append(k)
+			"resistant": d.resistant.append(k)
+			"weak": d.weak.append(k)
+	return d
 
 
 func _die() -> void:
@@ -206,8 +267,9 @@ func _die() -> void:
 
 
 ## Smoke testi botu: en yakın düşmana yürür, menzildeyse vurur, kalabalıkta Dönen kesik atar.
+## Aşama 2: hedef aktif silahın elementine bağışıksa ya da hedefte diğer silahla kombo yapılabilecekse Tab'a basar.
 func _bot_think(delta: float) -> Dictionary:
-	var out := {"move": Vector2.ZERO, "aim": facing_cart, "attack": false, "heavy": false, "dash": false}
+	var out := {"move": Vector2.ZERO, "aim": facing_cart, "attack": false, "heavy": false, "dash": false, "swap": false}
 	var nearest: Node2D = null
 	var best := INF
 	var close_count := 0
@@ -223,12 +285,23 @@ func _bot_think(delta: float) -> Dictionary:
 			close_count += 1
 	if nearest == null:
 		return out
+	var wt := weapon().type_data()
 	var to_e := Iso.to_cart(nearest.global_position - global_position)
 	out["aim"] = to_e
-	if best > float(_weapon["range"]) * 0.8:
+	if best > float(wt["range"]) * 0.8:
 		out["move"] = to_e.normalized()
-	out["attack"] = best <= float(_weapon["range"]) + 0.3
+	out["attack"] = best <= float(wt["range"]) + 0.3
 	out["heavy"] = close_count >= 2
+	_bot_swap_cd -= delta
+	if weapons.size() >= 2 and _bot_swap_cd <= 0.0 and out["attack"]:
+		var other: Weapon = weapons[(active_index + 1) % weapons.size()]
+		var def: DamageCalc.Defense = nearest.get("defense")
+		var st: StatusEffects = nearest.get("status")
+		var cur_useless := DamageCalc.status_multiplier(weapon().element, def) <= 0.0
+		var other_combo := not DamageCalc.is_immune(other.element, def) and not Combos.find(st, other.element).is_empty()
+		if cur_useless or other_combo:
+			out["swap"] = true
+			_bot_swap_cd = 0.4
 	_bot_dash_timer -= delta
 	if _bot_dash_timer <= 0.0 and hp < max_hp * 0.5:
 		out["dash"] = true

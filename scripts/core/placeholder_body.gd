@@ -12,6 +12,10 @@ var body_height: float = 34.0
 var body_width: float = 18.0
 var facing_cart: Vector2 = Vector2.RIGHT
 var weapon_length: float = 26.0
+var weapon_color: Color = Color(0.85, 0.87, 0.92):
+	set(v):
+		weapon_color = v
+		queue_redraw()
 var show_weapon: bool = true
 var lean: float = 0.0            # saldırıda öne eğilme (0..1)
 
@@ -73,7 +77,7 @@ func _draw_weapon(dir_screen: Vector2, lean_off: Vector2) -> void:
 	var hand := Vector2(lean_off.x, -body_height * 0.45) + dir_screen * 8.0
 	var tip := hand + dir_screen * weapon_length
 	draw_line(hand, tip, outline_color, 5.0)
-	draw_line(hand, tip, Color(0.85, 0.87, 0.92), 3.0)
+	draw_line(hand, tip, weapon_color, 3.0)
 
 
 func _draw_ellipse(c: Vector2, rx: float, ry: float, col: Color) -> void:

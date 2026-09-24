@@ -8,8 +8,8 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | Aşama | Konu | Durum |
 | --- | --- | --- |
 | 0 | Ortam ve iskelet | ✅ Bitti |
-| 1 | Vuruş hissi prototipi | 🧪 Kullanıcı testinde |
-| 2 | Savaş çekirdeği | — |
+| 1 | Vuruş hissi prototipi | ✅ Bitti (vuruş hissi onaylandı) |
+| 2 | Savaş çekirdeği | 🧪 Kullanıcı testinde |
 | 3 | Irklar ve silahlar | — |
 | 4 | Zindan üretimi | — |
 | 5 | Loot ve envanter | — |
@@ -19,7 +19,19 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 1 kodlandı (tek izometrik test odası, Warrior + kılıç, İskelet Savaşçı, vuruş hissi efektleri). Kullanıcı vuruş hissini onaylayınca Aşama 2'ye geçilecek; onaylamazsa `data/progression.json > feel` ayarlanır.
+**Kalınan yer:** Aşama 2 kodlandı: `DamageCalc` (hasar formülü), `StatusEffects` (6 element durumu), `Combos` (7 kombo),
+`Traits` (5 özellik), `HitResolver` (hepsini vuruşta birleştirir), düşman üstünde bağışıklık/zayıflık ikonları. Test odasında
+oyuncunun iki elementli kılıcı var (Tab ile geçiş) ve 1. kat düşmanları + Taş/Hayalet varyantları geliyor. Kullanıcı kombolarını
+test edip onaylayınca Aşama 3'e (ırklar ve silahlar) geçilecek.
+
+**Aşama 2'de GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/` içinde, `_default` notuyla işaretli; oyun testinde ayarlanır):
+- Su'nun kendi hasarı ×0,8. Yıldırım zinciri 3 karo menzil. Buz yığını her buz vuruşunda 3 sn tazelenir.
+- Arkadan vuruş: hedefin baktığı yönden 90°'den fazla açıyla gelen vuruş.
+- Kombo sayıları: Elektroşok 6 karodaki ıslaklara %60 · Erime +%200 · Zehir Patlaması 2,5 karo, %80 · Buhar 2 karo, 4 sn %40 ıskalama · Çürüme 6 sn.
+- Kombo ilk elementi tüketir (Çürüme'de de zehir tüketilir; sonraki zehir iki kat vurur). Bir vuruşta en fazla bir kombo.
+- Sekme 3 karo menzil. Sersemletme boss'ta 1 sn %30 yavaşlatır.
+- Zincir, sekme ve kombo alan hasarları "ikincil vuruş"tur: element bırakır ama yeni kombo/zincir/özellik tetiklemez.
+- Fiziksel hasara element hasarı bonusları uygulanmaz.
 
 **Bilinen durumlar / notlar:**
 - `bpy` (Blender Python) çalışma ortamının paket deposunda bulunamadı. Aşama 8'e kadar gerekmiyor; o aşamada tekrar denenecek ya da başka yol bulunacak.
@@ -44,6 +56,9 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 1 | İksir |
 | F | Etkileşim |
 | R | (Prototip) Odayı yeniden başlat |
+| 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
+| 8 | (Test odası) Aktif silahın özelliğini değiştir (Öfke, İnfaz, Can Emme, Sekme, Sersemletme) |
+| N | (Test odası) Yeni dalga |
 | Esc | (Prototip) Çık |
 
 ## Geliştirme
@@ -61,7 +76,8 @@ make all             # hepsi
 Godot başka bir yerdeyse: `make test GODOT=/yol/godot`.
 
 Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırken):
-- `--autoplay` — oyuncuyu bot oynatır (smoke testi bunu kullanır)
+- `--autoplay` — oyuncuyu bot oynatır (smoke testi bunu kullanır; hiç kombo yapamazsa test düşer)
+- `--loadout=water,lightning` — test odasındaki iki silahın elementi
 - `--shots=KLASÖR --shot-times=0.5,2,3` — verilen saniyelerde ekran görüntüsü kaydeder
 
 ## Klasör yapısı
