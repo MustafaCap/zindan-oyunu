@@ -1,22 +1,35 @@
 {
+  "_note": "4 ırk (GDD: Irklar, Skill Sistemi > Kaynaklar ve Irk başlangıç statları). '_default' ile işaretli sayılar GDD'de yoktu, Aşama 3'te verildi; oyun testinde ayarlanır. Yetenek hasarları aktif silahın vuruşunun katıdır (skill_mult) ve aktif silahın elementini taşır.",
   "warrior": {
     "name": "Warrior",
     "family": "warrior",
+    "placeholder_color": "#3f8cf2",
     "base_hp": 150,
     "hp_per_level": 6,
     "move_speed": 1.0,
     "armor": 0.15,
     "resource": {
       "type": "energy",
+      "name": "Enerji",
+      "color": "#f2c230",
       "max": 100,
       "regen_per_sec": 10,
-      "gain_on_hit": 2
+      "gain_on_hit": 2,
+      "_default": "gain_on_hit: isabet eden her saldırı başına bir kez (vurulan düşman sayısından bağımsız)"
     },
     "costs": { "q": 40, "e": 70 },
     "cooldowns": { "heavy": [5, 7] },
     "abilities": {
-      "q": { "id": "armor_up", "name": "Zırh", "description": "Kısa süreli, az hasar emen zırh ve +%3 hasar", "damage_bonus": 0.03 },
-      "e": { "id": "ground_slam", "name": "Yer sarsıntısı", "description": "Önündeki alana büyük hasar" }
+      "q": {
+        "id": "armor_up", "name": "Zırh", "description": "Kısa süreli, az hasar emen zırh ve +%3 hasar",
+        "damage_bonus": 0.03, "armor_bonus": 0.2, "duration": 3.0,
+        "_default": "armor_bonus (hasar azaltma) ve duration"
+      },
+      "e": {
+        "id": "ground_slam", "name": "Yer sarsıntısı", "description": "Önündeki alana büyük hasar",
+        "skill_mult": 2.5, "range": 3.0, "arc_degrees": 100,
+        "_default": "hepsi"
+      }
     },
     "passive": { "description": "Yüksek can ve zırh", "bonuses": {} },
     "resistances": {},
@@ -25,16 +38,25 @@
   "ghost": {
     "name": "Ghost",
     "family": "ghost",
+    "placeholder_color": "#a58cff",
     "base_hp": 100,
     "hp_per_level": 4,
     "move_speed": 1.1,
     "armor": 0.0,
-    "resource": { "type": "cooldown" },
+    "resource": { "type": "cooldown", "name": "Bekleme süresi", "color": "#b8b8c8" },
     "costs": {},
     "cooldowns": { "heavy": 5, "q": 12, "e": 10 },
     "abilities": {
-      "q": { "id": "phase", "name": "Faz", "description": "Maks 1 sn dokunulmaz ve düşmanlara görünmez", "max_duration": 1.0 },
-      "e": { "id": "shadow_step", "name": "Gölge adımı", "description": "Hedef düşmanın arkasına ışınlanır" }
+      "q": {
+        "id": "phase", "name": "Faz", "description": "Maks 1 sn dokunulmaz ve düşmanlara görünmez",
+        "max_duration": 1.0,
+        "_default": "Saldırınca faz erken biter; faz sırasında düşmanların içinden geçilir"
+      },
+      "e": {
+        "id": "shadow_step", "name": "Gölge adımı", "description": "Hedef düşmanın arkasına ışınlanır",
+        "range": 7.0, "behind_distance": 0.9, "iframes": 0.25,
+        "_default": "hepsi; hedef = farenin en yakınındaki düşman"
+      }
     },
     "passive": { "description": "Fiziksele dirençli, ateşe zayıf; özel iyileşme kuralı", "bonuses": {} },
     "resistances": { "physical": "resistant", "fire": "weak" },
@@ -43,36 +65,54 @@
       "lifesteal": false,
       "heal_on_kill": 0.04,
       "heal_on_elite_kill": 0.10,
-      "lifesteal_becomes_kill_heal": true
+      "lifesteal_becomes_kill_heal": true,
+      "_default": "Can Emme özellikli silah aktifken öldürme başına ek iyileşme = Can Emme yüzdesi (%3) × maks can"
     }
   },
   "archer": {
     "name": "Archer",
     "family": "archer",
+    "placeholder_color": "#4fbf5a",
     "base_hp": 90,
     "hp_per_level": 3.5,
     "move_speed": 1.05,
     "armor": 0.0,
-    "resource": { "type": "cooldown" },
+    "resource": { "type": "cooldown", "name": "Bekleme süresi", "color": "#b8b8c8" },
     "costs": {},
     "cooldowns": { "heavy": 6, "q": 8, "e": 18 },
     "abilities": {
-      "q": { "id": "back_leap", "name": "Geri sıçrama", "description": "Geriye atılırken önüne 3 ok atar", "arrows": 3 },
-      "e": { "id": "arrow_rain", "name": "Ok yağmuru", "description": "Seçilen alana çoklu ok" }
+      "q": {
+        "id": "back_leap", "name": "Geri sıçrama", "description": "Geriye atılırken önüne 3 ok atar",
+        "arrows": 3, "distance": 3.0, "duration": 0.22, "spread_degrees": 24, "skill_mult": 0.8,
+        "arrow_range": 9.0, "arrow_speed": 18.0,
+        "_default": "arrows dışındaki sayılar"
+      },
+      "e": {
+        "id": "arrow_rain", "name": "Ok yağmuru", "description": "Seçilen alana çoklu ok",
+        "max_range": 9.0, "radius": 2.2, "waves": 6, "interval": 0.25, "skill_mult": 0.45, "delay": 0.35,
+        "_default": "hepsi"
+      }
     },
-    "passive": { "description": "Menzil ve kritik bonusu", "bonuses": {} },
+    "passive": {
+      "description": "Menzil ve kritik bonusu",
+      "bonuses": { "attack_range": 0.10, "crit_chance": 0.05 },
+      "_default": "+%10 saldırı menzili, +%5 kritik şansı"
+    },
     "resistances": {},
     "healing": { "potions": true, "lifesteal": true }
   },
   "magical": {
     "name": "Magical",
     "family": "magical",
+    "placeholder_color": "#e05ad0",
     "base_hp": 80,
     "hp_per_level": 3,
     "move_speed": 1.0,
     "armor": 0.0,
     "resource": {
       "type": "mana",
+      "name": "Mana",
+      "color": "#4a8cff",
       "base_max": 120,
       "max_per_level": 4,
       "regen_pct_per_sec": 0.03
@@ -80,10 +120,22 @@
     "costs": { "light": 2, "heavy": 70, "q": 80, "e": 110 },
     "cooldowns": {},
     "abilities": {
-      "q": { "id": "flight", "name": "Uçuş", "description": "Kısa süre engel ve tuzakların üstünden uçar" },
-      "e": { "id": "element_storm", "name": "Element fırtınası", "description": "Aktif silahın elementinde alan hasarı" }
+      "q": {
+        "id": "flight", "name": "Uçuş", "description": "Kısa süre engel ve tuzakların üstünden uçar",
+        "duration": 2.5, "speed_bonus": 0.2, "hover_px": 16,
+        "_default": "hepsi; uçuş bir engelin üstünde biterse oyuncu engelden çıkana kadar uçmaya devam eder"
+      },
+      "e": {
+        "id": "element_storm", "name": "Element fırtınası", "description": "Aktif silahın elementinde alan hasarı",
+        "max_range": 6.0, "radius": 2.6, "pulses": 5, "interval": 0.4, "skill_mult": 0.7,
+        "_default": "hepsi; fırtına farenin gösterdiği noktada çıkar"
+      }
     },
-    "passive": { "description": "Element hasarı yüksek, can düşük", "bonuses": {} },
+    "passive": {
+      "description": "Element hasarı yüksek, can düşük",
+      "bonuses": { "element_damage": 0.15 },
+      "_default": "+%15 element hasarı"
+    },
     "resistances": {},
     "healing": { "potions": true, "lifesteal": true }
   }

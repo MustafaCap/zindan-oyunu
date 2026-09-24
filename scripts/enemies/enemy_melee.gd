@@ -15,6 +15,9 @@ var enemy_id: String = "skeleton_warrior"
 var material_id: String = ""
 var is_boss: bool = false
 var is_elite: bool = false
+## Hata ayıklama kuklası: yürümez, saldırmaz, geri savrulmaz (test odası). hp_override > 0 ise can o olur.
+var dummy: bool = false
+var hp_override: float = 0.0
 
 var display_name: String
 var max_hp: float
@@ -67,6 +70,11 @@ func _ready() -> void:
 	windup = float(stats["attack_windup"])
 	attack_cd_max = float(stats["attack_cooldown"])
 	knockback_resist = float(stats["knockback_resist"])
+	if hp_override > 0.0:
+		max_hp = hp_override
+		hp = max_hp
+	if dummy:
+		knockback_resist = 1.0
 
 	var immune: Array = (data["immune"] as Array).duplicate()
 	var resistant: Array = (data["resistant"] as Array).duplicate()
@@ -89,7 +97,7 @@ func _ready() -> void:
 	status = StatusEffects.new(is_boss)
 
 	collision_layer = 4
-	collision_mask = 1 | 2 | 4
+	collision_mask = 1 | 2 | 4 | 8
 	motion_mode = CharacterBody2D.MOTION_MODE_FLOATING
 	var shape := CollisionPolygon2D.new()
 	shape.polygon = Shapes.iso_ellipse(radius_tiles)
@@ -127,6 +135,10 @@ func _physics_process(delta: float) -> void:
 		target = get_tree().get_first_node_in_group("player") as Node2D
 
 	var move := Vector2.ZERO
+	if dummy:
+		acting = false
+		if state != State.SPAWN or _t >= SPAWN_TIME:
+			state = State.RECOVER
 	if not acting:
 		# Donmuş ya da sersem: hazırlık bozulur
 		if state == State.WINDUP:
@@ -137,7 +149,7 @@ func _physics_process(delta: float) -> void:
 				if _t >= SPAWN_TIME:
 					_set_state(State.CHASE)
 			State.CHASE:
-				if target and not target.get("dead"):
+				if _target_visible():
 					var to_t := Iso.to_cart(target.global_position - global_position)
 					facing_cart = to_t.normalized()
 					var dist := to_t.length() / Iso.KARO
@@ -173,12 +185,19 @@ func _set_state(s: State) -> void:
 
 func _strike() -> void:
 	_attack_cd = attack_cd_max
-	if target and target.has_method("take_damage") and not target.get("dead"):
+	if _target_visible() and target.has_method("take_damage"):
 		if CombatMath.in_arc(global_position, facing_cart, target.global_position, attack_range, attack_arc, float(target.get("radius_tiles"))):
 			if rng.randf() < status.miss_chance():
 				Events.floating_text.emit(target.global_position + Vector2(0, -60), "ISKA", Color(0.8, 0.8, 0.8), 20)
 				return
 			target.call("take_damage", damage, facing_cart)
+
+
+## Hedef görülebilir mi? (ölü değil ve Ghost'un Faz'ında değil)
+func _target_visible() -> bool:
+	if target == null or not is_instance_valid(target) or target.get("dead"):
+		return false
+	return not (target.has_method("is_untargetable") and bool(target.call("is_untargetable")))
 
 
 ## Süreli hasar (yanma, zehir) ve durum süreleri.

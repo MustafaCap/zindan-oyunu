@@ -24,6 +24,11 @@ func type_data() -> Dictionary:
 	return DataDB.table("weapon_types")[type_id]
 
 
+## Silah ailesi: warrior, ghost, archer, magical (ırk-silah matrisi buna göre).
+func family() -> String:
+	return str(type_data()["family"])
+
+
 func base_damage() -> float:
 	return float(DataDB.table("rarities")[rarity_id]["base_damage"])
 

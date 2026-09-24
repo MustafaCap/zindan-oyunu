@@ -1,5 +1,6 @@
-## Hud — prototip arayüzü: can barı, sağ tık ve Space bekleme göstergeleri, dalga bilgisi, ortadaki mesajlar.
+## Hud — prototip arayüzü: can ve kaynak barı, sağ tık / Q / E / Space göstergeleri, dalga bilgisi, ortadaki mesajlar.
 ## Aşama 2: iki aktif silah paneli (element ikonu, ad, nadirlik rengi; aktif olan vurgulu) ve hata ayıklama notları.
+## Aşama 3: ırk ve level, Enerji/Mana barı, yetenek adları ve bedelleri, iksir sayısı.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu yalnızca test için.
 class_name Hud
 extends CanvasLayer
@@ -30,11 +31,11 @@ func _ready() -> void:
 	_center.position.y -= 160
 
 	_info = _make_label(22, Color(0.85, 0.85, 0.9))
-	_info.position = Vector2(32, 96)
+	_info.position = Vector2(32, 104)
 
 	_hint_lines = PackedStringArray([
-		"WASD yürü · Fare nişan · Sol tık vuruş · Sağ tık Dönen kesik · Space atılma · Tab silah değiştir · R yeniden başla · Esc çık",
-		"Deneme tuşları: 2 Ateş · 3 Su · 4 Yıldırım · 5 Zehir · 6 Buz · 7 Karanlık · 0 Elementsiz · 8 Özellik değiştir · N Yeni dalga",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · R yeniden başla · Esc çık",
+		"M: HATA AYIKLAMA MENÜSÜ (ırk, silah, element) · Kısayol: 2-7 element · 0 elementsiz · 8 özellik · N yeni dalga",
 	])
 
 	var ver := _make_label(16, Color(0.5, 0.5, 0.55))
@@ -42,7 +43,7 @@ func _ready() -> void:
 	ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	ver.position = Vector2(-32, 24)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	ver.text = "v%s · Aşama 2 · savaş çekirdeği" % ProjectSettings.get_setting("application/config/version", "?")
+	ver.text = "v%s · Aşama 3 · ırklar ve silahlar" % ProjectSettings.get_setting("application/config/version", "?")
 
 
 func _make_label(size: int, color: Color) -> Label:
@@ -82,12 +83,35 @@ func _draw_panel() -> void:
 	_panel.draw_rect(Rect2(pos, size), Color(0.25, 0.08, 0.08))
 	_panel.draw_rect(Rect2(pos, Vector2(size.x * player.hp / player.max_hp, size.y)), Color(0.85, 0.18, 0.2))
 	var font := ThemeDB.fallback_font
-	_panel.draw_string_outline(font, pos + Vector2(10, 20), "%d / %d" % [ceili(player.hp), roundi(player.max_hp)], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, 5, Color.BLACK)
-	_panel.draw_string(font, pos + Vector2(10, 20), "%d / %d" % [ceili(player.hp), roundi(player.max_hp)], HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
-	# Bekleme göstergeleri (alt orta)
+	_text(pos + Vector2(10, 20), "%d / %d" % [ceili(player.hp), roundi(player.max_hp)], 18, Color.WHITE)
+	var race: Dictionary = DataDB.table("races")[player.race_id]
+	_text(pos + Vector2(size.x + 16, 20), "%s · Level %d · İksir %d" % [race["name"], player.level, player.potions], 18, Color(0.9, 0.9, 0.95))
+	# Kaynak barı (Enerji / Mana)
+	var kit := player.kit
+	if kit.uses_resource():
+		var rp := pos + Vector2(0, size.y + 8)
+		var rs := Vector2(size.x, 14)
+		_panel.draw_rect(Rect2(rp - Vector2(3, 3), rs + Vector2(6, 6)), Color(0, 0, 0, 0.75))
+		_panel.draw_rect(Rect2(rp, rs), kit.resource_color().darkened(0.7))
+		_panel.draw_rect(Rect2(rp, Vector2(rs.x * kit.resource / maxf(kit.resource_max, 1.0), rs.y)), kit.resource_color())
+		_text(rp + Vector2(8, 12), "%s %d / %d" % [kit.resource_name(), floori(kit.resource), roundi(kit.resource_max)], 13, Color.WHITE)
+	# Yetenek göstergeleri (alt orta): Sağ tık, Q, E, Space
 	var vp := _panel.size
-	_cooldown_box(Vector2(vp.x * 0.5 - 80, vp.y - 180), "Sağ tık", player.heavy_cd, player.heavy_cd_max)
-	_cooldown_box(Vector2(vp.x * 0.5 + 10, vp.y - 180), "Space", player.dash_cd, player.dash_cd_max)
+	var w := player.weapon()
+	var fam := w.family()
+	var heavy: Dictionary = w.type_data()["heavy"]
+	var boxes := [
+		["Sağ tık", str(heavy["name"]), "heavy"],
+		["Q", str(race["abilities"]["q"]["name"]), "q"],
+		["E", str(race["abilities"]["e"]["name"]), "e"],
+	]
+	var bx := vp.x * 0.5 - 2.0 * 112.0
+	for b: Array in boxes:
+		var slot: String = b[2]
+		var cost := kit.cost(slot, fam)
+		_cooldown_box(Vector2(bx, vp.y - 190), str(b[0]), str(b[1]), float(kit.cooldowns[slot]), float(kit.cooldown_totals[slot]), kit.resource + 0.001 >= cost, cost)
+		bx += 112.0
+	_cooldown_box(Vector2(bx, vp.y - 190), "Space", "Atılma", player.dash_cd, player.dash_cd_max, true, 0.0)
 	# Silah paneli (sol alt): iki aktif silah
 	var wy := vp.y - 250.0
 	for i: int in player.weapons.size():
@@ -108,25 +132,40 @@ func _draw_panel() -> void:
 
 
 func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int) -> void:
-	var s := Vector2(420, 44)
+	var s := Vector2(540, 44)
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.92 if active else 0.6))
 	_panel.draw_rect(Rect2(p, s), w.rarity_color() if active else Color(0.35, 0.35, 0.4), false, 3.0 if active else 1.0)
 	ElementIcons.draw_badge(_panel, w.element, p + Vector2(24, 22), 14.0)
 	var font := ThemeDB.fallback_font
 	var name_col := w.rarity_color().lightened(0.25) if active else Color(0.6, 0.6, 0.65)
 	_panel.draw_string(font, p + Vector2(48, 20), "%d. %s" % [slot, w.display_name()], HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 19, name_col)
-	var sub := "%s · %s" % [w.rarity_name(), Weapon.kind_name(w.element)]
+	var sub := "%s · %s · %s" % [w.rarity_name(), Weapon.kind_name(w.element), RaceStats.matrix_text(player.race_id, w.family())]
 	if not w.traits.is_empty():
 		sub += " · " + str(Traits.data(w.traits[0])["name"])
 	_panel.draw_string(font, p + Vector2(48, 38), sub, HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 14, Color(0.7, 0.7, 0.75))
 
 
-func _cooldown_box(p: Vector2, label: String, cd: float, cd_max: float) -> void:
-	var s := Vector2(70, 70)
+## Yetenek kutusu: tuş, kalan bekleme süresi ya da kaynak bedeli; altında yeteneğin adı.
+func _cooldown_box(p: Vector2, key: String, label: String, cd: float, cd_max: float, affordable: bool, cost: float) -> void:
+	var s := Vector2(96, 70)
+	var font := ThemeDB.fallback_font
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.9))
+	if not affordable:
+		_panel.draw_rect(Rect2(p, s), Color(0.1, 0.2, 0.5, 0.55))
+	_panel.draw_string(font, p + Vector2(0, 26), key, HORIZONTAL_ALIGNMENT_CENTER, s.x, 20, Color(0.95, 0.9, 0.75))
 	if cd > 0.0 and cd_max > 0.0:
-		var k := cd / cd_max
+		var k := clampf(cd / cd_max, 0.0, 1.0)
 		_panel.draw_rect(Rect2(p + Vector2(0, s.y * (1.0 - k)), Vector2(s.x, s.y * k)), Color(0, 0, 0, 0.65))
-		_panel.draw_string(ThemeDB.fallback_font, p + Vector2(0, 44), "%.1f" % cd, HORIZONTAL_ALIGNMENT_CENTER, s.x, 20, Color.WHITE)
-	_panel.draw_rect(Rect2(p, s), Color(0.9, 0.8, 0.5) if cd <= 0.0 else Color(0.4, 0.4, 0.45), false, 2.0)
-	_panel.draw_string(ThemeDB.fallback_font, p + Vector2(0, s.y + 20), label, HORIZONTAL_ALIGNMENT_CENTER, s.x, 16, Color(0.8, 0.8, 0.85))
+		_panel.draw_string(font, p + Vector2(0, 54), "%.1f" % cd, HORIZONTAL_ALIGNMENT_CENTER, s.x, 20, Color.WHITE)
+	elif cost > 0.0:
+		_panel.draw_string(font, p + Vector2(0, 54), "%d %s" % [roundi(cost), player.kit.resource_name()], HORIZONTAL_ALIGNMENT_CENTER, s.x, 14, player.kit.resource_color().lightened(0.3))
+	var ready := cd <= 0.0 and affordable
+	_panel.draw_rect(Rect2(p, s), Color(0.9, 0.8, 0.5) if ready else Color(0.4, 0.4, 0.45), false, 2.0)
+	_panel.draw_string_outline(font, p + Vector2(-8, s.y + 18), label, HORIZONTAL_ALIGNMENT_CENTER, s.x + 16, 12, 4, Color.BLACK)
+	_panel.draw_string(font, p + Vector2(-8, s.y + 18), label, HORIZONTAL_ALIGNMENT_CENTER, s.x + 16, 12, Color(0.8, 0.8, 0.85))
+
+
+func _text(p: Vector2, text: String, size: int, color: Color) -> void:
+	var font := ThemeDB.fallback_font
+	_panel.draw_string_outline(font, p, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 5, Color.BLACK)
+	_panel.draw_string(font, p, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, color)
