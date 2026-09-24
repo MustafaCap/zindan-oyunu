@@ -1,13 +1,25 @@
-## TestRoom — Aşama 1 vuruş hissi prototipi: tek izometrik oda, dalga dalga İskelet Savaşçılar.
+## TestRoom — Aşama 2 savaş çekirdeği test odası: tek izometrik oda, dalga dalga 1. kat düşmanları
+## (Taş ve Hayalet varyantlarıyla, bağışıklık ikonları görünür). Oyuncunun iki elementli kılıcı var; Tab ile geçip kombo yapılır.
+## Hata ayıklama tuşları: 2-7 aktif silahın elementi, 0 elementsiz, 8 özellik değiştir, N yeni dalga.
 ## Oda temizlenince ya da oyuncu ölünce R ile yeniden başlanır.
 ## Komut satırı (geliştirme/test için, "--" sonrasına yazılır):
-##   --autoplay        Oyuncuyu bot oynatır; oda temizlenirse çıkış kodu 0, ölürse 2, süre dolarsa 3.
+##   --autoplay        Oyuncuyu bot oynatır; oda temizlenirse çıkış kodu 0, ölürse 2, süre dolarsa 3,
+##                     hiç kombo yapılmadıysa 4.
+##   --loadout=su,yıldırım  İki silahın elementi (element id: fire, water, lightning, poison, ice, dark, physical).
 ##   --shots=KLASÖR    Belirli anlarda ekran görüntüsü kaydeder (görsel kontrol için).
 ##   --shot-times=0.5,2,3   Görüntü alınacak anlar (saniye).
 extends Node2D
 
 @export var room_size: int = 16
-@export var waves: Array[int] = [3, 4]
+## Her dalga düşman listesi: "düşman_id" ya da "düşman_id:malzeme".
+var waves: Array = [
+	["skeleton_warrior", "skeleton_warrior", "skeleton_warrior"],
+	["skeleton_warrior:stone", "skeleton_warrior:ghost", "skeleton_warrior", "skeleton_warrior"],
+	["cave_rat", "cave_rat", "cave_rat", "cave_rat", "cave_rat", "vein_mass"],
+]
+## Hata ayıklama tuşlarıyla seçilebilen elementler (tuş → element).
+const DEBUG_ELEMENT_KEYS := {KEY_2: "fire", KEY_3: "water", KEY_4: "lightning", KEY_5: "poison", KEY_6: "ice", KEY_7: "dark", KEY_0: "physical"}
+const DEBUG_TRAITS := ["", "fury", "execute", "lifesteal", "ricochet", "stun"]
 @export var pillars: Array[Vector2i] = [Vector2i(4, 4), Vector2i(11, 4), Vector2i(4, 11), Vector2i(11, 11)]
 @export var autoplay_timeout_sec: float = 120.0
 
@@ -28,12 +40,16 @@ var _shots_dir: String = ""
 var _shot_times: Array[float] = [0.5, 2.0, 3.0, 4.5, 6.0, 8.0]
 var _elapsed: float = 0.0
 var _between_waves: float = -1.0
+var _combo_log: Dictionary = {}
+var _loadout: PackedStringArray = ["water", "lightning"]
 
 
 func _ready() -> void:
 	for arg: String in OS.get_cmdline_user_args():
 		if arg == "--autoplay":
 			_autoplay = true
+		elif arg.begins_with("--loadout="):
+			_loadout = arg.get_slice("=", 1).split(",")
 		elif arg.begins_with("--shots="):
 			_shots_dir = arg.get_slice("=", 1)
 		elif arg.begins_with("--shot-times="):
@@ -69,6 +85,11 @@ func _ready() -> void:
 	_build_room()
 
 	player = Player.new()
+	player.weapons = []
+	for el: String in _loadout:
+		var w := Weapon.make("sword", "rare", el)
+		_debug_fix_rarity(w)
+		player.weapons.append(w)
 	player.autoplay = _autoplay
 	player.rng.seed = 7 if _autoplay else randi()
 	world.add_child(player)
@@ -91,6 +112,10 @@ func _ready() -> void:
 	add_child(hud)
 
 	Events.enemy_killed.connect(_on_enemy_killed)
+	Events.combo_triggered.connect(func(id: String, _t: Node) -> void:
+		_combo_log[id] = int(_combo_log.get(id, 0)) + 1
+		if _autoplay:
+			print("[TestRoom] kombo %s (%.2f sn)" % [id, _elapsed]))
 	_start_wave(0)
 
 
@@ -127,7 +152,14 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).keycode
-		if key == KEY_R:
+		if DEBUG_ELEMENT_KEYS.has(key) and player and not player.dead:
+			_debug_set_element(DEBUG_ELEMENT_KEYS[key])
+		elif key == KEY_8 and player and not player.dead:
+			_debug_cycle_trait()
+		elif key == KEY_N and player and not player.dead:
+			finished = false
+			_start_wave((wave_index + 1) % waves.size())
+		elif key == KEY_R:
 			Engine.time_scale = 1.0
 			get_tree().reload_current_scene()
 		elif key == KEY_ESCAPE:
@@ -142,9 +174,12 @@ func _start_wave(i: int) -> void:
 		if not finished:
 			hud.show_message(""))
 	var free_cells := _spawn_cells()
-	for n: int in waves[i]:
+	for spec: Variant in waves[i]:
+		var parts := str(spec).split(":")
 		var e := EnemyMelee.new()
-		e.enemy_id = "skeleton_warrior"
+		e.enemy_id = parts[0]
+		e.material_id = parts[1] if parts.size() > 1 else ""
+		e.rng.seed = rng.randi()
 		world.add_child(e)
 		var idx := rng.randi_range(0, free_cells.size() - 1)
 		e.global_position = floor_layer.map_to_local(free_cells[idx])
@@ -179,10 +214,13 @@ func _on_enemy_killed(_enemy: Node, _elite: bool, _boss: bool) -> void:
 		_between_waves = 1.5
 	else:
 		finished = true
-		hud.show_message("Oda temizlendi!\nR: yeniden başla")
-		print("[TestRoom] ODA TEMİZLENDİ (%.1f sn, can %d/%d)" % [_elapsed, player.hp, player.max_hp])
+		hud.show_message("Oda temizlendi!\nN: yeni dalga · R: yeniden başla")
+		print("[TestRoom] ODA TEMİZLENDİ (%.1f sn, can %d/%d, kombo %d: %s)" % [_elapsed, player.hp, player.max_hp, player.combos_done, _combo_log])
 		if _autoplay:
-			get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(0))
+			var code := 0 if player.combos_done > 0 else 4
+			if code == 4:
+				print("[TestRoom] HİÇ KOMBO YAPILMADI")
+			get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(code))
 
 
 func _on_player_died() -> void:
@@ -204,6 +242,36 @@ func _handle_debug_capture() -> void:
 		var img := get_viewport().get_texture().get_image()
 		DirAccess.make_dir_recursive_absolute(_shots_dir)
 		img.save_png("%s/shot_%04.1f.png" % [_shots_dir, t])
+
+
+## Hata ayıklama: aktif silahın elementini değiştirir; nadirlik elemente/özelliğe göre ayarlanır.
+func _debug_set_element(el: String) -> void:
+	var w := player.weapon()
+	w.element = el
+	_debug_fix_rarity(w)
+	player.refresh_weapon_visual()
+	hud.flash_note("%d. silah: %s" % [player.active_index + 1, w.display_name()])
+
+
+## Hata ayıklama: aktif silahın özelliğini sırayla değiştirir (yok → Öfke → İnfaz → Can Emme → Sekme → Sersemletme).
+func _debug_cycle_trait() -> void:
+	var w := player.weapon()
+	var cur := w.traits[0] if not w.traits.is_empty() else ""
+	var next: String = DEBUG_TRAITS[(DEBUG_TRAITS.find(cur) + 1) % DEBUG_TRAITS.size()]
+	w.traits.clear()
+	if next != "":
+		w.traits.append(next)
+	_debug_fix_rarity(w)
+	hud.flash_note("%d. silah: %s" % [player.active_index + 1, w.display_name()])
+
+
+func _debug_fix_rarity(w: Weapon) -> void:
+	if not w.traits.is_empty():
+		w.rarity_id = "epic"
+	elif w.is_elemental():
+		w.rarity_id = "rare"
+	else:
+		w.rarity_id = "common"
 
 
 func _show_data_error() -> void:
