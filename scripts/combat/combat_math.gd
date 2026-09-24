@@ -1,5 +1,5 @@
 ## CombatMath — saf (yan etkisiz) savaş hesapları: yay içinde mi, zırh, kritik.
-## Aşama 2'de DamageCalc tam hasar formülünü buraya ekleyecek; şimdilik prototip için gerekenler var.
+## Tam hasar formülü DamageCalc içindedir (scripts/combat/damage_calc.gd); burada geometri yardımcıları kalır.
 class_name CombatMath
 extends RefCounted
 

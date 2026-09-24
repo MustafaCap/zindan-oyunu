@@ -25,7 +25,7 @@ const SCHEMA := {
 	"race_weapon_matrix": {"_each": "dict"},
 	"weapon_types": {
 		"_each": {
-			"name": "string", "family": "string", "attacks_per_sec": "number", "range": "number",
+			"name": "string", "name_compound": "string", "family": "string", "attacks_per_sec": "number", "range": "number",
 			"damage_mult": "number", "heavy": {"id": "string", "name": "string", "description": "string"},
 		},
 	},
@@ -40,16 +40,17 @@ const SCHEMA := {
 	},
 	"elements": {
 		"status_multipliers": {"immune": "number", "resistant": "number", "normal": "number", "weak": "number", "common_vs_ghost": "number"},
-		"elements": {"_each": {"name": "string", "status": "string", "description": "string"}},
+		"physical": {"name": "string", "color": "string"},
+		"elements": {"_each": {"name": "string", "color": "string", "status": "string", "description": "string"}},
 		"combos": "array",
 		"boss_freeze_immunity_sec": "number",
 	},
-	"traits": {"_each": {"name": "string", "description": "string"}},
+	"traits": {"_each": {"name": "string", "adjective": "string", "description": "string"}},
 	"legendaries": {"passive_templates": "dict", "weapons": "array"},
 	"talismans": {"_each": {"name": "string", "description": "string"}},
 	"enemies": {
-		"materials": {"_each": {"name": "string", "immune": "array", "weak": "array"}},
-		"enemies": {"_each": {"name": "string", "floor": "number", "role": "string", "behavior": "string", "immune": "array"}},
+		"materials": {"_each": {"name": "string", "prefix": "string", "tint": "string", "immune": "array", "resistant": "array", "weak": "array"}},
+		"enemies": {"_each": {"name": "string", "floor": "number", "role": "string", "behavior": "string", "immune": "array", "resistant": "array", "weak": "array"}},
 	},
 	"bosses": {
 		"phase2_threshold": "number",
@@ -101,6 +102,27 @@ const SCHEMA := {
 }
 
 const FAMILIES := ["warrior", "ghost", "archer", "magical"]
+## 1. kat düşmanlarında (Aşama 2'den itibaren) zorunlu stat alanları.
+const ENEMY_STAT_FIELDS := ["hp", "damage", "armor", "move_speed", "radius", "attack_range",
+	"attack_arc_degrees", "attack_windup", "attack_cooldown", "knockback_resist"]
+## Kombo sayılarının zorunlu alanları (kombo id -> alanlar).
+const COMBO_FIELDS := {
+	"electroshock": ["damage_pct", "range"], "melt": ["bonus_damage_pct"], "freeze": ["freeze_duration"],
+	"shatter": [], "poison_burst": ["damage_pct", "radius"], "steam": ["radius", "miss_chance", "duration"],
+	"rot": ["poison_mult", "duration"],
+}
+## Element id -> DamageCalc/StatusEffects'in okuduğu zorunlu sayılar.
+const ELEMENT_FIELDS := {
+	"fire": ["duration", "dps_pct"], "water": ["duration", "damage_mult"],
+	"lightning": ["chain_targets", "chain_damage_pct", "chain_range"],
+	"poison": ["duration_per_stack", "dps_pct_per_stack", "max_stacks"],
+	"ice": ["slow_per_stack", "freeze_at_stacks", "freeze_duration", "stack_duration"],
+	"dark": ["backstab_mult", "duration", "backstab_angle_degrees"],
+}
+const TRAIT_FIELDS := {
+	"fury": ["per_hit", "max"], "execute": ["threshold", "boss_threshold"], "lifesteal": ["pct"],
+	"ricochet": ["chance", "damage_pct", "range"], "stun": ["chance", "duration", "boss_slow_duration", "boss_slow"],
+}
 
 var tables: Dictionary = {}
 var errors: PackedStringArray = []
@@ -249,17 +271,53 @@ func _cross_check() -> void:
 		if absf(total - 1.0) > 0.0001:
 			errors.append("loot_tables.floors.%s: nadirlik oranlarının toplamı 1 olmalı (bulunan %.4f)" % [floor_id, total])
 
+	var elements: Dictionary = tables["elements"]["elements"]
+	for el_id: String in ELEMENT_FIELDS.keys():
+		if not elements.has(el_id):
+			errors.append("elements.elements: '%s' elementi yok" % el_id)
+			continue
+		_require_numbers(elements[el_id], ELEMENT_FIELDS[el_id], "elements.elements.%s" % el_id)
 	for c: Variant in tables["elements"]["combos"]:
 		var combo: Dictionary = c
-		for k: String in ["id", "name", "first", "second"]:
+		var ok := true
+		for k: String in ["id", "name", "first", "second", "color"]:
 			if not combo.has(k):
 				errors.append("elements.combos: bir kombo kaydında '%s' eksik" % k)
+				ok = false
+		if not ok:
+			continue
+		var cid: String = combo["id"]
+		for k2: String in ["first", "second"]:
+			var el: String = combo[k2]
+			if not (el in element_ids or el == "frozen"):
+				errors.append("elements.combos.%s.%s: bilinmeyen element '%s'" % [cid, k2, el])
+		if COMBO_FIELDS.has(cid):
+			_require_numbers(combo, COMBO_FIELDS[cid], "elements.combos.%s" % cid)
+		else:
+			errors.append("elements.combos: bilinmeyen kombo id '%s' (kodda karşılığı yok)" % cid)
+	for tid: String in TRAIT_FIELDS.keys():
+		if not tables["traits"].has(tid):
+			errors.append("traits: '%s' özelliği yok" % tid)
+			continue
+		_require_numbers(tables["traits"][tid], TRAIT_FIELDS[tid], "traits.%s" % tid)
 
+	for mid: String in _records(tables["enemies"]["materials"]):
+		for k3: String in ["immune", "resistant", "weak"]:
+			for el2: Variant in tables["enemies"]["materials"][mid][k3]:
+				if not el2 in damage_kinds:
+					errors.append("enemies.materials.%s.%s: bilinmeyen hasar türü '%s'" % [mid, k3, el2])
 	var enemy_ids: Array = _records(tables["enemies"]["enemies"])
 	for eid: String in enemy_ids:
-		for imm: Variant in tables["enemies"]["enemies"][eid]["immune"]:
-			if not imm in damage_kinds:
-				errors.append("enemies.%s.immune: bilinmeyen hasar türü '%s'" % [eid, imm])
+		var en: Dictionary = tables["enemies"]["enemies"][eid]
+		for k4: String in ["immune", "resistant", "weak"]:
+			for imm: Variant in en[k4]:
+				if not imm in damage_kinds:
+					errors.append("enemies.%s.%s: bilinmeyen hasar türü '%s'" % [eid, k4, imm])
+		if int(en["floor"]) == 1:
+			if not en.has("stats") or typeof(en["stats"]) != TYPE_DICTIONARY:
+				errors.append("enemies.%s: 1. kat düşmanında 'stats' olmalı" % eid)
+			else:
+				_require_numbers(en["stats"], ENEMY_STAT_FIELDS, "enemies.%s.stats" % eid)
 	var boss_ids: Array = _records(tables["bosses"]["bosses"])
 	for bid: String in boss_ids:
 		for k2: String in ["immune", "weak"]:
@@ -283,6 +341,20 @@ func _cross_check() -> void:
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
 		errors.append("progression.mastery.xp_to_next: %d eleman olmalı (max_level - 1)" % (int(mastery["max_level"]) - 1))
+
+
+## Sözlükte verilen alanların hepsi sayı olmalı.
+func _require_numbers(d: Dictionary, fields: Array, where: String) -> void:
+	for f: String in fields:
+		if not d.has(f):
+			errors.append("%s: eksik alan '%s'" % [where, f])
+		elif not _type_ok(d[f], "number"):
+			errors.append("%s.%s: 'number' tipinde olmalı, bulunan: %s" % [where, f, _type_name(d[f])])
+
+
+## Sözlüğün "_" ile başlamayan (not olmayan) anahtarları.
+func records(d: Dictionary) -> Array:
+	return _records(d)
 
 
 func _records(d: Dictionary) -> Array:

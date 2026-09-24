@@ -1,4 +1,5 @@
 {
+  "_note": "Elementler, durum etkileri ve kombolar (GDD: Elementler, Özellikler ve Kombolar). '_default' ile işaretli sayılar GDD'de yazmıyordu; Aşama 2'de makul bir değer seçildi, oyun testinde ayarlanır.",
   "status_multipliers": {
     "immune": 0.0,
     "resistant": 0.5,
@@ -6,22 +7,66 @@
     "weak": 1.5,
     "common_vs_ghost": 0.25
   },
+  "physical": { "name": "Fiziksel", "color": "#d9d4c7" },
   "elements": {
-    "fire":      { "name": "Ateş",     "status": "burn",   "description": "Yanma: süreli hasar", "duration": 3.0, "dps_pct": 0.20 },
-    "water":     { "name": "Su",       "status": "wet",    "description": "Islatma: kendi hasarı düşük, kombo hazırlar", "duration": 4.0 },
-    "lightning": { "name": "Yıldırım", "status": "shock",  "description": "Yakındaki düşmana zincirleme sıçrar", "chain_targets": 2, "chain_damage_pct": 0.50 },
-    "poison":    { "name": "Zehir",    "status": "poison", "description": "İstiflenen süreli hasar", "duration_per_stack": 4.0, "dps_pct_per_stack": 0.08, "max_stacks": 5 },
-    "ice":       { "name": "Buz",      "status": "chill",  "description": "Yavaşlatma, istiflenince kısa süre dondurur", "slow_per_stack": 0.10, "freeze_at_stacks": 5, "freeze_duration": 1.5 },
-    "dark":      { "name": "Karanlık", "status": "shadow_mark", "description": "Arkadan vuruşta +%10 hasar; kısa süreli Gölge işareti", "backstab_mult": 1.1, "duration": 4.0 }
+    "fire": {
+      "name": "Ateş", "color": "#ff7a2a", "status": "burn",
+      "description": "Yanma: süreli hasar",
+      "duration": 3.0, "dps_pct": 0.20
+    },
+    "water": {
+      "name": "Su", "color": "#3aa0ff", "status": "wet",
+      "description": "Islatma: kendi hasarı düşük, kombo hazırlar",
+      "duration": 4.0, "damage_mult": 0.8,
+      "_default": "damage_mult (GDD: 'kendi hasarı düşük')"
+    },
+    "lightning": {
+      "name": "Yıldırım", "color": "#ffe14a", "status": "shock",
+      "description": "Yakındaki düşmana zincirleme sıçrar",
+      "chain_targets": 2, "chain_damage_pct": 0.50, "chain_range": 3.0,
+      "_default": "chain_range (karo)"
+    },
+    "poison": {
+      "name": "Zehir", "color": "#6ad14a", "status": "poison",
+      "description": "İstiflenen süreli hasar",
+      "duration_per_stack": 4.0, "dps_pct_per_stack": 0.08, "max_stacks": 5
+    },
+    "ice": {
+      "name": "Buz", "color": "#9fe7ff", "status": "chill",
+      "description": "Yavaşlatma, istiflenince kısa süre dondurur",
+      "slow_per_stack": 0.10, "freeze_at_stacks": 5, "freeze_duration": 1.5, "stack_duration": 3.0,
+      "_default": "stack_duration (sn, her buz vuruşu tazeler)"
+    },
+    "dark": {
+      "name": "Karanlık", "color": "#a45cff", "status": "shadow_mark",
+      "description": "Arkadan vuruşta +%10 hasar; kısa süreli Gölge işareti",
+      "backstab_mult": 1.1, "duration": 4.0, "backstab_angle_degrees": 90,
+      "_default": "backstab_angle_degrees: hedefin baktığı yöne göre saldıranın açısı bundan büyükse 'arkadan'"
+    }
   },
   "combos": [
-    { "id": "electroshock", "name": "Elektroşok",       "first": "water",  "second": "lightning", "description": "Tüm ıslak düşmanlara zincirleme hasar" },
-    { "id": "melt",         "name": "Erime",            "first": "fire",   "second": "ice",       "description": "Büyük tek seferlik hasar" },
-    { "id": "freeze",       "name": "Donma",            "first": "water",  "second": "ice",       "description": "Hedef 2 sn donar", "freeze_duration": 2.0 },
-    { "id": "shatter",      "name": "Kırılma",          "first": "frozen", "second": "lightning", "description": "Garantili kritik vuruş" },
-    { "id": "poison_burst", "name": "Zehir Patlaması",  "first": "fire",   "second": "poison",    "description": "Alan hasarı", "order_free": true },
-    { "id": "steam",        "name": "Buhar",            "first": "fire",   "second": "water",     "description": "Hedeflerin isabeti düşer", "order_free": true },
-    { "id": "rot",          "name": "Çürüme",           "first": "poison", "second": "dark",      "description": "İyileşme engellenir, zehir hasarı iki katına çıkar", "poison_mult": 2.0 }
+    { "id": "electroshock", "name": "Elektroşok", "first": "water", "second": "lightning", "color": "#7fd6ff",
+      "description": "Tüm ıslak düşmanlara zincirleme hasar",
+      "damage_pct": 0.6, "range": 6.0 },
+    { "id": "melt", "name": "Erime", "first": "fire", "second": "ice", "color": "#ffb04a",
+      "description": "Büyük tek seferlik hasar",
+      "bonus_damage_pct": 2.0 },
+    { "id": "freeze", "name": "Donma", "first": "water", "second": "ice", "color": "#bff3ff",
+      "description": "Hedef 2 sn donar",
+      "freeze_duration": 2.0 },
+    { "id": "shatter", "name": "Kırılma", "first": "frozen", "second": "lightning", "color": "#e8fbff",
+      "description": "Garantili kritik vuruş",
+      "guaranteed_crit": true },
+    { "id": "poison_burst", "name": "Zehir Patlaması", "first": "fire", "second": "poison", "order_free": true, "color": "#9be04a",
+      "description": "Alan hasarı",
+      "damage_pct": 0.8, "radius": 2.5 },
+    { "id": "steam", "name": "Buhar", "first": "fire", "second": "water", "order_free": true, "color": "#c9c9c9",
+      "description": "Hedeflerin isabeti düşer",
+      "radius": 2.0, "miss_chance": 0.4, "duration": 4.0 },
+    { "id": "rot", "name": "Çürüme", "first": "poison", "second": "dark", "color": "#7a3fa0",
+      "description": "İyileşme engellenir, zehir hasarı iki katına çıkar",
+      "poison_mult": 2.0, "duration": 6.0 }
   ],
+  "_combo_defaults": "damage_pct, range, bonus_damage_pct, radius, miss_chance ve duration değerleri GDD'de yoktu; Aşama 2 varsayılanları.",
   "boss_freeze_immunity_sec": 8.0
 }
