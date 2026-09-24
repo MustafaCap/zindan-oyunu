@@ -1,0 +1,7 @@
+{
+  "fury":      { "name": "Öfke",        "description": "Aynı hedefe her vuruşta +%1 hasar, hedef başına ayrı birikir, maks %6", "per_hit": 0.01, "max": 0.06 },
+  "execute":   { "name": "İnfaz",       "description": "Hedefin canı %7'nin altına düşünce anında öldürür; boss'larda eşik %3", "threshold": 0.07, "boss_threshold": 0.03 },
+  "lifesteal": { "name": "Can Emme",    "description": "Verilen hasarın %3'ü can olarak döner", "pct": 0.03 },
+  "ricochet":  { "name": "Sekme",       "description": "Vuruş %35 ihtimalle yakındaki ikinci düşmana %50 hasarla seker", "chance": 0.35, "damage_pct": 0.50 },
+  "stun":      { "name": "Sersemletme", "description": "Vuruş %8 ihtimalle hedefi 0,8 sn sersemletir; boss'larda bunun yerine 1 sn yavaşlatır", "chance": 0.08, "duration": 0.8, "boss_slow_duration": 1.0 }
+}

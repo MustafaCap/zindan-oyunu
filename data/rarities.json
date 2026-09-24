@@ -1,0 +1,6 @@
+{
+  "common":    { "name": "Yaygın",   "color": "#9a9a9a", "base_damage": 100, "elements": 0, "traits": [0, 0], "unique_passive": false },
+  "rare":      { "name": "Ender",    "color": "#3d8bff", "base_damage": 125, "elements": 1, "traits": [0, 0], "unique_passive": false },
+  "epic":      { "name": "Destansı", "color": "#a24dff", "base_damage": 175, "elements": 1, "traits": [1, 1], "unique_passive": false },
+  "legendary": { "name": "Efsanevi", "color": "#ff8a1c", "base_damage": 260, "elements": 1, "traits": [1, 2], "unique_passive": true }
+}

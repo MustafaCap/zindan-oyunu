@@ -1,0 +1,48 @@
+{
+  "_note": "İlk sürümde kat başına 1 boss; havuzlar sonradan 5'er boss'a tamamlanacak. Can/hasar değerleri Aşama 7'de.",
+  "pool_size_target": 5,
+  "phase2_threshold": 0.5,
+  "first_kill_damage_bonus": 0.003,
+  "bosses": {
+    "morvath": {
+      "name": "Morvath, Ana Göz", "floor": 1, "immune": [], "weak": ["lightning"], "stationary": true,
+      "attacks": [
+        { "id": "gaze_beam",   "name": "Bakış Işını",  "description": "Arenayı yavaşça tarayan döner ışın" },
+        { "id": "vein_lash",   "name": "Damar Kırbacı", "description": "Zeminde çizgiler halinde damarlar fışkırır" },
+        { "id": "eye_spawns",  "name": "Göz Yavruları", "description": "4-6 küçük sürünen göz doğurur", "count": [4, 6] }
+      ],
+      "mechanic": { "id": "closing_eyelid", "name": "Kapanan Göz Kapağı", "wall_eyes": 3, "open_duration": 6.0, "open_damage_bonus": 0.5, "lightning_jumps_to_wall_eyes": true },
+      "phase2": { "description": "Zeminin bazı bölgeleri sürekli hasar verir; Bakış Işını ikiye bölünür ve ters yönlere döner", "beams": 2 }
+    },
+    "mycela": {
+      "name": "Mycela, Spor Kraliçesi", "floor": 2, "immune": ["poison"], "weak": ["fire"],
+      "attacks": [
+        { "id": "spore_cloud", "name": "Spor Bulutu",  "description": "Arenada birkaç saniye kalan zehirli bulutlar" },
+        { "id": "root_burst",  "name": "Kök Patlaması", "description": "Oyuncunun altından sırayla kökler fışkırır" },
+        { "id": "spore_shot",  "name": "Spor Oku",     "description": "Oyuncuya yelpaze şeklinde 5 spor", "count": 5 }
+      ],
+      "mechanic": { "id": "healing_totems", "name": "İyileştiren Mantarlar", "totems": 3, "fire_burns_clouds": true },
+      "phase2": { "description": "Arena yavaşça sporla dolar; Mycela hızla yer değiştirir" }
+    },
+    "kordrak": {
+      "name": "Kordrak, Erimiş Demirci", "floor": 3, "immune": ["lightning"], "weak": ["ice"],
+      "attacks": [
+        { "id": "anvil_slam", "name": "Örs Darbesi", "description": "Genişleyen şok halkası" },
+        { "id": "lava_fill",  "name": "Lav Dolumu",  "description": "Zemindeki kanalları lavla doldurur" },
+        { "id": "ember_fist", "name": "Kor Yumruğu", "description": "Oyuncuya hızlı atılım ve yumruk" }
+      ],
+      "mechanic": { "id": "cooling", "name": "Soğutma", "plate_damage_reduction": 0.70, "ice_stacks_to_break": 5, "armor_off_duration": 10.0 },
+      "phase2": { "description": "Plakalar kalıcı düşer, çekirdek açığa çıkar; hızlanır, Örs Darbesi'nden sonra ateş topları saçar" }
+    },
+    "nyxthar": {
+      "name": "Nyx'thar, Yankısız", "floor": 4, "immune": ["physical"], "weak": ["fire"], "final": true,
+      "attacks": [
+        { "id": "shadow_copies", "name": "Gölge Kopyaları", "description": "3 kopyaya bölünür; gerçek olan gölge düşürür", "copies": 3 },
+        { "id": "void_rift",     "name": "Boşluk Yırtığı",  "description": "Oyuncuyu içine çeken portallar" },
+        { "id": "scream",        "name": "Çığlık",          "description": "Etrafındaki alana gecikmeli patlama" }
+      ],
+      "mechanic": { "id": "veil_of_darkness", "name": "Karanlık Perdesi", "fire_relights_torches": true },
+      "phase2": { "description": "Platform kenarları çöker, arena küçülür; kopyalar 5'e çıkar ve Boşluk Yırtığı açabilir", "copies": 5 }
+    }
+  }
+}
