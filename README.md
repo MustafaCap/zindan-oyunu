@@ -7,8 +7,8 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 
 | Aşama | Konu | Durum |
 | --- | --- | --- |
-| 0 | Ortam ve iskelet | ✅ Bitti (kullanıcı testi bekleniyor) |
-| 1 | Vuruş hissi prototipi | ⏳ Sıradaki |
+| 0 | Ortam ve iskelet | ✅ Bitti |
+| 1 | Vuruş hissi prototipi | 🧪 Kullanıcı testinde |
 | 2 | Savaş çekirdeği | — |
 | 3 | Irklar ve silahlar | — |
 | 4 | Zindan üretimi | — |
@@ -19,7 +19,7 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 0 tamamlandı. Kullanıcı .exe'yi Windows'ta test edip onaylayınca Aşama 1'e geçilecek.
+**Kalınan yer:** Aşama 1 kodlandı (tek izometrik test odası, Warrior + kılıç, İskelet Savaşçı, vuruş hissi efektleri). Kullanıcı vuruş hissini onaylayınca Aşama 2'ye geçilecek; onaylamazsa `data/progression.json > feel` ayarlanır.
 
 **Bilinen durumlar / notlar:**
 - `bpy` (Blender Python) çalışma ortamının paket deposunda bulunamadı. Aşama 8'e kadar gerekmiyor; o aşamada tekrar denenecek ya da başka yol bulunacak.
@@ -43,13 +43,15 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | Tab | Aktif silah değiştir |
 | 1 | İksir |
 | F | Etkileşim |
+| R | (Prototip) Odayı yeniden başlat |
+| Esc | (Prototip) Çık |
 
 ## Geliştirme
 
 Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, `zip`, Python 3.
 
 ```bash
-make test            # tests/ içindeki tüm testleri headless çalıştırır
+make test            # birim testleri + otomatik oynayan smoke testi (make unit / make smoke ayrı ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites         # sprite'ları üretir (Aşama 8)
 make sfx             # ses efektlerini üretir (Aşama 9)
@@ -57,6 +59,10 @@ make all             # hepsi
 ```
 
 Godot başka bir yerdeyse: `make test GODOT=/yol/godot`.
+
+Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırken):
+- `--autoplay` — oyuncuyu bot oynatır (smoke testi bunu kullanır)
+- `--shots=KLASÖR --shot-times=0.5,2,3` — verilen saniyelerde ekran görüntüsü kaydeder
 
 ## Klasör yapısı
 
