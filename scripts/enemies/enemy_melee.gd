@@ -3,6 +3,7 @@
 ## Tüm statlar enemies.json > <id>.stats içinden okunur. material_id verilirse (stone, ghost…) o malzemenin
 ## bağışıklık/zayıflıkları eklenir ve adı "Taş İskelet Savaşçı" gibi olur.
 ## Aşama 2: element durumları (StatusEffects), bağışıklık ikonları, süreli hasar, donma/sersemleme, Buhar ıskalaması.
+## Aşama 4: zindanda elit ve boss yer tutucuları için can/hasar çarpanı, gövde ölçeği ve ad (gerçekleri Aşama 7'de).
 class_name EnemyMelee
 extends CharacterBody2D
 
@@ -18,6 +19,13 @@ var is_elite: bool = false
 ## Hata ayıklama kuklası: yürümez, saldırmaz, geri savrulmaz (test odası). hp_override > 0 ise can o olur.
 var dummy: bool = false
 var hp_override: float = 0.0
+## Yer tutucu elit/boss (Aşama 4): can ve hasar çarpanı, gövde ölçeği (yarıçap ve menzil de büyür), görünen ad.
+var hp_mult: float = 1.0
+var damage_mult: float = 1.0
+var body_scale: float = 1.0
+var name_override: String = ""
+## Zindanda engellerin etrafından dolaşma: (kendi konumu, hedef konumu) -> düz uzayda birim yön (DungeonNav).
+var navigator: Callable
 
 var display_name: String
 var max_hp: float
@@ -70,6 +78,12 @@ func _ready() -> void:
 	windup = float(stats["attack_windup"])
 	attack_cd_max = float(stats["attack_cooldown"])
 	knockback_resist = float(stats["knockback_resist"])
+	max_hp *= hp_mult
+	hp = max_hp
+	damage *= damage_mult
+	# Çarpışma gövdesi en fazla ×1,5 büyür: 1 karo kalınlığındaki duvarlardan taşmasın
+	radius_tiles *= minf(body_scale, 1.5)
+	attack_range *= body_scale
 	if hp_override > 0.0:
 		max_hp = hp_override
 		hp = max_hp
@@ -93,6 +107,10 @@ func _ready() -> void:
 		body_col = body_col.lerp(Color(str(mat["tint"])), 0.7)
 		if material_id == "ghost":
 			_base_modulate = Color(1, 1, 1, 0.72)
+	if is_elite and name_override == "":
+		display_name = "Elit " + display_name
+	if name_override != "":
+		display_name = name_override
 	defense = DamageCalc.Defense.new(immune, resistant, weak, float(stats["armor"]))
 	status = StatusEffects.new(is_boss)
 
@@ -113,7 +131,9 @@ func _ready() -> void:
 	visual.scale = Vector2(1, 0.05)
 	visual.modulate = Color(_base_modulate, 0.0)
 	var tw := create_tween()
-	tw.tween_property(visual, "scale", Vector2.ONE, SPAWN_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	# Yer tutucu elit/boss gövdesi biraz daha büyük çizilir
+	var vis := 1.0 + (body_scale - 1.0) * 0.6
+	tw.tween_property(visual, "scale", Vector2.ONE * vis, SPAWN_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(visual, "modulate:a", _base_modulate.a, SPAWN_TIME * 0.5)
 	_attack_cd = attack_cd_max * 0.5
 
@@ -156,7 +176,7 @@ func _physics_process(delta: float) -> void:
 					if dist <= attack_range * 0.9 and _attack_cd <= 0.0:
 						_set_state(State.WINDUP)
 					elif dist > attack_range * 0.7:
-						move = facing_cart
+						move = navigator.call(global_position, target.global_position) if navigator.is_valid() else facing_cart
 			State.WINDUP:
 				if _t >= windup / maxf(status.speed_mult(), 0.25):
 					_strike()
@@ -301,6 +321,11 @@ func _update_tint() -> void:
 func _draw() -> void:
 	if state == State.DEAD:
 		return
+	# Elit (altın) ve boss (kırmızı) halkası — yer tutucu
+	if is_elite or is_boss:
+		var ring := Shapes.iso_ellipse(radius_tiles * 1.25, 24)
+		ring.append(ring[0])
+		draw_polyline(ring, Color(1.0, 0.75, 0.25, 0.85) if is_elite else Color(1.0, 0.25, 0.25, 0.9), 3.0)
 	# Saldırı uyarısı: hazırlık boyunca dolan kırmızı yay
 	if state == State.WINDUP:
 		var k := clampf(_t / windup, 0.0, 1.0)
@@ -313,7 +338,7 @@ func _draw() -> void:
 		var edge := ice.duplicate()
 		edge.append(ice[0])
 		draw_polyline(edge, Color(0.85, 1.0, 1.0, 0.9), 2.0)
-	var top := -visual.body_height - 22.0
+	var top := -visual.body_height * maxf(visual.scale.y, 1.0) - 22.0
 	# Sersemken başın üstünde dönen yıldızlar
 	if status.stun_t > 0.0:
 		for i: int in 3:

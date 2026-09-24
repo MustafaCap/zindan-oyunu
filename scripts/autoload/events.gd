@@ -10,6 +10,9 @@ signal floor_entered(floor_index: int)
 # Oda akışı
 signal room_entered(room_id: int)
 signal room_cleared(room_id: int)
+signal combat_state_changed(in_combat: bool)   ## oda kilitlenince true, temizlenince false (slot değişimi kuralı)
+signal secret_found(room_id: int)
+signal boss_defeated(floor_index: int)
 
 # Savaş
 signal damage_dealt(source: Node, target: Node, amount: float, is_crit: bool, element: String)
