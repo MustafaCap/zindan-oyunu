@@ -1,5 +1,5 @@
 {
-  "_note": "17 temel düşman. Can, hasar ve hız değerleri Aşama 7'de eklenecek. XP değerleri kata göre progression.json > enemy_xp içinde.",
+  "_note": "17 temel düşman. 1. kat düşmanlarının statları Aşama 2'de eklendi (prototip değerleri, Aşama 7'de kat ölçeklemesiyle ayarlanacak). XP değerleri progression.json > enemy_xp içinde. 'material' varyantı düşmana malzeme bağışıklıklarını ekler (Taş İskelet, Hayalet İskelet...).",
   "materials": {
     "stone": {
       "name": "Taş",
@@ -8,7 +8,10 @@
       ],
       "weak": [
         "ice"
-      ]
+      ],
+      "prefix": "Taş",
+      "resistant": [],
+      "tint": "#8d8a86"
     },
     "ghost": {
       "name": "Hayalet",
@@ -17,7 +20,10 @@
       ],
       "weak": [
         "fire"
-      ]
+      ],
+      "prefix": "Hayalet",
+      "resistant": [],
+      "tint": "#9fd6ff"
     },
     "fire_elemental": {
       "name": "Ateş elementali",
@@ -27,7 +33,10 @@
       "weak": [
         "ice",
         "water"
-      ]
+      ],
+      "prefix": "Alevli",
+      "resistant": [],
+      "tint": "#ff8a4a"
     }
   },
   "enemies": {
@@ -38,7 +47,7 @@
       "behavior": "Oyuncuya yürür, basit kılıç darbesi",
       "immune": [],
       "stats": {
-        "_note": "Geçici prototip değerleri (Aşama 1). Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
+        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
         "hp": 380,
         "damage": 14,
         "armor": 0.0,
@@ -49,14 +58,35 @@
         "attack_windup": 0.45,
         "attack_cooldown": 1.3,
         "knockback_resist": 0.0
-      }
+      },
+      "resistant": [],
+      "weak": [],
+      "placeholder_color": "#d1ccb8"
     },
     "skeleton_archer": {
       "name": "İskelet Okçu",
       "floor": 1,
       "role": "ranged",
       "behavior": "Mesafe korur, tek ok atar",
-      "immune": []
+      "immune": [],
+      "resistant": [],
+      "weak": [],
+      "stats": {
+        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
+        "hp": 260,
+        "damage": 12,
+        "armor": 0.0,
+        "move_speed": 2.0,
+        "radius": 0.33,
+        "attack_range": 7.0,
+        "attack_arc_degrees": 10,
+        "attack_windup": 0.7,
+        "attack_cooldown": 2.0,
+        "knockback_resist": 0.0,
+        "projectile_speed": 9.0,
+        "keep_distance": 5.0
+      },
+      "placeholder_color": "#bfb9a0"
     },
     "cave_rat": {
       "name": "Mağara Faresi",
@@ -67,21 +97,72 @@
       "group_size": [
         5,
         8
-      ]
+      ],
+      "resistant": [],
+      "weak": [],
+      "stats": {
+        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
+        "hp": 90,
+        "damage": 6,
+        "armor": 0.0,
+        "move_speed": 3.6,
+        "radius": 0.22,
+        "attack_range": 0.8,
+        "attack_arc_degrees": 90,
+        "attack_windup": 0.25,
+        "attack_cooldown": 0.9,
+        "knockback_resist": 0.0
+      },
+      "placeholder_color": "#7a6450"
     },
     "eye_spawn": {
       "name": "Göz Yavrusu",
       "floor": 1,
       "role": "ranged",
       "behavior": "Duvara yapışık durur, kısa ışın atar",
-      "immune": []
+      "immune": [],
+      "resistant": [],
+      "weak": [],
+      "stats": {
+        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
+        "hp": 200,
+        "damage": 10,
+        "armor": 0.0,
+        "move_speed": 0.0,
+        "radius": 0.3,
+        "attack_range": 4.0,
+        "attack_arc_degrees": 8,
+        "attack_windup": 0.9,
+        "attack_cooldown": 2.4,
+        "knockback_resist": 1.0,
+        "beam_duration": 0.4
+      },
+      "placeholder_color": "#c9486a"
     },
     "vein_mass": {
       "name": "Damar Kütlesi",
       "floor": 1,
       "role": "tank",
       "behavior": "Yavaş, ölünce etrafına patlar",
-      "immune": []
+      "immune": [],
+      "resistant": [],
+      "weak": [],
+      "stats": {
+        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
+        "hp": 900,
+        "damage": 20,
+        "armor": 0.1,
+        "move_speed": 1.2,
+        "radius": 0.5,
+        "attack_range": 1.3,
+        "attack_arc_degrees": 120,
+        "attack_windup": 0.8,
+        "attack_cooldown": 2.2,
+        "knockback_resist": 0.7,
+        "death_explosion_radius": 2.0,
+        "death_explosion_damage": 25
+      },
+      "placeholder_color": "#8e2a3a"
     },
     "spore_beetle": {
       "name": "Sporlu Böcek",
@@ -90,7 +171,9 @@
       "behavior": "Ölünce zehir bulutu bırakır",
       "immune": [
         "poison"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "mushroom_man": {
       "name": "Mantar Adam",
@@ -99,7 +182,9 @@
       "behavior": "Yavaş, geniş yumruk",
       "immune": [
         "poison"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "poison_spitter": {
       "name": "Zehir Tükürücü",
@@ -108,7 +193,9 @@
       "behavior": "Yerde zehir birikintisi bırakan tükürük",
       "immune": [
         "poison"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "mushroom_healer": {
       "name": "Mantar Şifacı",
@@ -117,7 +204,9 @@
       "behavior": "Yakındaki düşmanları iyileştirir, öncelikli hedef",
       "immune": [
         "poison"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "stone_golemling": {
       "name": "Taş Golemcik",
@@ -126,7 +215,9 @@
       "behavior": "Zırhlı, yavaş, yere vurur",
       "immune": [
         "lightning"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "ember_hound": {
       "name": "Kor Köpeği",
@@ -135,7 +226,9 @@
       "behavior": "Sürü halinde hızlı saldırır",
       "immune": [
         "fire"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "slag_mage": {
       "name": "Cüruf Büyücüsü",
@@ -144,7 +237,9 @@
       "behavior": "Ateş topu atar, yere lav bırakır",
       "immune": [
         "fire"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "iron_guard": {
       "name": "Demir Muhafız",
@@ -154,7 +249,9 @@
       "immune": [
         "lightning"
       ],
-      "front_shield": true
+      "front_shield": true,
+      "resistant": [],
+      "weak": []
     },
     "shade": {
       "name": "Gölge",
@@ -163,7 +260,9 @@
       "behavior": "Kısa süre görünmezleşip arkadan saldırır",
       "immune": [
         "physical"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "wailer": {
       "name": "Feryatçı",
@@ -172,7 +271,9 @@
       "behavior": "Çığlığı yavaşlatır",
       "immune": [
         "physical"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "void_slave": {
       "name": "Boşluk Kulu",
@@ -181,7 +282,9 @@
       "behavior": "Karanlık hasarı, oyuncuyu kendine çeker",
       "immune": [
         "dark"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     },
     "void_summoner": {
       "name": "Boşluk Çağırıcı",
@@ -190,7 +293,9 @@
       "behavior": "Sürekli Gölge çağırır, öncelikli hedef",
       "immune": [
         "physical"
-      ]
+      ],
+      "resistant": [],
+      "weak": []
     }
   }
 }
