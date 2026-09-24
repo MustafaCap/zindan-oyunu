@@ -1,0 +1,155 @@
+{
+  "floors": {
+    "1": {
+      "name": "Damarlı Mağara",
+      "theme": "Bazı bölümlerinde duvarlarda damarlar ve gözler; iskeletler, fareler",
+      "rooms": 8,
+      "target_minutes": [
+        6,
+        8
+      ],
+      "level_range": [
+        1,
+        15
+      ],
+      "expected_normal_enemies": 60,
+      "expected_elites": 2,
+      "enemy_pool": [
+        "skeleton_warrior",
+        "skeleton_archer",
+        "cave_rat",
+        "eye_spawn",
+        "vein_mass"
+      ],
+      "boss_pool": [
+        "morvath"
+      ],
+      "placeholder_color": "#5a3a44"
+    },
+    "2": {
+      "name": "Mantar Mağaraları",
+      "theme": "Zehir, böcekler",
+      "rooms": 9,
+      "target_minutes": [
+        7,
+        10
+      ],
+      "level_range": [
+        15,
+        35
+      ],
+      "expected_normal_enemies": 70,
+      "expected_elites": 2,
+      "enemy_pool": [
+        "spore_beetle",
+        "mushroom_man",
+        "poison_spitter",
+        "mushroom_healer"
+      ],
+      "boss_pool": [
+        "mycela"
+      ],
+      "placeholder_color": "#3d5a3a"
+    },
+    "3": {
+      "name": "Kül Dökümhanesi",
+      "theme": "Ateş, taş golemler",
+      "rooms": 10,
+      "target_minutes": [
+        8,
+        12
+      ],
+      "level_range": [
+        35,
+        55
+      ],
+      "expected_normal_enemies": 80,
+      "expected_elites": 2,
+      "enemy_pool": [
+        "stone_golemling",
+        "ember_hound",
+        "slag_mage",
+        "iron_guard"
+      ],
+      "boss_pool": [
+        "kordrak"
+      ],
+      "placeholder_color": "#5a3a24"
+    },
+    "4": {
+      "name": "Boşluk",
+      "theme": "Gölge, hayaletler",
+      "rooms": 11,
+      "target_minutes": [
+        9,
+        15
+      ],
+      "level_range": [
+        55,
+        80
+      ],
+      "expected_normal_enemies": 90,
+      "expected_elites": 2,
+      "enemy_pool": [
+        "shade",
+        "wailer",
+        "void_slave",
+        "void_summoner"
+      ],
+      "boss_pool": [
+        "nyxthar"
+      ],
+      "placeholder_color": "#2a2440"
+    }
+  },
+  "room_types": {
+    "combat": {
+      "per_floor": "rest",
+      "description": "Düşman dalgaları, loot ve altın"
+    },
+    "elite": {
+      "per_floor": [
+        1,
+        2
+      ],
+      "description": "Güçlü tek düşman, daha iyi loot"
+    },
+    "merchant": {
+      "per_floor": [
+        1,
+        1
+      ],
+      "description": "Silah, tılsım, iksir al; çantadakileri sat",
+      "safe": true
+    },
+    "blacksmith": {
+      "per_floor": [
+        1,
+        1
+      ],
+      "description": "Altınla silah leveli atlatma ya da ek stat yeniden çekme",
+      "safe": true
+    },
+    "chest": {
+      "per_floor": [
+        1,
+        2
+      ],
+      "description": "Ücretsiz loot, bazen tuzaklı"
+    },
+    "secret": {
+      "per_floor": [
+        0,
+        1
+      ],
+      "description": "Duvar kırılarak bulunur, yüksek nadirlik şansı"
+    },
+    "boss": {
+      "per_floor": [
+        1,
+        1
+      ],
+      "description": "Kat sonu"
+    }
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "warrior": {
+    "name": "Warrior",
+    "family": "warrior",
+    "base_hp": 150,
+    "hp_per_level": 6,
+    "move_speed": 1.0,
+    "armor": 0.15,
+    "resource": {
+      "type": "energy",
+      "max": 100,
+      "regen_per_sec": 10,
+      "gain_on_hit": 2
+    },
+    "costs": { "q": 40, "e": 70 },
+    "cooldowns": { "heavy": [5, 7] },
+    "abilities": {
+      "q": { "id": "armor_up", "name": "Zırh", "description": "Kısa süreli, az hasar emen zırh ve +%3 hasar", "damage_bonus": 0.03 },
+      "e": { "id": "ground_slam", "name": "Yer sarsıntısı", "description": "Önündeki alana büyük hasar" }
+    },
+    "passive": { "description": "Yüksek can ve zırh", "bonuses": {} },
+    "resistances": {},
+    "healing": { "potions": true, "lifesteal": true }
+  },
+  "ghost": {
+    "name": "Ghost",
+    "family": "ghost",
+    "base_hp": 100,
+    "hp_per_level": 4,
+    "move_speed": 1.1,
+    "armor": 0.0,
+    "resource": { "type": "cooldown" },
+    "costs": {},
+    "cooldowns": { "heavy": 5, "q": 12, "e": 10 },
+    "abilities": {
+      "q": { "id": "phase", "name": "Faz", "description": "Maks 1 sn dokunulmaz ve düşmanlara görünmez", "max_duration": 1.0 },
+      "e": { "id": "shadow_step", "name": "Gölge adımı", "description": "Hedef düşmanın arkasına ışınlanır" }
+    },
+    "passive": { "description": "Fiziksele dirençli, ateşe zayıf; özel iyileşme kuralı", "bonuses": {} },
+    "resistances": { "physical": "resistant", "fire": "weak" },
+    "healing": {
+      "potions": false,
+      "lifesteal": false,
+      "heal_on_kill": 0.04,
+      "heal_on_elite_kill": 0.10,
+      "lifesteal_becomes_kill_heal": true
+    }
+  },
+  "archer": {
+    "name": "Archer",
+    "family": "archer",
+    "base_hp": 90,
+    "hp_per_level": 3.5,
+    "move_speed": 1.05,
+    "armor": 0.0,
+    "resource": { "type": "cooldown" },
+    "costs": {},
+    "cooldowns": { "heavy": 6, "q": 8, "e": 18 },
+    "abilities": {
+      "q": { "id": "back_leap", "name": "Geri sıçrama", "description": "Geriye atılırken önüne 3 ok atar", "arrows": 3 },
+      "e": { "id": "arrow_rain", "name": "Ok yağmuru", "description": "Seçilen alana çoklu ok" }
+    },
+    "passive": { "description": "Menzil ve kritik bonusu", "bonuses": {} },
+    "resistances": {},
+    "healing": { "potions": true, "lifesteal": true }
+  },
+  "magical": {
+    "name": "Magical",
+    "family": "magical",
+    "base_hp": 80,
+    "hp_per_level": 3,
+    "move_speed": 1.0,
+    "armor": 0.0,
+    "resource": {
+      "type": "mana",
+      "base_max": 120,
+      "max_per_level": 4,
+      "regen_pct_per_sec": 0.03
+    },
+    "costs": { "light": 2, "heavy": 70, "q": 80, "e": 110 },
+    "cooldowns": {},
+    "abilities": {
+      "q": { "id": "flight", "name": "Uçuş", "description": "Kısa süre engel ve tuzakların üstünden uçar" },
+      "e": { "id": "element_storm", "name": "Element fırtınası", "description": "Aktif silahın elementinde alan hasarı" }
+    },
+    "passive": { "description": "Element hasarı yüksek, can düşük", "bonuses": {} },
+    "resistances": {},
+    "healing": { "potions": true, "lifesteal": true }
+  }
+}

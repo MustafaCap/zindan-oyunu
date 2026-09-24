@@ -1,0 +1,27 @@
+{
+  "status_multipliers": {
+    "immune": 0.0,
+    "resistant": 0.5,
+    "normal": 1.0,
+    "weak": 1.5,
+    "common_vs_ghost": 0.25
+  },
+  "elements": {
+    "fire":      { "name": "Ateş",     "status": "burn",   "description": "Yanma: süreli hasar", "duration": 3.0, "dps_pct": 0.20 },
+    "water":     { "name": "Su",       "status": "wet",    "description": "Islatma: kendi hasarı düşük, kombo hazırlar", "duration": 4.0 },
+    "lightning": { "name": "Yıldırım", "status": "shock",  "description": "Yakındaki düşmana zincirleme sıçrar", "chain_targets": 2, "chain_damage_pct": 0.50 },
+    "poison":    { "name": "Zehir",    "status": "poison", "description": "İstiflenen süreli hasar", "duration_per_stack": 4.0, "dps_pct_per_stack": 0.08, "max_stacks": 5 },
+    "ice":       { "name": "Buz",      "status": "chill",  "description": "Yavaşlatma, istiflenince kısa süre dondurur", "slow_per_stack": 0.10, "freeze_at_stacks": 5, "freeze_duration": 1.5 },
+    "dark":      { "name": "Karanlık", "status": "shadow_mark", "description": "Arkadan vuruşta +%10 hasar; kısa süreli Gölge işareti", "backstab_mult": 1.1, "duration": 4.0 }
+  },
+  "combos": [
+    { "id": "electroshock", "name": "Elektroşok",       "first": "water",  "second": "lightning", "description": "Tüm ıslak düşmanlara zincirleme hasar" },
+    { "id": "melt",         "name": "Erime",            "first": "fire",   "second": "ice",       "description": "Büyük tek seferlik hasar" },
+    { "id": "freeze",       "name": "Donma",            "first": "water",  "second": "ice",       "description": "Hedef 2 sn donar", "freeze_duration": 2.0 },
+    { "id": "shatter",      "name": "Kırılma",          "first": "frozen", "second": "lightning", "description": "Garantili kritik vuruş" },
+    { "id": "poison_burst", "name": "Zehir Patlaması",  "first": "fire",   "second": "poison",    "description": "Alan hasarı", "order_free": true },
+    { "id": "steam",        "name": "Buhar",            "first": "fire",   "second": "water",     "description": "Hedeflerin isabeti düşer", "order_free": true },
+    { "id": "rot",          "name": "Çürüme",           "first": "poison", "second": "dark",      "description": "İyileşme engellenir, zehir hasarı iki katına çıkar", "poison_mult": 2.0 }
+  ],
+  "boss_freeze_immunity_sec": 8.0
+}

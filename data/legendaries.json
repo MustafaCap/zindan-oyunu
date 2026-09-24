@@ -1,0 +1,9 @@
+{
+  "_note": "Her efsanevi silahın adı ve pasifi elle tasarlanır (GDD). Pasif şablonları GDD'deki örneklerdir; silah listesi Aşama 5'te kullanıcıyla birlikte doldurulacak.",
+  "passive_templates": {
+    "sky_lightning":  { "description": "Her 5. vuruş gökten yıldırım indirir", "every_n_hits": 5, "element": "lightning" },
+    "death_burst":    { "description": "Öldürülen düşman silahın elementinde patlar" },
+    "combo_reset":    { "description": "Bir kombo tetiklenince sağ tık, Q ve E bekleme süreleri sıfırlanır" }
+  },
+  "weapons": []
+}

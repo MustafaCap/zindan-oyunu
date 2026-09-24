@@ -1,0 +1,27 @@
+{
+  "_note": "17 temel düşman. Can, hasar ve hız değerleri Aşama 7'de eklenecek. XP değerleri kata göre progression.json > enemy_xp içinde.",
+  "materials": {
+    "stone":           { "name": "Taş",             "immune": ["lightning"], "weak": ["ice"] },
+    "ghost":           { "name": "Hayalet",         "immune": ["physical"],  "weak": ["fire"] },
+    "fire_elemental":  { "name": "Ateş elementali", "immune": ["fire"],      "weak": ["ice", "water"] }
+  },
+  "enemies": {
+    "skeleton_warrior": { "name": "İskelet Savaşçı", "floor": 1, "role": "melee",   "behavior": "Oyuncuya yürür, basit kılıç darbesi", "immune": [] },
+    "skeleton_archer":  { "name": "İskelet Okçu",    "floor": 1, "role": "ranged",  "behavior": "Mesafe korur, tek ok atar", "immune": [] },
+    "cave_rat":         { "name": "Mağara Faresi",   "floor": 1, "role": "swarm",   "behavior": "5-8'li gruplar, hızlı ve zayıf", "immune": [], "group_size": [5, 8] },
+    "eye_spawn":        { "name": "Göz Yavrusu",     "floor": 1, "role": "ranged",  "behavior": "Duvara yapışık durur, kısa ışın atar", "immune": [] },
+    "vein_mass":        { "name": "Damar Kütlesi",   "floor": 1, "role": "tank",    "behavior": "Yavaş, ölünce etrafına patlar", "immune": [] },
+    "spore_beetle":     { "name": "Sporlu Böcek",    "floor": 2, "role": "swarm",   "behavior": "Ölünce zehir bulutu bırakır", "immune": ["poison"] },
+    "mushroom_man":     { "name": "Mantar Adam",     "floor": 2, "role": "tank",    "behavior": "Yavaş, geniş yumruk", "immune": ["poison"] },
+    "poison_spitter":   { "name": "Zehir Tükürücü",  "floor": 2, "role": "ranged",  "behavior": "Yerde zehir birikintisi bırakan tükürük", "immune": ["poison"] },
+    "mushroom_healer":  { "name": "Mantar Şifacı",   "floor": 2, "role": "support", "behavior": "Yakındaki düşmanları iyileştirir, öncelikli hedef", "immune": ["poison"] },
+    "stone_golemling":  { "name": "Taş Golemcik",    "floor": 3, "role": "tank",    "behavior": "Zırhlı, yavaş, yere vurur", "immune": ["lightning"] },
+    "ember_hound":      { "name": "Kor Köpeği",      "floor": 3, "role": "melee",   "behavior": "Sürü halinde hızlı saldırır", "immune": ["fire"] },
+    "slag_mage":        { "name": "Cüruf Büyücüsü",  "floor": 3, "role": "ranged",  "behavior": "Ateş topu atar, yere lav bırakır", "immune": ["fire"] },
+    "iron_guard":       { "name": "Demir Muhafız",   "floor": 3, "role": "melee",   "behavior": "Kalkanı önden hasarı engeller; arkadan vurulmalı", "immune": ["lightning"], "front_shield": true },
+    "shade":            { "name": "Gölge",           "floor": 4, "role": "melee",   "behavior": "Kısa süre görünmezleşip arkadan saldırır", "immune": ["physical"] },
+    "wailer":           { "name": "Feryatçı",        "floor": 4, "role": "ranged",  "behavior": "Çığlığı yavaşlatır", "immune": ["physical"] },
+    "void_slave":       { "name": "Boşluk Kulu",     "floor": 4, "role": "tank",    "behavior": "Karanlık hasarı, oyuncuyu kendine çeker", "immune": ["dark"] },
+    "void_summoner":    { "name": "Boşluk Çağırıcı", "floor": 4, "role": "support", "behavior": "Sürekli Gölge çağırır, öncelikli hedef", "immune": ["physical"] }
+  }
+}
