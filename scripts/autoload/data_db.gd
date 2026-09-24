@@ -12,9 +12,9 @@ const DATA_DIR := "res://data"
 const SCHEMA := {
 	"races": {
 		"_each": {
-			"name": "string", "family": "string", "base_hp": "number", "hp_per_level": "number",
+			"name": "string", "family": "string", "placeholder_color": "string", "base_hp": "number", "hp_per_level": "number",
 			"move_speed": "number", "armor": "number",
-			"resource": {"type": "string"},
+			"resource": {"type": "string", "name": "string", "color": "string"},
 			"costs": "dict", "cooldowns": "dict",
 			"abilities": {"q": {"id": "string", "name": "string"}, "e": {"id": "string", "name": "string"}},
 			"passive": {"description": "string", "bonuses": "dict"},
@@ -26,7 +26,9 @@ const SCHEMA := {
 	"weapon_types": {
 		"_each": {
 			"name": "string", "name_compound": "string", "family": "string", "attacks_per_sec": "number", "range": "number",
-			"damage_mult": "number", "heavy": {"id": "string", "name": "string", "description": "string"},
+			"damage_mult": "number", "arc_degrees": "number", "visual": "string",
+			"light": {"style": "string"},
+			"heavy": {"id": "string", "name": "string", "description": "string", "style": "string"},
 		},
 	},
 	"rarities": {
@@ -118,6 +120,50 @@ const ELEMENT_FIELDS := {
 	"poison": ["duration_per_stack", "dps_pct_per_stack", "max_stacks"],
 	"ice": ["slow_per_stack", "freeze_at_stacks", "freeze_duration", "stack_duration"],
 	"dark": ["backstab_mult", "duration", "backstab_angle_degrees"],
+}
+## Irk kaynak tipi -> zorunlu sayılar (Aşama 3).
+const RESOURCE_FIELDS := {
+	"energy": ["max", "regen_per_sec", "gain_on_hit"],
+	"mana": ["base_max", "max_per_level", "regen_pct_per_sec"],
+	"cooldown": [],
+}
+## Kaynak tipine göre hangi harcama (costs) ve bekleme (cooldowns) anahtarları zorunlu.
+const RESOURCE_KEYS := {
+	"energy": {"costs": ["q", "e"], "cooldowns": ["heavy"]},
+	"mana": {"costs": ["light", "heavy", "q", "e"], "cooldowns": []},
+	"cooldown": {"costs": [], "cooldowns": ["heavy", "q", "e"]},
+}
+## Irk yeteneği id -> zorunlu sayılar (kodda karşılığı olan yetenekler).
+const ABILITY_FIELDS := {
+	"armor_up": ["damage_bonus", "armor_bonus", "duration"],
+	"ground_slam": ["skill_mult", "range", "arc_degrees"],
+	"phase": ["max_duration"],
+	"shadow_step": ["range", "behind_distance", "iframes"],
+	"back_leap": ["arrows", "distance", "duration", "spread_degrees", "skill_mult", "arrow_range", "arrow_speed"],
+	"arrow_rain": ["max_range", "radius", "waves", "interval", "skill_mult", "delay"],
+	"flight": ["duration", "speed_bonus", "hover_px"],
+	"element_storm": ["max_range", "radius", "pulses", "interval", "skill_mult"],
+}
+## Sol tık stili -> zorunlu sayılar.
+const LIGHT_STYLE_FIELDS := {
+	"arc": [], "thrust": [],
+	"projectile": ["speed", "radius"],
+	"blast": ["radius", "delay"],
+}
+## Sağ tık stili -> zorunlu sayılar.
+const HEAVY_STYLE_FIELDS := {
+	"spin": ["damage_mult", "radius"],
+	"boomerang": ["damage_mult", "distance", "speed", "radius"],
+	"flurry": ["hits", "interval", "damage_mult", "range", "arc_degrees", "stun_duration", "boss_slow", "boss_slow_duration"],
+	"arc": ["damage_mult", "range", "arc_degrees", "backstab_bonus"],
+	"backstab": ["damage_mult", "search_range", "dash_duration", "fallback_distance"],
+	"smash": ["damage_mult", "radius", "offset", "slow", "slow_duration"],
+	"charge_shot": ["min_mult", "max_mult", "charge_time", "speed", "range", "radius"],
+	"fan": ["bolts", "spread_degrees", "damage_mult", "range", "speed", "radius"],
+	"spear_throw": ["damage_mult", "range", "speed", "return_speed", "auto_return_sec", "radius"],
+	"homing": ["projectiles", "damage_mult", "speed", "turn_rate", "range", "seek_range", "radius"],
+	"orb": ["damage_mult", "speed", "range", "radius", "explosion_radius"],
+	"trap": ["damage_mult", "max_range", "arm_time", "trigger_radius", "radius", "lifetime"],
 }
 const TRAIT_FIELDS := {
 	"fury": ["per_hit", "max"], "execute": ["threshold", "boss_threshold"], "lifesteal": ["pct"],
@@ -245,6 +291,7 @@ func _cross_check() -> void:
 	var damage_kinds: Array = element_ids + ["physical"]
 
 	for race_id: String in _records(tables["races"]):
+		_check_race(race_id, tables["races"][race_id])
 		var fam: String = tables["races"][race_id]["family"]
 		if not fam in FAMILIES:
 			errors.append("races.%s.family: bilinmeyen aile '%s'" % [race_id, fam])
@@ -254,11 +301,33 @@ func _cross_check() -> void:
 			for f: String in FAMILIES:
 				if not (tables["race_weapon_matrix"][race_id] as Dictionary).has(f):
 					errors.append("race_weapon_matrix.%s: '%s' ailesi için değer yok" % [race_id, f])
+					continue
+				var cell: Variant = tables["race_weapon_matrix"][race_id][f]
+				if typeof(cell) != TYPE_DICTIONARY:
+					errors.append("race_weapon_matrix.%s.%s: nesne ({...}) olmalı" % [race_id, f])
+					continue
+				for stat: String in (cell as Dictionary).keys():
+					if not stat in ["max_hp", "attack_speed", "damage", "element_damage"]:
+						errors.append("race_weapon_matrix.%s.%s: bilinmeyen stat '%s'" % [race_id, f, stat])
+					elif not _type_ok(cell[stat], "number"):
+						errors.append("race_weapon_matrix.%s.%s.%s: 'number' tipinde olmalı" % [race_id, f, stat])
 
 	for wt: String in _records(tables["weapon_types"]):
 		var fam2: String = tables["weapon_types"][wt]["family"]
 		if not fam2 in FAMILIES:
 			errors.append("weapon_types.%s.family: bilinmeyen aile '%s'" % [wt, fam2])
+		var light: Dictionary = tables["weapon_types"][wt]["light"]
+		var ls: String = light["style"]
+		if LIGHT_STYLE_FIELDS.has(ls):
+			_require_numbers(light, LIGHT_STYLE_FIELDS[ls], "weapon_types.%s.light" % wt)
+		else:
+			errors.append("weapon_types.%s.light.style: bilinmeyen stil '%s' (kodda karşılığı yok)" % [wt, ls])
+		var heavy: Dictionary = tables["weapon_types"][wt]["heavy"]
+		var hs: String = heavy["style"]
+		if HEAVY_STYLE_FIELDS.has(hs):
+			_require_numbers(heavy, HEAVY_STYLE_FIELDS[hs], "weapon_types.%s.heavy" % wt)
+		else:
+			errors.append("weapon_types.%s.heavy.style: bilinmeyen stil '%s' (kodda karşılığı yok)" % [wt, hs])
 
 	var rarity_ids: Array = _records(tables["rarities"])
 	for floor_id: String in _records(tables["loot_tables"]["floors"]):
@@ -341,6 +410,34 @@ func _cross_check() -> void:
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
 		errors.append("progression.mastery.xp_to_next: %d eleman olmalı (max_level - 1)" % (int(mastery["max_level"]) - 1))
+
+
+## Irkın kaynak, harcama, bekleme ve yetenek sayılarını denetler.
+func _check_race(race_id: String, r: Dictionary) -> void:
+	var where := "races.%s" % race_id
+	var rtype: String = r["resource"]["type"]
+	if not RESOURCE_FIELDS.has(rtype):
+		errors.append("%s.resource.type: bilinmeyen kaynak '%s'" % [where, rtype])
+		return
+	_require_numbers(r["resource"], RESOURCE_FIELDS[rtype], where + ".resource")
+	var keys: Dictionary = RESOURCE_KEYS[rtype]
+	_require_numbers(r["costs"], keys["costs"], where + ".costs")
+	for k: String in keys["cooldowns"]:
+		var cd: Variant = (r["cooldowns"] as Dictionary).get(k)
+		var ok := _type_ok(cd, "number") or (typeof(cd) == TYPE_ARRAY and (cd as Array).size() == 2)
+		if not ok:
+			errors.append("%s.cooldowns: '%s' sayı ya da [en az, en çok] olmalı" % [where, k])
+	for slot: String in ["q", "e"]:
+		var ab: Dictionary = r["abilities"][slot]
+		var aid: String = ab["id"]
+		if ABILITY_FIELDS.has(aid):
+			_require_numbers(ab, ABILITY_FIELDS[aid], "%s.abilities.%s" % [where, slot])
+		else:
+			errors.append("%s.abilities.%s: bilinmeyen yetenek '%s' (kodda karşılığı yok)" % [where, slot, aid])
+	var stat_keys := ["attack_range", "crit_chance", "element_damage", "damage", "attack_speed", "max_hp"]
+	for b: String in (r["passive"]["bonuses"] as Dictionary).keys():
+		if not b in stat_keys:
+			errors.append("%s.passive.bonuses: bilinmeyen stat '%s'" % [where, b])
 
 
 ## Sözlükte verilen alanların hepsi sayı olmalı.
