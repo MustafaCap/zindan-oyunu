@@ -1,5 +1,5 @@
 {
-  "_note": "12 silah tipi. name_compound: element ya da özellikle birleşik ad ('Buz Kılıcı').",
+  "_note": "12 silah tipi (GDD: Skill Sistemi > Silah tipleri). name_compound: element ya da özellikle birleşik ad ('Buz Kılıcı'). light = sol tık, heavy = sağ tık. heavy.damage_mult ve light.damage_mult tipin hasar çarpanının (Ç) üstüne çarpılır. Menzil ve hızlar karo cinsinden. 'style' kodda saldırının nasıl yapılacağını seçer; 'visual' placeholder çizimini seçer. '_default' ile işaretli sayılar GDD'de yoktu (Aşama 3), oyun testinde ayarlanır.",
   "sword": {
     "name": "Kılıç",
     "name_compound": "Kılıcı",
@@ -7,14 +7,13 @@
     "attacks_per_sec": 1.4,
     "range": 1.5,
     "damage_mult": 1.0,
+    "arc_degrees": 110,
+    "visual": "blade",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "spin_slash",
-      "name": "Dönen kesik",
-      "description": "Etrafındaki herkese hasar",
-      "damage_mult": 1.6,
-      "radius": 1.9
-    },
-    "arc_degrees": 110
+      "id": "spin_slash", "name": "Dönen kesik", "description": "Etrafındaki herkese hasar",
+      "style": "spin", "damage_mult": 1.6, "radius": 1.9
+    }
   },
   "axe": {
     "name": "Balta",
@@ -23,12 +22,14 @@
     "attacks_per_sec": 1.1,
     "range": 1.6,
     "damage_mult": 1.25,
+    "arc_degrees": 120,
+    "visual": "axe",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "axe_throw",
-      "name": "Balta fırlatma",
-      "description": "Geri dönen balta"
-    },
-    "arc_degrees": 110
+      "id": "axe_throw", "name": "Balta fırlatma", "description": "Geri dönen balta",
+      "style": "boomerang", "damage_mult": 1.4, "distance": 5.0, "speed": 11.0, "radius": 0.5,
+      "_default": "hepsi; balta gidişte ve dönüşte aynı düşmana birer kez vurur"
+    }
   },
   "fist": {
     "name": "Demir yumruk",
@@ -37,13 +38,15 @@
     "attacks_per_sec": 2.0,
     "range": 1.0,
     "damage_mult": 0.7,
+    "arc_degrees": 80,
+    "visual": "fist",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "flurry",
-      "name": "Seri yumruk",
-      "description": "5 hızlı yumruk, sonuncusu sersemletir",
-      "hits": 5
-    },
-    "arc_degrees": 110
+      "id": "flurry", "name": "Seri yumruk", "description": "5 hızlı yumruk, sonuncusu sersemletir",
+      "style": "flurry", "hits": 5, "interval": 0.09, "damage_mult": 0.55, "range": 1.25, "arc_degrees": 90,
+      "stun_duration": 0.8, "boss_slow": 0.3, "boss_slow_duration": 1.0,
+      "_default": "hits dışındaki sayılar; boss'ta sersemletme yerine yavaşlatma (Sersemletme özelliğindeki kural)"
+    }
   },
   "scythe": {
     "name": "Tırpan",
@@ -52,13 +55,14 @@
     "attacks_per_sec": 0.9,
     "range": 2.0,
     "damage_mult": 1.5,
+    "arc_degrees": 140,
+    "visual": "scythe",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "harvest",
-      "name": "Hasat",
-      "description": "Geniş yay, arkadan vurulanlara +%20",
-      "backstab_bonus": 0.2
-    },
-    "arc_degrees": 110
+      "id": "harvest", "name": "Hasat", "description": "Geniş yay, arkadan vurulanlara +%20",
+      "style": "arc", "damage_mult": 1.4, "range": 2.4, "arc_degrees": 220, "backstab_bonus": 0.2,
+      "_default": "damage_mult, range, arc_degrees"
+    }
   },
   "dagger": {
     "name": "Hançer",
@@ -67,12 +71,14 @@
     "attacks_per_sec": 1.6,
     "range": 1.0,
     "damage_mult": 0.9,
+    "arc_degrees": 70,
+    "visual": "dagger",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "backstab",
-      "name": "Saplama",
-      "description": "İleri atılıp hedefin arkasından vurma"
-    },
-    "arc_degrees": 110
+      "id": "backstab", "name": "Saplama", "description": "İleri atılıp hedefin arkasından vurma",
+      "style": "backstab", "damage_mult": 2.2, "search_range": 4.5, "dash_duration": 0.12, "fallback_distance": 2.5,
+      "_default": "hepsi; hedef = farenin en yakınındaki düşman, yoksa fare yönüne atılıp keser"
+    }
   },
   "mace": {
     "name": "Gürz",
@@ -81,12 +87,14 @@
     "attacks_per_sec": 0.7,
     "range": 1.4,
     "damage_mult": 1.9,
+    "arc_degrees": 100,
+    "visual": "mace",
+    "light": { "style": "arc" },
     "heavy": {
-      "id": "ground_smash",
-      "name": "Yere vuruş",
-      "description": "Alan hasarı ve yavaşlatma"
-    },
-    "arc_degrees": 110
+      "id": "ground_smash", "name": "Yere vuruş", "description": "Alan hasarı ve yavaşlatma",
+      "style": "smash", "damage_mult": 1.5, "radius": 2.2, "offset": 0.8, "slow": 0.4, "slow_duration": 2.0,
+      "_default": "hepsi"
+    }
   },
   "bow": {
     "name": "Yay",
@@ -95,12 +103,14 @@
     "attacks_per_sec": 0.9,
     "range": 9,
     "damage_mult": 0.9,
+    "arc_degrees": 0,
+    "visual": "bow",
+    "light": { "style": "projectile", "speed": 18.0, "radius": 0.25, "projectile": "arrow" },
     "heavy": {
-      "id": "power_shot",
-      "name": "Güçlü atış",
-      "description": "Basılı tutunca dolan delici ok"
-    },
-    "arc_degrees": 0
+      "id": "power_shot", "name": "Güçlü atış", "description": "Basılı tutunca dolan delici ok",
+      "style": "charge_shot", "min_mult": 1.0, "max_mult": 3.0, "charge_time": 1.2, "speed": 24.0, "range": 11.0, "radius": 0.3,
+      "_default": "hepsi; ok yoldaki bütün düşmanları deler"
+    }
   },
   "crossbow": {
     "name": "Arbalet",
@@ -109,13 +119,14 @@
     "attacks_per_sec": 0.6,
     "range": 10,
     "damage_mult": 1.3,
+    "arc_degrees": 0,
+    "visual": "crossbow",
+    "light": { "style": "projectile", "speed": 22.0, "radius": 0.25, "projectile": "bolt" },
     "heavy": {
-      "id": "scatter",
-      "name": "Saçma",
-      "description": "Yelpaze şeklinde 5 cıvata",
-      "bolts": 5
-    },
-    "arc_degrees": 0
+      "id": "scatter", "name": "Saçma", "description": "Yelpaze şeklinde 5 cıvata",
+      "style": "fan", "bolts": 5, "spread_degrees": 40, "damage_mult": 0.7, "range": 6.0, "speed": 20.0, "radius": 0.25,
+      "_default": "bolts dışındaki sayılar"
+    }
   },
   "spear": {
     "name": "Mızrak",
@@ -124,12 +135,14 @@
     "attacks_per_sec": 0.8,
     "range": 3.5,
     "damage_mult": 1.0,
+    "arc_degrees": 24,
+    "visual": "spear",
+    "light": { "style": "thrust" },
     "heavy": {
-      "id": "spear_throw",
-      "name": "Fırlatma",
-      "description": "Uzağa saplanır, tekrar basınca geri döner"
-    },
-    "arc_degrees": 0
+      "id": "spear_throw", "name": "Fırlatma", "description": "Uzağa saplanır, tekrar basınca geri döner",
+      "style": "spear_throw", "damage_mult": 1.6, "range": 8.0, "speed": 16.0, "return_speed": 20.0, "auto_return_sec": 6.0, "radius": 0.35,
+      "_default": "hepsi; mızrak yoldaki düşmanları deler; havadayken sol tık çalışmaz; bekleme süresi mızrak dönünce başlar"
+    }
   },
   "tome": {
     "name": "Kitap",
@@ -138,13 +151,14 @@
     "attacks_per_sec": 1.2,
     "range": 5,
     "damage_mult": 0.85,
+    "arc_degrees": 0,
+    "visual": "tome",
+    "light": { "style": "projectile", "speed": 13.0, "radius": 0.3, "projectile": "page" },
     "heavy": {
-      "id": "homing_pages",
-      "name": "Güdümlü sayfalar",
-      "description": "Hedef arayan 4 mermi",
-      "projectiles": 4
-    },
-    "arc_degrees": 0
+      "id": "homing_pages", "name": "Güdümlü sayfalar", "description": "Hedef arayan 4 mermi",
+      "style": "homing", "projectiles": 4, "damage_mult": 0.6, "speed": 9.0, "turn_rate": 7.0, "range": 10.0, "seek_range": 7.0, "radius": 0.3,
+      "_default": "projectiles dışındaki sayılar"
+    }
   },
   "staff": {
     "name": "Asa",
@@ -153,12 +167,14 @@
     "attacks_per_sec": 1.0,
     "range": 6,
     "damage_mult": 1.0,
+    "arc_degrees": 0,
+    "visual": "staff",
+    "light": { "style": "projectile", "speed": 14.0, "radius": 0.3, "projectile": "orb" },
     "heavy": {
-      "id": "element_orb",
-      "name": "Element küresi",
-      "description": "Çarpınca patlayan büyük küre"
-    },
-    "arc_degrees": 0
+      "id": "element_orb", "name": "Element küresi", "description": "Çarpınca patlayan büyük küre",
+      "style": "orb", "damage_mult": 2.0, "speed": 7.0, "range": 7.0, "radius": 0.45, "explosion_radius": 2.0,
+      "_default": "hepsi"
+    }
   },
   "rune": {
     "name": "Rün",
@@ -167,11 +183,16 @@
     "attacks_per_sec": 0.8,
     "range": 5,
     "damage_mult": 1.2,
-    "heavy": {
-      "id": "rune_trap",
-      "name": "Rün tuzağı",
-      "description": "Üzerine basılınca patlayan rün alanı"
+    "arc_degrees": 0,
+    "visual": "rune",
+    "light": {
+      "style": "blast", "radius": 1.1, "delay": 0.3,
+      "_default": "Sol tık farenin gösterdiği noktada (menzil içinde) kısa gecikmeyle patlayan küçük rün"
     },
-    "arc_degrees": 0
+    "heavy": {
+      "id": "rune_trap", "name": "Rün tuzağı", "description": "Üzerine basılınca patlayan rün alanı",
+      "style": "trap", "damage_mult": 2.5, "max_range": 5.0, "arm_time": 0.5, "trigger_radius": 1.0, "radius": 2.2, "lifetime": 10.0,
+      "_default": "hepsi; aynı anda tek tuzak (yenisi eskisini kaldırır)"
+    }
   }
 }

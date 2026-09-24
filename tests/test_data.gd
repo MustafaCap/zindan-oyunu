@@ -10,7 +10,7 @@ func test_all_files_load_without_errors() -> void:
 
 
 func test_content_counts() -> void:
-	assert_eq(DataDB.table("races").size(), 4, "4 ırk")
+	assert_eq(DataDB.records(DataDB.table("races")).size(), 4, "4 ırk")
 	assert_eq(DataDB.records(DataDB.table("weapon_types")).size(), 12, "12 silah tipi")
 	assert_eq(DataDB.table("rarities").size(), 4, "4 nadirlik")
 	assert_eq(DataDB.table("elements")["elements"].size(), 6, "6 element")
