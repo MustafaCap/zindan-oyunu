@@ -1,14 +1,164 @@
 {
-  "sword":     { "name": "Kılıç",        "family": "warrior", "attacks_per_sec": 1.4, "range": 1.5, "damage_mult": 1.0,  "heavy": { "id": "spin_slash",    "name": "Dönen kesik",     "description": "Etrafındaki herkese hasar" } },
-  "axe":       { "name": "Balta",        "family": "warrior", "attacks_per_sec": 1.1, "range": 1.6, "damage_mult": 1.25, "heavy": { "id": "axe_throw",     "name": "Balta fırlatma",  "description": "Geri dönen balta" } },
-  "fist":      { "name": "Demir yumruk", "family": "warrior", "attacks_per_sec": 2.0, "range": 1.0, "damage_mult": 0.7,  "heavy": { "id": "flurry",        "name": "Seri yumruk",     "description": "5 hızlı yumruk, sonuncusu sersemletir", "hits": 5 } },
-  "scythe":    { "name": "Tırpan",       "family": "ghost",   "attacks_per_sec": 0.9, "range": 2.0, "damage_mult": 1.5,  "heavy": { "id": "harvest",       "name": "Hasat",           "description": "Geniş yay, arkadan vurulanlara +%20", "backstab_bonus": 0.20 } },
-  "dagger":    { "name": "Hançer",       "family": "ghost",   "attacks_per_sec": 1.6, "range": 1.0, "damage_mult": 0.9,  "heavy": { "id": "backstab",      "name": "Saplama",         "description": "İleri atılıp hedefin arkasından vurma" } },
-  "mace":      { "name": "Gürz",         "family": "ghost",   "attacks_per_sec": 0.7, "range": 1.4, "damage_mult": 1.9,  "heavy": { "id": "ground_smash",  "name": "Yere vuruş",      "description": "Alan hasarı ve yavaşlatma" } },
-  "bow":       { "name": "Yay",          "family": "archer",  "attacks_per_sec": 0.9, "range": 9,   "damage_mult": 0.9,  "heavy": { "id": "power_shot",    "name": "Güçlü atış",      "description": "Basılı tutunca dolan delici ok" } },
-  "crossbow":  { "name": "Arbalet",      "family": "archer",  "attacks_per_sec": 0.6, "range": 10,  "damage_mult": 1.3,  "heavy": { "id": "scatter",       "name": "Saçma",           "description": "Yelpaze şeklinde 5 cıvata", "bolts": 5 } },
-  "spear":     { "name": "Mızrak",       "family": "archer",  "attacks_per_sec": 0.8, "range": 3.5, "damage_mult": 1.0,  "heavy": { "id": "spear_throw",   "name": "Fırlatma",        "description": "Uzağa saplanır, tekrar basınca geri döner" } },
-  "tome":      { "name": "Kitap",        "family": "magical", "attacks_per_sec": 1.2, "range": 5,   "damage_mult": 0.85, "heavy": { "id": "homing_pages",  "name": "Güdümlü sayfalar", "description": "Hedef arayan 4 mermi", "projectiles": 4 } },
-  "staff":     { "name": "Asa",          "family": "magical", "attacks_per_sec": 1.0, "range": 6,   "damage_mult": 1.0,  "heavy": { "id": "element_orb",   "name": "Element küresi",  "description": "Çarpınca patlayan büyük küre" } },
-  "rune":      { "name": "Rün",          "family": "magical", "attacks_per_sec": 0.8, "range": 5,   "damage_mult": 1.2,  "heavy": { "id": "rune_trap",     "name": "Rün tuzağı",      "description": "Üzerine basılınca patlayan rün alanı" } }
+  "sword": {
+    "name": "Kılıç",
+    "family": "warrior",
+    "attacks_per_sec": 1.4,
+    "range": 1.5,
+    "damage_mult": 1.0,
+    "heavy": {
+      "id": "spin_slash",
+      "name": "Dönen kesik",
+      "description": "Etrafındaki herkese hasar",
+      "damage_mult": 1.6,
+      "radius": 1.9
+    },
+    "arc_degrees": 110
+  },
+  "axe": {
+    "name": "Balta",
+    "family": "warrior",
+    "attacks_per_sec": 1.1,
+    "range": 1.6,
+    "damage_mult": 1.25,
+    "heavy": {
+      "id": "axe_throw",
+      "name": "Balta fırlatma",
+      "description": "Geri dönen balta"
+    },
+    "arc_degrees": 110
+  },
+  "fist": {
+    "name": "Demir yumruk",
+    "family": "warrior",
+    "attacks_per_sec": 2.0,
+    "range": 1.0,
+    "damage_mult": 0.7,
+    "heavy": {
+      "id": "flurry",
+      "name": "Seri yumruk",
+      "description": "5 hızlı yumruk, sonuncusu sersemletir",
+      "hits": 5
+    },
+    "arc_degrees": 110
+  },
+  "scythe": {
+    "name": "Tırpan",
+    "family": "ghost",
+    "attacks_per_sec": 0.9,
+    "range": 2.0,
+    "damage_mult": 1.5,
+    "heavy": {
+      "id": "harvest",
+      "name": "Hasat",
+      "description": "Geniş yay, arkadan vurulanlara +%20",
+      "backstab_bonus": 0.2
+    },
+    "arc_degrees": 110
+  },
+  "dagger": {
+    "name": "Hançer",
+    "family": "ghost",
+    "attacks_per_sec": 1.6,
+    "range": 1.0,
+    "damage_mult": 0.9,
+    "heavy": {
+      "id": "backstab",
+      "name": "Saplama",
+      "description": "İleri atılıp hedefin arkasından vurma"
+    },
+    "arc_degrees": 110
+  },
+  "mace": {
+    "name": "Gürz",
+    "family": "ghost",
+    "attacks_per_sec": 0.7,
+    "range": 1.4,
+    "damage_mult": 1.9,
+    "heavy": {
+      "id": "ground_smash",
+      "name": "Yere vuruş",
+      "description": "Alan hasarı ve yavaşlatma"
+    },
+    "arc_degrees": 110
+  },
+  "bow": {
+    "name": "Yay",
+    "family": "archer",
+    "attacks_per_sec": 0.9,
+    "range": 9,
+    "damage_mult": 0.9,
+    "heavy": {
+      "id": "power_shot",
+      "name": "Güçlü atış",
+      "description": "Basılı tutunca dolan delici ok"
+    },
+    "arc_degrees": 0
+  },
+  "crossbow": {
+    "name": "Arbalet",
+    "family": "archer",
+    "attacks_per_sec": 0.6,
+    "range": 10,
+    "damage_mult": 1.3,
+    "heavy": {
+      "id": "scatter",
+      "name": "Saçma",
+      "description": "Yelpaze şeklinde 5 cıvata",
+      "bolts": 5
+    },
+    "arc_degrees": 0
+  },
+  "spear": {
+    "name": "Mızrak",
+    "family": "archer",
+    "attacks_per_sec": 0.8,
+    "range": 3.5,
+    "damage_mult": 1.0,
+    "heavy": {
+      "id": "spear_throw",
+      "name": "Fırlatma",
+      "description": "Uzağa saplanır, tekrar basınca geri döner"
+    },
+    "arc_degrees": 0
+  },
+  "tome": {
+    "name": "Kitap",
+    "family": "magical",
+    "attacks_per_sec": 1.2,
+    "range": 5,
+    "damage_mult": 0.85,
+    "heavy": {
+      "id": "homing_pages",
+      "name": "Güdümlü sayfalar",
+      "description": "Hedef arayan 4 mermi",
+      "projectiles": 4
+    },
+    "arc_degrees": 0
+  },
+  "staff": {
+    "name": "Asa",
+    "family": "magical",
+    "attacks_per_sec": 1.0,
+    "range": 6,
+    "damage_mult": 1.0,
+    "heavy": {
+      "id": "element_orb",
+      "name": "Element küresi",
+      "description": "Çarpınca patlayan büyük küre"
+    },
+    "arc_degrees": 0
+  },
+  "rune": {
+    "name": "Rün",
+    "family": "magical",
+    "attacks_per_sec": 0.8,
+    "range": 5,
+    "damage_mult": 1.2,
+    "heavy": {
+      "id": "rune_trap",
+      "name": "Rün tuzağı",
+      "description": "Üzerine basılınca patlayan rün alanı"
+    },
+    "arc_degrees": 0
+  }
 }
