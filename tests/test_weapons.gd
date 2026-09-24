@@ -123,7 +123,7 @@ func test_tome_homing_pages_find_target() -> void:
 	var t := _enemy(Vector2(2, 3))
 	WeaponAttacks.heavy_pressed(p)
 	assert_eq(_count(Projectile), 4, "4 güdümlü sayfa")
-	assert_eq(p.kit.resource, p.kit.resource_max - 70.0, "Magical sağ tık 70 mana")
+	assert_eq(p.kit.resource, p.kit.resource_max - 55.0, "Magical sağ tık 55 mana")
 	_step(3.0)
 	assert_true(t.hits.size() >= 3, "sayfalar yandaki hedefi bulur (%d isabet)" % t.hits.size())
 
@@ -237,9 +237,9 @@ func test_foreign_spell_weapon_heavy_cooldown() -> void:
 
 func test_magical_needs_mana_for_light() -> void:
 	var p := _player("magical", "tome", "fire", 1)
+	p.kit.resource = 0.5
+	assert_true(not WeaponAttacks.light(p), "1 mana yoksa sol tık yok")
 	p.kit.resource = 1.0
-	assert_true(not WeaponAttacks.light(p), "2 mana yoksa sol tık yok")
-	p.kit.resource = 2.0
 	assert_true(WeaponAttacks.light(p))
 	assert_eq(p.kit.resource, 0.0)
 
