@@ -38,6 +38,15 @@ var iframes: float = 0.0
 var busy_t: float = 0.0                   ## seri yumruk, saplama gibi hareketler sürerken yeni saldırı yok
 var dead: bool = false
 var autoplay: bool = false
+## Geliştirme: hasar almaz (zindan smoke testi --god ile haritanın yürünebilirliğini dener).
+var invulnerable: bool = false
+## Zindan botu (DungeonAutopilot): düşman yokken bu noktaya yürür / bu noktaya vurur (çatlak duvar). INF = yok.
+var bot_waypoint: Vector2 = Vector2.INF
+var bot_attack_point: Vector2 = Vector2.INF
+## Zindan botu: (kendi konumu, hedef) -> engellerin etrafından dolaşan yön (DungeonNav). Boşsa doğrudan hedefe.
+var bot_nav: Callable
+## Zindan botu: (kendi konumu, hedef) -> arada engel yok mu. Uzak silahla görüş yoksa bot hedefe yaklaşır.
+var bot_los: Callable
 ## Doluysa girdi buradan okunur (matris testi her karede doldurur). Anahtarlar _read_input ile aynı.
 var external_intent: Dictionary = {}
 
@@ -164,6 +173,11 @@ func attack_range(w: Weapon = null) -> float:
 func attack_interval(w: Weapon = null) -> float:
 	var ww := w if w else weapon()
 	return 1.0 / (float(ww.type_data()["attacks_per_sec"]) * maxf(1.0 + stats_for(ww).attack_speed_bonus, 0.1))
+
+
+## Şimdiye kadarki saldırı sayısı (zindan çatlak duvarı bir saldırının duvara gelip gelmediğini buradan anlar).
+func attack_count() -> int:
+	return _attack_counter
 
 
 func next_attack_id() -> int:
@@ -581,7 +595,7 @@ func _on_combo(_id: String, _t: Node) -> void:
 
 ## Düşmandan gelen hasar (hasar formülünden geçer: ırk direnci ve zırh).
 func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCalc.PHYSICAL) -> void:
-	if dead or iframes > 0.0:
+	if dead or iframes > 0.0 or invulnerable:
 		return
 	var hit := DamageCalc.Hit.new()
 	hit.base_damage = amount
@@ -642,14 +656,24 @@ func _bot_think(delta: float) -> Dictionary:
 		if d < 2.0:
 			close_count += 1
 	if nearest == null:
+		# Zindanda düşman yok: çatlak duvara vur ya da sıradaki yol noktasına yürü
+		if bot_attack_point != Vector2.INF:
+			out["aim"] = bot_attack_point
+			out["light"] = attack_cd <= 0.0
+		elif bot_waypoint != Vector2.INF:
+			var to_w := Iso.to_cart(bot_waypoint - global_position)
+			out["aim"] = bot_waypoint
+			if to_w.length() > 2.0:
+				out["move"] = to_w.normalized()
 		return out
 	var w := weapon()
 	var rng_t := attack_range(w)
 	var to_e := Iso.to_cart(nearest.global_position - global_position)
 	out["aim"] = nearest.global_position
 	var ranged := rng_t > 3.0
-	if best > rng_t * 0.8:
-		out["move"] = to_e.normalized()
+	var blocked := bot_los.is_valid() and not bool(bot_los.call(global_position, nearest.global_position))
+	if best > rng_t * 0.8 or (blocked and best > 1.2):
+		out["move"] = bot_nav.call(global_position, nearest.global_position) if bot_nav.is_valid() else to_e.normalized()
 	elif ranged and best < minf(2.5, rng_t * 0.4):
 		out["move"] = -to_e.normalized()
 	var in_range := best <= rng_t + 0.3

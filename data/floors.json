@@ -24,7 +24,9 @@
       "boss_pool": [
         "morvath"
       ],
-      "placeholder_color": "#5a3a44"
+      "placeholder_color": "#5a3a44",
+      "wall_color": "#2e1d26",
+      "obstacle_color": "#7a3448"
     },
     "2": {
       "name": "Mantar Mağaraları",
@@ -49,7 +51,9 @@
       "boss_pool": [
         "mycela"
       ],
-      "placeholder_color": "#3d5a3a"
+      "placeholder_color": "#3d5a3a",
+      "wall_color": "#1f2e22",
+      "obstacle_color": "#6b4a7a"
     },
     "3": {
       "name": "Kül Dökümhanesi",
@@ -74,7 +78,9 @@
       "boss_pool": [
         "kordrak"
       ],
-      "placeholder_color": "#5a3a24"
+      "placeholder_color": "#5a3a24",
+      "wall_color": "#2a2320",
+      "obstacle_color": "#a0521e"
     },
     "4": {
       "name": "Boşluk",
@@ -99,7 +105,9 @@
       "boss_pool": [
         "nyxthar"
       ],
-      "placeholder_color": "#2a2440"
+      "placeholder_color": "#2a2440",
+      "wall_color": "#121020",
+      "obstacle_color": "#4a3f7a"
     }
   },
   "room_types": {
@@ -151,5 +159,6 @@
       ],
       "description": "Kat sonu"
     }
-  }
+  },
+  "_default_palette": "Aşama 4: katların placeholder renk paletleri (zemin, duvar, engel). Aşama 8'de gerçek karo setleri gelir."
 }

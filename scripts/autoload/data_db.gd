@@ -97,11 +97,28 @@ const SCHEMA := {
 			"_each": {
 				"name": "string", "theme": "string", "rooms": "number", "target_minutes": "array",
 				"level_range": "array", "enemy_pool": "array", "boss_pool": "array", "placeholder_color": "string",
+				"wall_color": "string", "obstacle_color": "string", "expected_normal_enemies": "number", "expected_elites": "number",
 			},
 		},
 		"room_types": {"_each": {"description": "string"}},
 	},
+	"dungeon": {
+		"grid_cell_tiles": "number", "corridor_width": "number", "main_path_ratio": "number", "min_combat_rooms": "number",
+		"room_jitter_tiles": "number", "template_symmetry": "bool", "door_clear_radius": "number",
+		"obstacles": "dict", "template_pools": "dict", "room_type_names": "dict", "room_type_colors": "dict",
+		"waves": {"max_per_wave": "number", "min_waves": "number", "max_waves": "number", "wave_delay_sec": "number",
+			"first_wave_delay_sec": "number", "enemy_count_mult": "number", "spawn_min_distance_tiles": "number"},
+		"prototype_enemies": {"rat_group": "array"},
+		"placeholder_elite": {"base_pool": "array", "hp_mult": "number", "damage_mult": "number", "scale": "number"},
+		"placeholder_boss": {"base": "string", "hp_mult": "number", "damage_mult": "number", "scale": "number"},
+		"secret_wall": {"hits_to_break": "number", "reach_tiles": "number"},
+		"interact_range_tiles": "number",
+		"templates": {"_each": {"name": "string", "rows": "array"}},
+	},
 }
+## Zindanın oda tipleri (floors.json > room_types ile aynı olmalı) ve şablon karakterleri.
+const ROOM_TYPES := ["start", "combat", "elite", "merchant", "blacksmith", "chest", "secret", "boss"]
+const TEMPLATE_CHARS := [".", "o", " "]
 
 const FAMILIES := ["warrior", "ghost", "archer", "magical"]
 ## 1. kat düşmanlarında (Aşama 2'den itibaren) zorunlu stat alanları.
@@ -407,6 +424,8 @@ func _cross_check() -> void:
 		if not tables["loot_tables"]["floors"].has(fid):
 			errors.append("loot_tables.floors: %s. kat için tablo yok" % fid)
 
+	_check_dungeon(enemy_ids)
+
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
 		errors.append("progression.mastery.xp_to_next: %d eleman olmalı (max_level - 1)" % (int(mastery["max_level"]) - 1))
@@ -438,6 +457,64 @@ func _check_race(race_id: String, r: Dictionary) -> void:
 	for b: String in (r["passive"]["bonuses"] as Dictionary).keys():
 		if not b in stat_keys:
 			errors.append("%s.passive.bonuses: bilinmeyen stat '%s'" % [where, b])
+
+
+## Zindan: oda tipleri, şablon havuzları, şablonların şekli ve kat başına prototip düşman havuzları.
+func _check_dungeon(enemy_ids: Array) -> void:
+	var dg: Dictionary = tables["dungeon"]
+	var templates: Dictionary = dg["templates"]
+	for tid: String in _records(templates):
+		var rows: Array = templates[tid]["rows"]
+		if rows.is_empty():
+			errors.append("dungeon.templates.%s.rows: boş" % tid)
+			continue
+		var w := str(rows[0]).length()
+		var floor_count := 0
+		for i: int in rows.size():
+			var row := str(rows[i])
+			if row.length() != w:
+				errors.append("dungeon.templates.%s.rows[%d]: satır uzunluğu %d olmalı (bulunan %d)" % [tid, i, w, row.length()])
+			for ch: String in row:
+				if not ch in TEMPLATE_CHARS:
+					errors.append("dungeon.templates.%s.rows[%d]: bilinmeyen karakter '%s' (izinli: . o boşluk)" % [tid, i, ch])
+				elif ch == ".":
+					floor_count += 1
+		if floor_count == 0:
+			errors.append("dungeon.templates.%s: hiç zemin (.) yok" % tid)
+		if w + 4 > int(dg["grid_cell_tiles"]) or rows.size() + 4 > int(dg["grid_cell_tiles"]):
+			errors.append("dungeon.templates.%s: %d×%d şablon %d karoluk hücreye sığmıyor" % [tid, w, rows.size(), int(dg["grid_cell_tiles"])])
+	for rt: String in ROOM_TYPES:
+		for key: String in ["template_pools", "obstacles", "room_type_names", "room_type_colors"]:
+			if not (dg[key] as Dictionary).has(rt):
+				errors.append("dungeon.%s: '%s' oda tipi eksik" % [key, rt])
+		if not tables["floors"]["room_types"].has(rt) and rt != "start":
+			errors.append("floors.room_types: '%s' oda tipi eksik" % rt)
+	for rt: String in _records(dg["template_pools"]):
+		var pool: Array = dg["template_pools"][rt]
+		if pool.is_empty():
+			errors.append("dungeon.template_pools.%s: boş" % rt)
+		for tid: Variant in pool:
+			if not templates.has(str(tid)):
+				errors.append("dungeon.template_pools.%s: bilinmeyen şablon '%s'" % [rt, tid])
+	var materials: Dictionary = tables["enemies"]["materials"]
+	var enemies: Dictionary = tables["enemies"]["enemies"]
+	for fid: String in _records(tables["floors"]["floors"]):
+		var pe: Dictionary = dg["prototype_enemies"]
+		if not pe.has(fid) or typeof(pe[fid]) != TYPE_DICTIONARY or not (pe[fid] as Dictionary).has("pool"):
+			errors.append("dungeon.prototype_enemies: %s. kat için havuz yok" % fid)
+			continue
+		for entry: Variant in pe[fid]["pool"]:
+			if typeof(entry) != TYPE_ARRAY or (entry as Array).size() != 3:
+				errors.append("dungeon.prototype_enemies.%s.pool: her kayıt [düşman, malzeme, ağırlık] olmalı" % fid)
+				continue
+			var eid := str(entry[0])
+			if not eid in enemy_ids or not (enemies[eid] as Dictionary).has("stats"):
+				errors.append("dungeon.prototype_enemies.%s: '%s' düşmanının statları yok" % [fid, eid])
+			if str(entry[1]) != "" and not materials.has(str(entry[1])):
+				errors.append("dungeon.prototype_enemies.%s: bilinmeyen malzeme '%s'" % [fid, entry[1]])
+	for eid: Variant in dg["placeholder_elite"]["base_pool"] + [dg["placeholder_boss"]["base"]]:
+		if not str(eid) in enemy_ids or not (enemies[str(eid)] as Dictionary).has("stats"):
+			errors.append("dungeon: yer tutucu elit/boss için '%s' düşmanının statları yok" % eid)
 
 
 ## Sözlükte verilen alanların hepsi sayı olmalı.

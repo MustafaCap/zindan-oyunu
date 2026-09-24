@@ -1,18 +1,23 @@
 ## Hud — prototip arayüzü: can ve kaynak barı, sağ tık / Q / E / Space göstergeleri, dalga bilgisi, ortadaki mesajlar.
 ## Aşama 2: iki aktif silah paneli (element ikonu, ad, nadirlik rengi; aktif olan vurgulu) ve hata ayıklama notları.
 ## Aşama 3: ırk ve level, Enerji/Mana barı, yetenek adları ve bedelleri, iksir sayısı.
+## Aşama 4: kat/oda bilgisi, etkileşim ipucu ("F: ..."), boss can barı; tuş ipuçları sahneye göre değişir.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu yalnızca test için.
 class_name Hud
 extends CanvasLayer
 
 var player: Player
 var wave_text: String = ""
+var prompt_text: String = ""          ## etkileşim ipucu (ekranın ortasının altında)
+var boss: Node2D                      ## doluysa üstte boss can barı
+var stage_text: String = "Aşama 3 · ırklar ve silahlar"
 var _panel: Control
 var _center: Label
 var _info: Label
 var _hint_lines: PackedStringArray = []
 var _note_text: String = ""
 var _note_t: float = 0.0
+var _ver: Label
 
 
 func _ready() -> void:
@@ -43,7 +48,8 @@ func _ready() -> void:
 	ver.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	ver.position = Vector2(-32, 24)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	ver.text = "v%s · Aşama 3 · ırklar ve silahlar" % ProjectSettings.get_setting("application/config/version", "?")
+	_ver = ver
+	_ver.text = "v%s · %s" % [ProjectSettings.get_setting("application/config/version", "?"), stage_text]
 
 
 func _make_label(size: int, color: Color) -> Label:
@@ -55,6 +61,11 @@ func _make_label(size: int, color: Color) -> Label:
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(l)
 	return l
+
+
+## Alt kısımdaki tuş ipucu satırları.
+func set_hints(lines: PackedStringArray) -> void:
+	_hint_lines = lines
 
 
 func show_message(text: String) -> void:
@@ -69,6 +80,8 @@ func flash_note(text: String) -> void:
 
 func _process(delta: float) -> void:
 	_info.text = wave_text
+	if _ver:
+		_ver.text = "v%s · %s" % [ProjectSettings.get_setting("application/config/version", "?"), stage_text]
 	_note_t = maxf(_note_t - delta, 0.0)
 	_panel.queue_redraw()
 
@@ -123,6 +136,22 @@ func _draw_panel() -> void:
 		var hp := Vector2(32, vp.y - 44 + i * 24)
 		_panel.draw_string_outline(ThemeDB.fallback_font, hp, _hint_lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, 4, Color.BLACK)
 		_panel.draw_string(ThemeDB.fallback_font, hp, _hint_lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.62, 0.62, 0.68))
+	# Etkileşim ipucu
+	if prompt_text != "":
+		var pp := Vector2(0, vp.y * 0.5 + 90)
+		_panel.draw_string_outline(ThemeDB.fallback_font, pp, prompt_text, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, 7, Color.BLACK)
+		_panel.draw_string(ThemeDB.fallback_font, pp, prompt_text, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, Color(1, 0.95, 0.7))
+	# Boss can barı (üst orta)
+	if boss != null and is_instance_valid(boss) and not boss.get("dead"):
+		var bw := 600.0
+		var bp := Vector2((vp.x - bw) * 0.5 + 40.0, 44)
+		var k := clampf(float(boss.get("hp")) / maxf(float(boss.get("max_hp")), 1.0), 0.0, 1.0)
+		_panel.draw_rect(Rect2(bp - Vector2(3, 3), Vector2(bw + 6, 26)), Color(0, 0, 0, 0.8))
+		_panel.draw_rect(Rect2(bp, Vector2(bw, 20)), Color(0.25, 0.05, 0.05))
+		_panel.draw_rect(Rect2(bp, Vector2(bw * k, 20)), Color(0.8, 0.12, 0.15))
+		var bn := str(boss.get("display_name"))
+		_panel.draw_string_outline(ThemeDB.fallback_font, bp + Vector2(0, -8), bn, HORIZONTAL_ALIGNMENT_CENTER, bw, 20, 5, Color.BLACK)
+		_panel.draw_string(ThemeDB.fallback_font, bp + Vector2(0, -8), bn, HORIZONTAL_ALIGNMENT_CENTER, bw, 20, Color(1, 0.8, 0.75))
 	# Kısa not (silah değişti vb.)
 	if _note_t > 0.0:
 		var a := clampf(_note_t / 0.5, 0.0, 1.0)

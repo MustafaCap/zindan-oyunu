@@ -1,4 +1,4 @@
-## TestRoom — Aşama 3 hata ayıklama odası: tek izometrik oda, 4 ırk × 12 silah tipi denenebilir.
+## TestRoom — hata ayıklama odası (Aşama 3; Aşama 4'ten beri ana sahne zindan, buraya M menüsünden geçilir): tek izometrik oda, 4 ırk × 12 silah tipi denenebilir.
 ## M ile hata ayıklama menüsü açılır (ırk, level, iki silahın tipi/elementi/özelliği, düşman türü).
 ## Düşmanlar: 1. kat dalgaları (Taş ve Hayalet varyantlarıyla) ya da saldırmayan kuklalar.
 ## Kısayollar: 2-7 aktif silahın elementi, 0 elementsiz, 8 özellik değiştir, N yeni dalga, R yeniden başla.
@@ -12,6 +12,7 @@
 ##   --matrix          Her ırk × silah tipi kombinasyonunu sırayla otomatik dener (sol tık, sağ tık, Q, E, Tab);
 ##                     hepsi çalışırsa çıkış kodu 0, biri bile çalışmazsa 5.
 ##   --shots=KLASÖR    Belirli anlarda ekran görüntüsü kaydeder.  --shot-times=0.5,2,3  Görüntü anları (saniye).
+class_name TestRoom
 extends Node2D
 
 @export var room_size: int = 16
@@ -25,6 +26,7 @@ var waves: Array = [
 const DEBUG_ELEMENT_KEYS := {KEY_2: "fire", KEY_3: "water", KEY_4: "lightning", KEY_5: "poison", KEY_6: "ice", KEY_7: "dark", KEY_0: "physical"}
 const DEBUG_TRAITS := ["", "fury", "execute", "lifesteal", "ricochet", "stun"]
 const DUMMY_HP := 1000000.0
+const DUNGEON_SCENE := "res://scenes/game.tscn"
 @export var pillars: Array[Vector2i] = [Vector2i(4, 4), Vector2i(11, 4), Vector2i(4, 11), Vector2i(11, 11)]
 @export var autoplay_timeout_sec: float = 120.0
 
@@ -56,7 +58,7 @@ var _combo_log: Dictionary = {}
 
 static func default_config() -> Dictionary:
 	return {
-		"race": "warrior", "level": 1, "enemies": "waves",
+		"race": "warrior", "level": 1, "enemies": "waves", "floor": 1,
 		"weapons": [
 			{"type": "sword", "element": "water", "trait": ""},
 			{"type": "sword", "element": "lightning", "trait": ""},
@@ -106,7 +108,7 @@ func _ready() -> void:
 	if not DataDB.loaded:
 		_show_data_error()
 		return
-	var cfg_error := _validate_config(config)
+	var cfg_error := validate_config(config)
 	if cfg_error != "":
 		push_error("[TestRoom] " + cfg_error)
 		config = default_config()
@@ -141,6 +143,7 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
+	hud.stage_text = "Test odası"
 	add_child(hud)
 
 	menu = DebugMenu.new()
@@ -148,6 +151,9 @@ func _ready() -> void:
 	menu.applied.connect(func(c: Dictionary) -> void:
 		config = c
 		get_tree().reload_current_scene())
+	menu.action.connect(func(_name: String, c: Dictionary) -> void:
+		config = c
+		get_tree().change_scene_to_file(DUNGEON_SCENE))
 
 	Events.enemy_killed.connect(_on_enemy_killed)
 	Events.combo_triggered.connect(_on_combo)
@@ -212,7 +218,7 @@ static func make_weapon(wc: Dictionary) -> Weapon:
 	return w
 
 
-func _validate_config(cfg: Dictionary) -> String:
+static func validate_config(cfg: Dictionary) -> String:
 	if not DataDB.table("races").has(str(cfg.get("race", ""))):
 		return "bilinmeyen ırk '%s'" % cfg.get("race", "")
 	for wc: Dictionary in cfg["weapons"]:

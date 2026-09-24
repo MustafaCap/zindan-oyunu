@@ -1,15 +1,22 @@
 ## DebugMenu — geçici hata ayıklama menüsü (Aşama 3): ırk, level, iki aktif silahın tipi/elementi/özelliği ve
 ## düşman türü seçilip test odası o ayarla yeniden kurulur. M ile açılır/kapanır; açıkken oyun duraklar.
+## Aşama 4: zindanda da açılır — "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında değil: GDD slot
+## değişimi yalnızca oda dışında), "Bu kattan yeni harita" seçilen kattan yeni seed'le run başlatır, bir düğme de
+## test odası ↔ zindan arasında geçer.
 ## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
 class_name DebugMenu
 extends CanvasLayer
 
 signal applied(config: Dictionary)
+## Zindan/test odası düğmeleri: "new_map" (config["floor"] katından yeni harita), "test_room", "dungeon".
+signal action(action_name: String, config: Dictionary)
 
 const LEVELS := [1, 10, 20, 40, 60, 80]
 const ENEMY_MODES := [["waves", "1. kat dalgaları"], ["dummies", "Kuklalar (saldırmaz, ölmez)"]]
 
 var config: Dictionary = {}
+## "test" (hata ayıklama odası) ya da "dungeon" (zindan); düğmeler ve satırlar buna göre değişir.
+var context: String = "test"
 
 var _race_buttons: Dictionary = {}
 var _level: OptionButton
@@ -19,6 +26,11 @@ var _info: Label
 var _type_ids: Array = []
 var _element_ids: Array = []
 var _trait_ids: Array = []
+var _floor: OptionButton
+var _god: CheckBox
+var _enemy_row: Control
+var _ok: Button
+var _lock: Label
 
 
 func _ready() -> void:
@@ -33,7 +45,10 @@ func _ready() -> void:
 
 func open(current: Dictionary) -> void:
 	config = current.duplicate(true)
+	if not config.has("floor"):
+		config["floor"] = maxi(GameState.floor_index, 1)
 	_load_config()
+	set_lock_reason("")
 	visible = true
 	get_tree().paused = true
 
@@ -79,7 +94,9 @@ func _build() -> void:
 
 	var title := _label("Hata Ayıklama Menüsü", 28, Color(1, 0.9, 0.6))
 	box.add_child(title)
-	box.add_child(_label("Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (M / Esc: kapat)", 15, Color(0.7, 0.7, 0.75)))
+	var sub := "Irk, level ve iki aktif silahı seç; 'Uygula' yeni ayarı yerinde uygular (savaş dışında). (M / Esc: kapat)" \
+		if context == "dungeon" else "Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (M / Esc: kapat)"
+	box.add_child(_label(sub, 15, Color(0.7, 0.7, 0.75)))
 
 	# Irk
 	var race_row := _row(box, "Irk")
@@ -128,8 +145,34 @@ func _build() -> void:
 			_refresh_info())
 		_slots.append([t_opt, e_opt, r_opt])
 
-	# Düşmanlar
+	# Zindan: kat seçimi, yeni harita, sahne geçişi
+	var dn_row := _row(box, "Zindan")
+	_floor = _option(dn_row, ["1. kat", "2. kat", "3. kat", "4. kat"], 120)
+	_floor.item_selected.connect(func(i: int) -> void: config["floor"] = i + 1)
+	var new_map := Button.new()
+	new_map.text = "Bu kattan yeni harita"
+	new_map.custom_minimum_size = Vector2(230, 38)
+	new_map.pressed.connect(func() -> void:
+		close()
+		action.emit("new_map", config.duplicate(true)))
+	dn_row.add_child(new_map)
+	var switch := Button.new()
+	switch.text = "Test odasına git" if context == "dungeon" else "Zindana git"
+	switch.custom_minimum_size = Vector2(200, 38)
+	switch.pressed.connect(func() -> void:
+		close()
+		action.emit("test_room" if context == "dungeon" else "dungeon", config.duplicate(true)))
+	dn_row.add_child(switch)
+	_god = CheckBox.new()
+	_god.text = "Ölümsüz (test)"
+	_god.add_theme_font_size_override("font_size", 16)
+	_god.toggled.connect(func(on: bool) -> void: config["god"] = on)
+	dn_row.add_child(_god)
+
+	# Düşmanlar (yalnızca test odası)
 	var en_row := _row(box, "Düşmanlar")
+	_enemy_row = en_row
+	en_row.visible = context == "test"
 	_enemies = _option(en_row, ENEMY_MODES.map(func(m: Array) -> String: return str(m[1])), 300)
 	_enemies.item_selected.connect(func(i: int) -> void: config["enemies"] = ENEMY_MODES[i][0])
 
@@ -137,6 +180,9 @@ func _build() -> void:
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_info.custom_minimum_size = Vector2(860, 150)
 	box.add_child(_info)
+
+	_lock = _label("", 16, Color(1, 0.55, 0.5))
+	box.add_child(_lock)
 
 	var btns := HBoxContainer.new()
 	btns.add_theme_constant_override("separation", 16)
@@ -148,13 +194,20 @@ func _build() -> void:
 	cancel.pressed.connect(close)
 	btns.add_child(cancel)
 	var ok := Button.new()
-	ok.text = "Uygula ve başla"
+	_ok = ok
+	ok.text = "Uygula" if context == "dungeon" else "Uygula ve başla"
 	ok.custom_minimum_size = Vector2(220, 44)
 	ok.add_theme_font_size_override("font_size", 18)
 	ok.pressed.connect(func() -> void:
 		close()
 		applied.emit(config.duplicate(true)))
 	btns.add_child(ok)
+
+
+## Savaş sırasında (zindanda) ırk/silah değişikliği kapalı: neden gösterilir ve Uygula devre dışı kalır.
+func set_lock_reason(text: String) -> void:
+	_lock.text = text
+	_ok.disabled = text != ""
 
 
 func _load_config() -> void:
@@ -167,6 +220,8 @@ func _load_config() -> void:
 		(_slots[slot][0] as OptionButton).select(maxi(_type_ids.find(wc["type"]), 0))
 		(_slots[slot][1] as OptionButton).select(maxi(_element_ids.find(wc["element"]), 0))
 		(_slots[slot][2] as OptionButton).select(maxi(_trait_ids.find(wc["trait"]), 0))
+	_floor.select(clampi(int(config.get("floor", 1)) - 1, 0, 3))
+	_god.set_pressed_no_signal(bool(config.get("god", false)))
 	for i: int in ENEMY_MODES.size():
 		if ENEMY_MODES[i][0] == config.get("enemies", "waves"):
 			_enemies.select(i)
