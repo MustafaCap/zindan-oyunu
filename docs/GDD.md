@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa
+Sep 23, 2026 · @Mustafa · Son güncelleme: 24 Eyl 2026 (Aşama 4)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -490,7 +490,7 @@ Can kıt bir kaynaktır: temel iyileşme sınırlı iksirler ve boss sonrası ta
 - **Diğer kaynaklar:** Can emme ödülleri ve özellikleri, tılsımlar.
 - Temizlenen odalarda otomatik iyileşme yoktur.
 
-**Ghost istisnası:** Ghost iksir kullanamaz ve can emmeyle iyileşmez. Yalnızca iki yolla iyileşir: öldürdüğü her düşman maks canının %4'ünü (elit %10) doldurur, kat boss'u kesilince canı tamamen dolar. Ghost'ta can emme etkileri öldürme başına ek iyileşmeye dönüşür.
+**Ghost istisnası (onaylandı):** Ghost iksir kullanamaz ve can emmeyle iyileşmez. Yalnızca iki yolla iyileşir: öldürdüğü her düşman maks canının %4'ünü (elit %10) doldurur, kat boss'u kesilince canı tamamen dolar. Ghost'ta can emme etkileri öldürme başına ek iyileşmeye dönüşür.
 
 ## Run Süresi
 
@@ -522,10 +522,11 @@ Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
 ## Açık Kararlar
 
 - [ ] Oyunun adı
-- [ ] Ghost'un iksir kullanamaması onaylanıyor mu?
 - [ ] Kalan 16 boss (kat başına 4)
 - [ ] Hikâye ve lore
 - [ ] Ayrıntılı arayüz tasarımı
+- [x] Ghost iksir kullanamaz (Aşama 3'te onaylandı)
+- [x] Magical mana bedelleri düşürüldü: sol tık 1, sağ tık 55, Q 65, E 90 (Aşama 3 testinden sonra)
 - [x] Kontroller: WASD, fare nişan, sol/sağ tık silah, Q/E ırk, Space atılma
 - [x] Kaynaklar: Warrior enerji, Magical mana, Archer ve Ghost bekleme süresi
 - [x] Silah ailesi karakterleri (menzil, hız, hasar)
@@ -540,6 +541,111 @@ Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
 - [x] Ustalık XP'si derinlik çarpanları
 - [x] Boss ilk kesiş bonusu +%0,3 (20 boss ile maks +%6)
 - [x] 12 silah tipi: kılıç, balta, demir yumruk, tırpan, hançer, gürz, yay, arbalet, mızrak, kitap, asa, rün
+
+## Uygulamada Verilen Kararlar
+
+Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için verilen kararlar ve kullanıcının oyun testinden sonra istediği değişiklikler. Hepsi `data/` dosyalarında `_default` notuyla işaretlidir ve oyun testlerinde ayarlanabilir. Bu bölüm dokümanın geri kalanıyla aynı ağırlıktadır: yeni bir oturum bu kararları değiştirmeden önce kullanıcıya sorar.
+
+### Kullanıcının onayladığı değişiklikler
+
+| Aşama | Değişiklik |
+| --- | --- |
+| 1 | Vuruş hissi (hitstop, sarsıntı, flaş, savrulma) olduğu gibi onaylandı |
+| 2 | Kombolar ve element sistemi olduğu gibi onaylandı |
+| 3 | Ghost iksir kullanamaz (açık karar kapandı) |
+| 3 | Magical mana bedelleri düşürüldü: sol tık 2 → 1, sağ tık 70 → 55, Q 80 → 65, E 110 → 90 |
+
+### Teknik ve his (Aşama 0-1)
+
+- Motor sürümü: Godot 4.7.2 (headless Linux sürümüyle test ve Windows export). Renderer: GL Compatibility. Pencere 1920×1080, açılış penceresi 1600×900, `canvas_items` stretch, `expand` en-boy.
+- İzometrik karo 64×32 piksel; 1 karo = karonun zemindeki kenar uzunluğu. Tüm menzil ve hızlar karo cinsindendir.
+- Oyuncu: temel hareket hızı 4,5 karo/sn (ırkın hız çarpanıyla çarpılır), gövde yarıçapı 0,3 karo, hasar aldıktan sonra 0,4 sn dokunulmazlık.
+- Space atılması: 3 karo, 0,18 sn sürer; 1 sn bekleme, ilk 0,2 sn dokunulmazlık.
+- Vuruş hissi: hitstop 60 ms (güçlü vuruş ve kritikte 90 ms), ekran sarsıntısı 5 (güçlü 10, oyuncu hasar alınca 8), sönme hızı 32, beyaz flaş 0,1 sn, geri savrulma 0,7 karo (güçlü 1,3 karo) 0,16 sn'de.
+- Oyuncu hasarı da aynı hasar formülünden geçer (ırk direnci ve zırh uygulanır).
+- Kat yer renkleri (placeholder) `floors.json` içindedir.
+
+### Savaş çekirdeği (Aşama 2)
+
+- Su'nun kendi hasarı ×0,8. Yıldırım zinciri 3 karo menzil. Buz yığını her buz vuruşunda 3 sn tazelenir.
+- Arkadan vuruş: hedefin baktığı yönden 90°'den fazla açıyla gelen vuruş.
+- Kombo sayıları: Elektroşok 6 karo içindeki tüm ıslaklara vuruşun %60'ı · Erime vuruşa ek +%200 · Donma 2 sn · Kırılma garantili kritik · Zehir Patlaması 2,5 karo alana %80 · Buhar 2 karo alanda 4 sn %40 ıskalama · Çürüme 6 sn, zehir ×2.
+- Zehir + Ateş ve Su + Ateş kombolarında sıra önemli değildir (iki yönde de tetiklenir); diğerlerinde tablodaki sıra geçerlidir.
+- Kombo ilk elementi tüketir (Çürüme'de de zehir tüketilir; sonraki zehir iki kat vurur). Bir vuruşta en fazla bir kombo.
+- Sekme 3 karo menzil. Sersemletme boss'ta 1 sn %30 yavaşlatır.
+- Zincir, sekme ve kombo alan hasarları "ikincil vuruş"tur: element bırakır ama yeni kombo, zincir ya da özellik tetiklemez; kritik ve arkadan vuruş almaz.
+- Fiziksel hasara element hasarı bonusları uygulanmaz.
+- Elit düşmanlar ve gizli odalardaki "üst nadirlik ×2" farkı Yaygın'dan düşülür.
+- 1\. kat düşmanlarının prototip statları (Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak):
+
+| Düşman | Can | Hasar | Zırh | Hız | Saldırı menzili | Hazırlık | Bekleme | Not |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| İskelet Savaşçı | 380 | 14 | %0 | 2,2 | 1,1 (90°) | 0,45 sn | 1,3 sn |  |
+| İskelet Okçu | 260 | 12 | %0 | 2,0 | 7 | 0,7 sn | 2,0 sn | Ok hızı 9, 5 karo mesafe korur |
+| Mağara Faresi | 90 | 6 | %0 | 3,6 | 0,8 (90°) | 0,25 sn | 0,9 sn |  |
+| Göz Yavrusu | 200 | 10 | %0 | 0 | 4 | 0,9 sn | 2,4 sn | Işın 0,4 sn, savrulmaz |
+| Damar Kütlesi | 900 | 20 | %10 | 1,2 | 1,3 (120°) | 0,8 sn | 2,2 sn | Ölünce 2 karo alana 25 hasar, savrulmaya %70 dirençli |
+
+### Irklar ve silahlar (Aşama 3)
+
+- **Irk pasifleri:** Archer +%10 saldırı menzili ve +%5 kritik şansı; Magical +%15 element hasarı (her silahta geçerli). Warrior ve Ghost'un pasifi başlangıç statları ve dirençleridir.
+- **Yetenek hasarı:** Hasar veren Q/E yetenekleri aktif silahın vuruşunun katıdır (skill çarpanı) ve onun elementini taşır; Q/E ile de kombo yapılır.
+- **Warrior** Q Zırh: 3 sn, +%20 hasar azaltma ve +%3 hasar. E Yer sarsıntısı: önde 3 karo, 100° yay, aktif silahın ×2,5'i.
+- **Warrior enerjisi:** isabet eden her saldırı başına bir kez +2 (vurulan düşman sayısından bağımsız). Sağ tık bekleme süresi 5-7 sn aralığının ortası: 6 sn.
+- **Ghost** Q Faz: 1 sn; saldırınca erken biter, faz sırasında düşmanların içinden geçilir. E Gölge adımı: farenin en yakınındaki düşmanın (oyuncuya en fazla 7 karo) 0,9 karo arkasına ışınlanır, 0,25 sn dokunulmazlık; menzilde hedef yoksa yetenek kullanılmaz ve bekleme başlamaz.
+- **Ghost iyileşmesi:** Can Emme özellikli silah aktifken öldürme başına ek %3 maks can iyileşmesi.
+- **Archer** Q Geri sıçrama: 0,22 sn'de 3 karo geri (dokunulmaz), öne 24°'lik yelpazede 3 ok (her biri ×0,8, 9 karo menzil). E Ok yağmuru: farenin gösterdiği yerde (en fazla 9 karo) 2,2 karo alana 0,35 sn gecikmeyle 0,25 sn arayla 6 dalga ok (her biri ×0,45).
+- **Magical** Q Uçuş: 2,5 sn, sütun ve engellerin üstünden geçer (dış duvarlardan geçemez), +%20 hareket hızı; uçuş bir engelin üstünde biterse oyuncu engelden çıkana kadar uçmaya devam eder. E Element fırtınası: farenin gösterdiği yerde (en fazla 6 karo) 2,6 karo alana 0,4 sn arayla 5 vuruş (her biri ×0,7).
+- **Magical** her silahta mana harcar (yakın silahta da). Magical dışı ırk büyü silahında (kitap, asa, rün) sol tık bedavadır, sağ tık = ırkın sağ tık beklemesi × 1,5 (Warrior 9 sn, Ghost 7,5 sn, Archer 9 sn).
+- **Irk-silah matrisi** aktif silaha göre işler. Tab ile farklı ailedeki silaha geçince maks can değişir, can oranı korunur. Uçan mermiler atıldıkları silahın statlarını kullanır.
+- **İksir** (1 tuşu) Aşama 3'ten itibaren çalışır: run 2 iksirle başlar, maks canın %40'ı; can doluyken içilmez. Tüccar ve iksir düşmesi Aşama 5'te.
+- **Çarpışma katmanları:** duvarlar 1, oyuncu 2, düşmanlar 4, sütun ve engeller 8 (Uçuş 8'i yok sayar). Mermiler duvar ve sütunlarda durur.
+- **Silah saldırıları** (sol tık ve sağ tık):
+
+| Tip | Sol tık | Sağ tık ayrıntısı |
+| --- | --- | --- |
+| Kılıç | 110° yay | Dönen kesik: 1,9 karo çevre, ×1,6 |
+| Balta | 120° yay | Balta fırlatma: 5 karo gidip döner (hız 11, dönüş ×1,15), gidişte ve dönüşte aynı düşmana birer kez vurur, ×1,4 |
+| Demir yumruk | 80° yay | Seri yumruk: 0,09 sn arayla 5 × ×0,55 (1,25 karo, 90°); sonuncusu 0,8 sn sersemletir, boss'ta 1 sn %30 yavaşlatır; seri sürerken yeni saldırı yok |
+| Tırpan | 140° yay | Hasat: 2,4 karo, 220° yay, ×1,4, arkadan vurulanlara +%20 |
+| Hançer | 70° yay | Saplama: farenin yakınındaki düşmana (4,5 karo) 0,12 sn'de atılıp arkasına geçer ve ×2,2 vurur; hedef yoksa 2,5 karo ileri atılıp keser |
+| Gürz | 100° yay | Yere vuruş: 0,8 karo önde 2,2 karo alan, ×1,5, 2 sn %40 yavaşlatma |
+| Yay | Ok (hız 18) | Güçlü atış: basılı tutunca 1,2 sn'de ×1'den ×3'e dolar, 11 karo, yoldaki bütün düşmanları deler; bekleme bırakınca başlar |
+| Arbalet | Cıvata (hız 22) | Saçma: 40°'lik yelpazede 5 cıvata, her biri ×0,7, 6 karo |
+| Mızrak | Dar dürtme (24°) | Fırlatma: 8 karo, deler, menzil sonunda ya da duvarda saplanır; tekrar sağ tık ya da 6 sn sonra geri döner ve dönüşte yeniden vurur; havadayken sol tık çalışmaz; bekleme mızrak dönünce başlar |
+| Kitap | Sayfa (hız 13) | Güdümlü sayfalar: 4 mermi, her biri ×0,6, 7 karodaki hedefi arar |
+| Asa | Küre (hız 14) | Element küresi: yavaş büyük küre, ilk düşmana ya da duvara çarpınca 2 karo alanda patlar, ×2,0 |
+| Rün | Farenin gösterdiği yerde 0,3 sn sonra 1,1 karo patlama | Rün tuzağı: 5 karoya kadar kurulur, 0,5 sn'de hazır olur, 1 karo içine düşman girince 2,2 karo alanda patlar (×2,5), 10 sn sonra söner; aynı anda tek tuzak |
+
+- **Hata ayıklama odası** (geçici, Aşama 10'da kalkar): M ile menü açılır; ırk, level, iki silahın tipi/elementi/özelliği ve düşman türü (1. kat dalgaları ya da saldırmayan kuklalar) seçilir. 2-7 / 0 aktif silahın elementini, 8 özelliğini değiştirir; N yeni dalga, R yeniden başlatır. Aşama 4'ten beri oyun zindanla açılır; test odasına M menüsündeki "Test odasına git" düğmesiyle geçilir (geri dönüş: "Zindana git").
+
+### Zindan (Aşama 4)
+
+Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
+
+- **Oda sayısı:** Run Süresi tablosundaki sayı (8 / 9 / 10 / 11, boss dahil) savaş, elit, tüccar, demirci, sandık ve boss odalarının toplamıdır. Düşmansız küçük bir **giriş odası** ve varsa **gizli oda** bu sayıya ektir.
+- **Oda tipi sayıları:** Ekonomi ve Oda Tipleri tablosundaki aralıklardan her katta rastgele (elit 1-2, sandık 1-2, gizli 0-1; tüccar, demirci, boss 1). Savaş odası 3'ün altına düşerse önce fazladan sandık, sonra fazladan elit azaltılır.
+- **Harita yapısı:** Odalar 28×28 karoluk bir ızgaranın hücrelerine yerleşir, komşu odalar 3 karo genişliğinde koridorla bağlanır. Girişten boss'a giden ana yol oda sayısının %60'ıdır; kalan odalar ana yoldan ya da dallardan çıkan yan dallardır. Boss odası ana yolun sonundadır, tek kapısı vardır ve yan dallar ona bitişik olamaz.
+- **Oda tiplerinin yeri:** Tüccar, demirci ve sandık önce çıkmaz odalara konur; elit en az 2 oda derindedir (önce ana yola).
+- **Şablonlar (11):** 8 savaş şablonu (Kare salon, Sütunlu salon, L oda, Haç, Yuvarlak mağara, Uzun salon, Çift oda, Halka), 2 küçük oda (tüccar, demirci, sandık, gizli oda), giriş odası ve boss arenası. Elit odası savaş şablonlarının 5'inden seçilir. Her oda 8 yönlü döndürme/aynalamayla ve ±2 karo kaydırılarak yerleşir; kapılar her kenarın ortasındadır.
+- **Rastgele engeller:** savaş odasında 2-6, elitte 1-4, sandık odasında 0-2, diğerlerinde yok; %35 ihtimalle 2 karoluk. Kapı yollarına 2 karodan, oda ortasına 2 karodan ve birbirine 2 karodan yakın konmaz; her engelden sonra odanın tüm zemini kapıdan ulaşılabilir olmalıdır, değilse engel geri alınır.
+- **Seed:** Her run yeni bir seed alır; her katın haritası `hash(run seed, kat)` ile üretilir, yani aynı seed aynı haritaları verir. Seed ekranın solunda görünür (hata bildiriminde yazılır).
+- **Oda akışı:** Oyuncu kapı ağzından 2 karodan fazla içeri girince kapılar demir parmaklıklarla kilitlenir. İlk dalga 0,6 sn sonra, sonrakiler önceki dalga ölünce 1,2 sn arayla gelir. Düşmanlar oyuncudan en az 4 karo uzakta, kapı ağzına ve engellere bitişik olmayan karolarda doğar. Son dalga ölünce kapılar açılır. Düşmansız odalar girildiği anda temizlenmiş sayılır.
+- **Dalgalar:** Katın normal düşman sayısı (60 / 70 / 80 / 90) savaş odalarına eşit bölünür; her oda 2-4 dalgaya ayrılır (dalga başına en fazla 8 düşman). Her elit odasında 1 elit vardır; kat başına 2 elitten eksik kalan, rastgele bir savaş odasının son dalgasına eklenir. Mağara Fareleri 3-5'li sürüler halinde gelir.
+- **Prototip düşmanlar (Aşama 7'ye kadar):** Tüm katlarda 1. kat modelleri kullanılır: İskelet Savaşçı, Mağara Faresi, Damar Kütlesi. Katı belli etmek için malzeme varyantları karışır: 2. kat Alevli, 3. kat Taş ve Alevli, 4. kat Hayalet. İskelet Okçu ve Göz Yavrusu uzak yapay zekâyla Aşama 7'de gelir. Düşman statları katla ölçeklenmez (Aşama 7).
+- **Yer tutucu elit:** İskelet Savaşçı ya da Damar Kütlesi; ×3 can, ×1,5 hasar, ×1,35 boy, altın halka, adı "Elit …".
+- **Yer tutucu boss:** Katın boss havuzundan seçilen boss'un adını taşıyan dev bir Damar Kütlesi; ×6 can, ×1,6 hasar, ×2,1 boy (çarpışma gövdesi en fazla ×1,5), kırmızı halka ve ekranın üstünde can barı. Gerçek boss'lar Aşama 7'de.
+- **Boss sonrası:** Kat boss'u kesilince can tamamen dolar (Ghost dahil), boss odasının ortasında merdiven belirir; F ile bir alt kata inilir. 4. kat boss'u kesilince "KAZANDIN!" yazısı çıkar. Ölünce ya da kazanınca R yeni run başlatır (yeni seed, 1. kat).
+- **Gizli oda:** Bir odanın boş ızgara komşusuna konur; aradaki geçit 3 karoluk **çatlak duvarla** kapalıdır (açık renkli, kırık çizgili duvar). Yakın saldırıyla (menzil + 1,2 karo içinde ve duvara dönükken) ya da duvara 1,2 karodan fazla yaklaşan bir mermiyle vurulur; 3 vuruşta kırılır. Gizli oda ve koridoru duvar kırılana kadar çizilmez ve haritada görünmez. İçinde bir sandık vardır.
+- **Etkileşim (F):** Sandık, tüccar ve demirci şimdilik yer tutucudur (sandık açılır, tüccar/demirci konuşur); loot ve arayüzleri Aşama 5'te. Etkileşim menzili 1,6 karo; yakındaki nesnenin ipucu ekranın ortasında "F: …" olarak görünür.
+- **Slot değişimi kuralı:** Kilitli bir odada savaş sürerken `GameState.in_combat` açıktır ve ırk/silah değişikliği yapılamaz; koridorda, temizlenmiş ya da düşmansız odada serbesttir. Tab (iki aktif silah arası) her zaman serbesttir. Aşama 5'teki çanta ve slotlar bu kuralı kullanır.
+- **Kat paletleri (zemin / duvar / engel):** 1. kat #5a3a44 / #2e1d26 / #7a3448 · 2. kat #3d5a3a / #1f2e22 / #6b4a7a · 3. kat #5a3a24 / #2a2320 / #a0521e · 4. kat #2a2440 / #121020 / #4a3f7a. Gerçek karo setleri Aşama 8'de.
+- **Minimap:** Sağ üstte, dünyayla aynı izometrik yönde. Girilen odalar tip rengi ve harfiyle (G giriş, E elit, T tüccar, D demirci, S sandık, B boss, ? gizli oda), girilen odaların komşuları gri "?" olarak görünür; temizlenmemiş düşmanlı odada kırmızı nokta vardır. Gizli oda bulunana kadar görünmez.
+- **Duvar arkası siluet:** Karakter (oyuncu ya da düşman) bir duvarın ya da engelin arkasında kalınca yarı saydam silueti duvarın üstünde görünür.
+- **Yol bulma:** Düşmanlar ve test botu, arada engel varsa oda içinde engelin etrafından dolaşır (mesafe haritası).
+- **Güvenlik ağları:** Kilitli odanın dışına düşen oyuncu (örn. Gölge adımı kapının ötesine ışınlarsa) ve duvarın ötesine itilen düşman odanın içindeki son konumuna geri alınır.
+- **Hata ayıklama menüsü (zindanda):** "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında kapalı). "Zindan" satırı: kat seçimi + "Bu kattan yeni harita", "Test odasına git" ve "Ölümsüz (test)" kutusu (hasar alınmaz; katları hızlı gezmek için).
+- **Zorluk notu:** Aşama 6'ya (XP ve level) kadar oyuncu level atlamaz ve düşmanlar katla güçlenmez; level 1'de 60 düşmanlı 1. katı bitirmek zordur. Test için menüden level seçilebilir ya da "Ölümsüz" açılabilir.
 
 ## Uygulama Rehberi
 
@@ -560,11 +666,32 @@ Ekteki dosya zindan oyunumun tasarım dokümanı (GDD). Oyunu bu dokümandaki
 
 Sonraki oturumlarda kaldığın yerden devam etmek için: "GDD ekte, repo şu: \<link>. Aşama N'den devam et."
 
+### Proje Durumu ve Çalışma Düzeni
+
+Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlatıldığında kaldığı yeri buradan bilir. Ayrıntılı durum reponun README'sindeki "Durum" bölümündedir.
+
+| Aşama | Durum |
+| --- | --- |
+| 0 — Ortam ve iskelet | ✅ Bitti, main'e birleştirildi |
+| 1 — Vuruş hissi prototipi | ✅ Bitti, onaylandı |
+| 2 — Savaş çekirdeği | ✅ Bitti, onaylandı (`asama-2` dalı) |
+| 3 — Irklar ve silahlar | ✅ Bitti, onaylandı (`asama-3` dalı, sürüm 0.3.1) |
+| 4 — Zindan üretimi | ✅ Bitti (`asama-4` dalı, sürüm 0.4.0); kullanıcı testinde |
+| 5-10 | Sırada: Aşama 5 — Loot ve envanter |
+
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-2`, `asama-3` ve `asama-4` dalları push edildi, henüz main'e birleştirilmedi; her dal bir öncekinin üstüne kurulu olduğu için `asama-4`'ü birleştirmek öncekileri de getirir.
+- **Teslim:** Claude'un GitHub bağlantısı yalnızca okuyabilir. Kod `git bundle` olarak kullanıcının bilgisayarındaki `C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakılır (önceki aşamanın dalına göre artımlı); push'u kullanıcı yapar. Kullanıcının yerel klonu `ZindanOyunu-Derlemeler\zindan-oyunu` klasöründedir. Kullanıcı **Git Bash** kullanır: verilen git komutlarında yol ayıracı `/` olmalıdır. Push komutları (klon klasöründe): `git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`.
+- **.exe teslimi:** Zip 30 MB'tan büyük olduğu için 19 MB'lık parçalara bölünür ve `ZindanOyunu-Derlemeler\asama-N\` klasörüne, parçaları birleştirip açan `birlestir-ve-ac.bat` ile birlikte konur.
+- **Test:** `make test` dört adımı çalıştırır: birim testleri (121 test), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, boss'ları keser, merdivenle iner).
+- **Bilinen:** `bpy` paket deposunda bulunamadı (Aşama 8'de yeniden denenecek). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
+
+**Kaldığın yerden devam mesajı:** "GDD ekte, repo: https://github.com/MustafaCap/zindan-oyunu. Aşama N'den devam et. README'deki Durum bölümüne bak. Kodu git bundle olarak Git_Dosyaları\ZindanOyunu-Derlemeler klasörüne bırak, push'u ben yaparım; .exe'yi parçalayıp aynı klasöre birlestir-ve-ac.bat ile koy. Git Bash kullanıyorum: git komutlarında / kullan. Aşama sonunda GDD'yi de güncelle."
+
 ### Teknik Altyapı
 
 | Araç | Kullanım | Nereden |
 | --- | --- | --- |
-| Godot 4 (en güncel kararlı 4.x) | Motor; Linux headless sürümü testler ve export için | GitHub releases (godotengine/godot) |
+| Godot 4 (kullanılan: 4.7.2) | Motor; Linux headless sürümü testler ve export için | GitHub releases (godotengine/godot) |
 | Godot export şablonları | Linux'tan Windows .exe derlemek | Aynı sürümün GitHub release'i |
 | GDScript | Tüm oyun kodu | — |
 | Blender (Python `bpy`) | Low-poly modeller, 8 yönlü sprite render'ı, normal map | `pip install bpy` |
@@ -588,20 +715,22 @@ zindan-oyunu/
     autoload/             # Events, DataDB, GameState, SaveManager
     combat/               # DamageCalc, StatusEffects, Combos
     player/  enemies/  bosses/
-    dungeon/              # DungeonGenerator, RoomController
+    dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
     loot/                 # LootGenerator, Inventory
     progression/          # Leveling, Mastery, Rewards
   assets/                 # sprites, normals, audio/sfx, audio/music, fonts, shaders
   tools/
     blender/render_sprites.py
     audio/sfx_synth.py
+    dev/print_dungeon.gd  # bir katın haritasını ASCII olarak basar (geliştirme aracı)
   tests/                  # headless birim testleri
   build/                  # export çıktıları (git'e girmez)
 ```
 
 | Make hedefi | Ne yapar |
 | --- | --- |
-| `make test` | Godot'u headless çalıştırıp `tests/` içindeki tüm testleri koşar |
+| `make test` | Birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke testi |
+| `make dungeon` | Zindan smoke testi: bot 4 katı baştan sona yürür (Aşama 4 kabulü) |
 | `make sprites` | Blender script'iyle tüm sprite ve normal map'leri yeniden üretir |
 | `make sfx` | Ses efektlerini sentezleyip `assets/audio/sfx` içine yazar |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
@@ -626,9 +755,10 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `bosses.json` | 4 boss, fazlar, saldırılar | Boss'lar |
 | `rewards.json` | Level ve boss ödül havuzları | Run İçi Ödüller |
 | `progression.json` | XP eğrisi, ustalık eğrisi, derinlik çarpanları, stat tavanları | Level, Ustalık, Denge |
-| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu | Zindan, Run Süresi |
+| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu, placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
+| `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, prototip düşmanlar, yer tutucu elit/boss, gizli duvar | Zindan, Uygulamada Verilen Kararlar |
 
-**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular), `GameState` (aktif run: level, çanta, slotlar, buff'lar), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`).
+**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular), `GameState` (aktif run: level, çanta, slotlar, buff'lar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`).
 
 **Hasar formülü:** Tüm hasar tek bir `DamageCalc` fonksiyonundan geçer ve birim testleriyle korunur.
 
@@ -783,4 +913,4 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 - **Kod:** GDScript'te statik tipler, her script'in başında kısa bir açıklama, koda gömülü denge sayısı yok.
 - **Git:** Her aşama kendi branch'inde (`asama-0`, `asama-1` …), bitince `main`'e merge edilir; commit mesajları Türkçe ve anlamlıdır. Kullanıcı Git öğreniyor: branch, commit ve merge adımları kısaca açıklanır.
 - **Oturumlar arası devamlılık:** README'nin "Durum" bölümü her aşama sonunda güncellenir (bitmiş aşamalar, kalınan adım, bilinen hatalar); yeni sohbet oradan devam eder.
-- **Açık kararlar** (oyunun adı, Ghost'un iksir kuralı, kalan 16 boss, hikâye, ayrıntılı arayüz) oyunun yapımını engellemez; ilgili aşamaya gelindiğinde kullanıcıya sorulur.
+- **Açık kararlar** (oyunun adı, kalan 16 boss, hikâye, ayrıntılı arayüz) oyunun yapımını engellemez; ilgili aşamaya gelindiğinde kullanıcıya sorulur.

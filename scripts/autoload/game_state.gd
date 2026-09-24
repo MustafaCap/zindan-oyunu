@@ -9,6 +9,8 @@ var race_id: String = ""
 var level: int = 1
 var xp: float = 0.0
 var floor_index: int = 1
+var run_seed: int = 0               ## haritaları üreten seed (her kat: run_seed + kat)
+var in_combat: bool = false         ## kilitli bir savaş odasında mı (GDD: slot değişimi yalnızca oda dışında)
 var gold: int = 0
 var potions: int = 0
 var bag: Array = []                 # çantadaki eşyalar (Aşama 5)
@@ -30,6 +32,8 @@ func reset_run() -> void:
 	level = 1
 	xp = 0.0
 	floor_index = 1
+	run_seed = 0
+	in_combat = false
 	gold = 0
 	potions = 0
 	bag = []
@@ -48,6 +52,24 @@ func start_run(new_race_id: String) -> void:
 	in_run = true
 	potions = int(DataDB.get_value("progression", "potions.start"))
 	Events.run_started.emit(race_id)
+
+
+## GDD Kontroller ve Slotlar: çanta ↔ slot değişimi yalnızca oda dışında (koridorda, temizlenmiş ya da savaş dışı
+## odada). Tab ile iki aktif silah arasında geçiş bu kurala tabi değildir, savaşta da serbesttir.
+func can_change_slots() -> bool:
+	return not in_combat
+
+
+func set_in_combat(value: bool) -> void:
+	if in_combat == value:
+		return
+	in_combat = value
+	Events.combat_state_changed.emit(value)
+
+
+## Kat seed'i: aynı run seed'inden her kat için farklı ama tekrarlanabilir harita.
+func floor_seed(floor_idx: int) -> int:
+	return hash([run_seed, floor_idx])
 
 
 ## Silah tipine göre verilen hasarı biriktirir (run sonunda ustalık XP'si buna göre bölünür).
