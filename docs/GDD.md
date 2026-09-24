@@ -410,7 +410,7 @@ Warrior silahları hızlı ve kısa menzilli, Ghost silahları kısa menzilli ve
 | Irk | Kaynak | Nasıl çalışır |
 | --- | --- | --- |
 | Warrior | Enerji, sabit 100 | Q 40, E 70 enerji harcar. Saniyede 10 dolar, her isabetli vuruşta +2. Sağ tık bekleme süreli (5-7 sn). |
-| Magical | Mana: 120 + level × 4 (level 80'de 440) | Sol tık 2, sağ tık 70, Q 80, E 110 mana harcar. Saniyede maks mananın %3'ü dolar, enerjiden yavaş. Maks levelde arka arkaya 4-5 skill atılabilir. |
+| Magical | Mana: 120 + level × 4 (level 80'de 440) | Sol tık 1, sağ tık 55, Q 65, E 90 mana harcar. Saniyede maks mananın %3'ü dolar, enerjiden yavaş. Maks levelde arka arkaya 5-6 skill atılabilir. |
 | Archer | Yok | Sağ tık 6 sn, Q 8 sn, E 18 sn bekleme süresi |
 | Ghost | Yok | Sağ tık 5 sn, Q 12 sn, E 10 sn bekleme süresi |
 

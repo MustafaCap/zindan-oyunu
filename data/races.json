@@ -117,7 +117,8 @@
       "max_per_level": 4,
       "regen_pct_per_sec": 0.03
     },
-    "costs": { "light": 2, "heavy": 70, "q": 80, "e": 110 },
+    "costs": { "light": 1, "heavy": 55, "q": 65, "e": 90 },
+    "_costs_note": "Aşama 3 testinden sonra kullanıcı isteğiyle düşürüldü (eski: sol 2, sağ 70, Q 80, E 110).",
     "cooldowns": {},
     "abilities": {
       "q": {

@@ -38,7 +38,7 @@ dalga ya da kukla). `make matrix` 48 ırk × silah kombinasyonunun hepsini otoma
   engelden çıkana kadar uçmaya devam eder. E Element fırtınası: farenin gösterdiği yerde 2,6 karo alana 5 vuruş (×0,7).
 - Yetenek hasarları aktif silahın vuruşunun katıdır ve onun elementini taşır (Q/E ile de kombo yapılır).
 - Warrior enerjisi isabet eden **her saldırı** başına bir kez +2 (vurulan düşman sayısından bağımsız). Sağ tık 5-7 sn → 6 sn.
-- Magical her silahta mana harcar (sol tık 2, sağ tık 70). Magical dışı ırk büyü silahında sol tık bedava, sağ tık = ırkın
+- Magical her silahta mana harcar (sol tık 1, sağ tık 55, Q 65, E 90 — Aşama 3 testinden sonra düşürüldü; eskisi 2 / 70 / 80 / 110). Magical dışı ırk büyü silahında sol tık bedava, sağ tık = ırkın
   sağ tık beklemesi × 1,5 (Warrior 9 sn, Ghost 7,5 sn, Archer 9 sn).
 - İki farklı ailede silah taşınınca ırk-silah matrisi **aktif silaha** göre işler; Tab'la geçince maks can değişir, can
   oranı korunur.

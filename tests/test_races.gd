@@ -112,16 +112,22 @@ func test_mana() -> void:
 	assert_eq(k1.resource_max, 124.0, "Mana = 120 + level × 4")
 	var k80 := RaceKit.new("magical", 80)
 	assert_eq(k80.resource_max, 440.0, "level 80'de 440")
-	assert_eq(k80.cost("light", "magical"), 2.0)
-	assert_eq(k80.cost("heavy", "magical"), 70.0)
-	assert_eq(k80.cost("q", "magical"), 80.0)
-	assert_eq(k80.cost("e", "magical"), 110.0)
+	assert_eq(k80.cost("light", "magical"), 1.0)
+	assert_eq(k80.cost("heavy", "magical"), 55.0)
+	assert_eq(k80.cost("q", "magical"), 65.0)
+	assert_eq(k80.cost("e", "magical"), 90.0)
 	assert_eq(k80.cooldown_for("heavy", "magical"), 0.0, "Magical sağ tık mana ile, beklemesiz")
-	# Maks levelde arka arkaya 4-5 skill (GDD)
+	# Maks levelde arka arkaya 5-6 skill (GDD); yalnızca sağ tık atılırsa 8
 	var casts := 0
 	while k80.use("heavy", "magical"):
 		casts += 1
-	assert_true(casts >= 4 and casts <= 6, "maks levelde arka arkaya 4-5 sağ tık (bulunan %d)" % casts)
+	assert_eq(casts, 8, "440 manayla arka arkaya 8 sağ tık (55)")
+	var k_mix := RaceKit.new("magical", 80)
+	var skills := 0
+	for slot: String in ["e", "q", "heavy", "e", "q", "heavy", "e"]:
+		if k_mix.use(slot, "magical"):
+			skills += 1
+	assert_true(skills >= 5 and skills <= 6, "karışık Q/E/sağ tıkla 5-6 skill (bulunan %d)" % skills)
 	k80.resource = 0.0
 	k80.tick(1.0)
 	assert_almost(k80.resource, 13.2, 0.001, "saniyede maks mananın %3'ü")
@@ -159,7 +165,7 @@ func test_foreign_spell_weapon_cooldown_x1_5() -> void:
 	assert_true(RaceKit.new("warrior").is_foreign_spell_weapon("magical"))
 	assert_true(not RaceKit.new("magical").is_foreign_spell_weapon("magical"))
 	assert_eq(RaceKit.new("archer").cooldown_for("heavy", "warrior"), 6.0, "yakın silah ×1 kalır")
-	assert_eq(RaceKit.new("magical", 1).cost("light", "warrior"), 2.0, "Magical her silahta mana harcar")
+	assert_eq(RaceKit.new("magical", 1).cost("light", "warrior"), 1.0, "Magical her silahta mana harcar")
 
 
 # --- Player: can, iksir, Ghost, Tab ---
