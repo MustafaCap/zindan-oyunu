@@ -13,8 +13,12 @@ signal room_cleared(room_id: int)
 
 # Savaş
 signal damage_dealt(source: Node, target: Node, amount: float, is_crit: bool, element: String)
+signal hit_landed(position: Vector2, amount: float, is_crit: bool, heavy: bool, dir_cart: Vector2)
+signal damage_number(position: Vector2, amount: float, is_crit: bool, is_player: bool)
 signal enemy_killed(enemy: Node, is_elite: bool, is_boss: bool)
+signal enemy_died_fx(position: Vector2, dir_cart: Vector2)
 signal player_damaged(amount: float)
+signal player_dashed(position: Vector2)
 signal player_died()
 signal combo_triggered(combo_id: String, target: Node)
 
