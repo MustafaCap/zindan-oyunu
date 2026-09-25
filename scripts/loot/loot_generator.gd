@@ -1,7 +1,9 @@
 ## LootGenerator — loot üretimi (GDD: Nadirlik ve Efsanevi Silahlar, Zindan, Ekonomi). Saf hesaptır; zar atışları
 ## verilen RandomNumberGenerator'dan gelir (aynı seed aynı loot).
-##   Nadirlik: katın oranları (loot_tables.json). Elit düşman ve gizli oda üst nadirliklerin (Destansı, Efsanevi) şansını
-##   ×2 yapar, fark Yaygın'dan düşülür (Yaygın yetmezse — 4. kat — kalan Ender'den). Efsanevi 3. kattan itibaren. 3. ve 4. kat boss'ları en az Destansı düşürür.
+##   Nadirlik: katın oranları (loot_tables.json). Gizli oda üst nadirliklerin (Destansı, Efsanevi) şansını ×2 yapar,
+##   fark Yaygın'dan düşülür (Yaygın yetmezse — 4. kat — kalan Ender'den). Efsanevi 3. kattan itibaren.
+##   Kullanıcı kararı (Aşama 5): düşmanlar (elit dahil) silah düşürmez, yalnızca altın (ve nadiren iksir); boss kesilince
+##   1 silah düşer, nadirliği katın normal oranlarıyla çıkar (garanti yüksek nadirlik yok).
 ##   Silah: tip 12 tipten eşit olasılıkla; element sayısı ve özellik sayısı nadirliğe göre; level katın aralığından.
 ##   Efsanevi: legendaries.json'daki kayıtlardan biri (tip ve element kayıttan), 1 veya 2 özellik.
 ##   Düşmeler (economy.json): altın, silah, iksir; sandıkta ayrıca tılsım.
@@ -45,13 +47,6 @@ static func rarity_weights(floor_i: int, source: String) -> Dictionary:
 			var take := minf(float(w[r6]), extra)
 			w[r6] = float(w[r6]) - take
 			extra -= take
-	# Boss: en az belirli nadirlik (alttakiler sıfırlanır, kalanlar yeniden ölçeklenir)
-	if source == "boss" and (lt["boss_min_rarity"] as Dictionary).has(str(floor_i)):
-		var min_r := str(lt["boss_min_rarity"][str(floor_i)])
-		for r3: String in order:
-			if r3 == min_r:
-				break
-			w[r3] = 0.0
 	var total := 0.0
 	for r4: String in order:
 		total += float(w[r4])
@@ -145,7 +140,7 @@ static func gold_mult(floor_i: int) -> float:
 	return float(DataDB.table("economy")["floor_gold_mult"][str(clampi(floor_i, 1, 4))])
 
 
-## Düşmanın düşürdükleri. kind: "normal", "elite", "boss".
+## Düşmanın düşürdükleri. kind: "normal", "elite", "boss". Silahı yalnızca boss düşürür (economy.drops.boss_weapons).
 ## Döndürür: [{"kind": "gold", "amount": int} | {"kind": "weapon", "item": Weapon} | {"kind": "potion"}]
 static func enemy_drops(floor_i: int, kind: String, rng: RandomNumberGenerator) -> Array:
 	var d: Dictionary = DataDB.table("economy")["drops"]
@@ -154,10 +149,8 @@ static func enemy_drops(floor_i: int, kind: String, rng: RandomNumberGenerator) 
 	var potion_chance := 0.0
 	match kind:
 		"normal":
-			weapons = 1 if rng.randf() < float(d["normal_weapon_chance"]) else 0
 			potion_chance = float(d["normal_potion_chance"])
 		"elite":
-			weapons = int(d["elite_weapons"])
 			potion_chance = float(d["elite_potion_chance"])
 		"boss":
 			weapons = int(d["boss_weapons"])

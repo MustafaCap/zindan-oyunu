@@ -304,6 +304,7 @@ Boss'lar dondurulduktan sonra 8 sn donmaya bağışık olur. İki aktif silah ar
 **Boss ödülü:**
 
 - Her kesişte boss ödül havuzundan gelen 2 seçenekten biri seçilir (Run İçi Ödüller bölümü)
+- Her kesişte 1 silah düşer; nadirliği katın normal düşme oranlarıyla çıkar (garanti yüksek nadirlik yok; ör. 3. katta efsanevi %5)
 - İlk kesişte ayrıca kalıcı +%0,3 hasar (20 boss ile maks +%6)
 
 **Bağışıklık:** Her düşmanın malzemesine göre elementlere karşı Bağışık, Dirençli ya da Zayıf durumu vardır. Bağışık olunan element, o elementle efsunlu silahları ve Rezonans hasarını da kapsar.
@@ -462,7 +463,7 @@ Temel hasar silah tipine göre bir çarpanla ayarlanır: hızlı silahlar (hanç
 | 3 | %35 | %38 | %22 | %5 |
 | 4 | %20 | %38 | %32 | %10 |
 
-Elit düşmanlar ve gizli odalar üst nadirlik şanslarını iki katına çıkarır. 3. ve 4. kat boss'ları en az Destansı silah düşürür.
+**Silah nereden çıkar:** Düşmanlar (normal ve elit) silah düşürmez, yalnızca altın (ve nadiren iksir) düşürür. Kat boss'u kesilince 1 silah düşer ve nadirliği yukarıdaki tablodan çıkar (boss için garanti yüksek nadirlik yoktur). Silah ayrıca sandıklardan, gizli odadan ve tüccardan gelir. Gizli oda üst nadirlik (Destansı, Efsanevi) şanslarını iki katına çıkarır.
 
 Efsanevi pasif örnekleri: her 5. vuruş gökten yıldırım indirir; öldürülen düşman elementinde patlar; bir kombo tetiklenince sağ tık, Q ve E bekleme süreleri sıfırlanır. Her efsanevi silahın adı ve pasifi elle tasarlanır.
 
@@ -473,12 +474,12 @@ Altın yalnızca run içinde harcanır ve ölünce gider. Her kat, savaş odalar
 | Oda | Kat başına | İşlevi |
 | --- | --- | --- |
 | Savaş | Çoğunluk | Düşman dalgaları, loot ve altın |
-| Elit | 1-2 | Güçlü tek düşman, daha iyi loot |
+| Elit | 1-2 | Güçlü tek düşman, daha çok altın (silah düşürmez) |
 | Tüccar | 1 | Silah, tılsım ve iksir satın alma; çantadaki silahları satma |
 | Demirci | 1 | Altınla silah leveli atlatma ya da ek stat yeniden çekme |
 | Sandık | 1-2 | Ücretsiz loot, bazen tuzaklı |
 | Gizli oda | 0-1 | Duvar kırılarak bulunur, yüksek nadirlik şansı |
-| Boss | 1 | Kat sonu |
+| Boss | 1 | Kat sonu; 1 silah düşürür |
 
 Oda değişimi kuralı burada da geçerli: tüccar ve demirci odaları savaş dışı sayılır, slot değişimi yapılabilir.
 
@@ -526,6 +527,7 @@ Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
 - [ ] Kalan 16 boss (kat başına 4)
 - [ ] Hikâye ve lore
 - [ ] Ayrıntılı arayüz tasarımı
+- [x] Silah düşmeleri: düşmanlar yalnızca altın, boss 1 silah (katın normal oranlarıyla) — Aşama 5'te kullanıcı kararı
 - [ ] Efsanevi silah listesi: Aşama 5'te 12 efsanevi önerildi (her tipten bir; ad, element, pasif, sağ tık eki — Uygulamada Verilen Kararlar > Loot ve envanter). Kullanıcı ad ve pasifleri değiştirebilir; liste zamanla genişletilir.
 - [x] Ghost iksir kullanamaz (Aşama 3'te onaylandı)
 - [x] Magical mana bedelleri düşürüldü: sol tık 1, sağ tık 55, Q 65, E 90 (Aşama 3 testinden sonra)
@@ -557,6 +559,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 3 | Ghost iksir kullanamaz (açık karar kapandı) |
 | 3 | Magical mana bedelleri düşürüldü: sol tık 2 → 1, sağ tık 70 → 55, Q 80 → 65, E 110 → 90 |
 | 4 | Zindan üretimi olduğu gibi onaylandı |
+| 5 | Düşmanlar (elit dahil) silah düşürmez, yalnızca altın; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar ("direkt çok iyi" olmasın; ör. efsanevi %5). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kuralları kaldırıldı. |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -578,7 +581,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 - Sekme 3 karo menzil. Sersemletme boss'ta 1 sn %30 yavaşlatır.
 - Zincir, sekme ve kombo alan hasarları "ikincil vuruş"tur: element bırakır ama yeni kombo, zincir ya da özellik tetiklemez; kritik ve arkadan vuruş almaz.
 - Fiziksel hasara element hasarı bonusları uygulanmaz.
-- Elit düşmanlar ve gizli odalardaki "üst nadirlik ×2" farkı Yaygın'dan düşülür.
+- Gizli odadaki "üst nadirlik ×2" farkı Yaygın'dan düşülür (Aşama 5'ten beri elit düşmanlar silah düşürmediği için yalnızca gizli oda).
 - 1\. kat düşmanlarının prototip statları (Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak):
 
 | Düşman | Can | Hasar | Zırh | Hız | Saldırı menzili | Hazırlık | Bekleme | Not |
@@ -658,8 +661,8 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 
 - Silah tipi 12 tipten eşit olasılıkla seçilir (oyuncunun ailesine ağırlık verilmez). Element (Ender ve üstü) 6 elementten eşit olasılıkla; özellikler farklı olmak üzere nadirliğin aralığından (Destansı 1, Efsanevi 1-2).
 - Silah leveli katın aralığından eşit olasılıkla: 1. kat 1, 2. kat 10, 3. kat 25-40, 4. kat 50.
-- Elit düşman ve gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan düşülür; **Yaygın yetmezse kalan Ender'den** düşülür (yalnızca 4. katta olur: Yaygın %0, Ender %16, Destansı %64, Efsanevi %20). Sandık ve tüccar normal tabloyu kullanır.
-- 3. ve 4. kat boss'ları en az Destansı: Destansı altı sıfırlanır, kalanlar oranları korunarak yeniden ölçeklenir (3. kat: Destansı %81,5, Efsanevi %18,5).
+- **Kullanıcı kararı:** düşmanlar (normal ve elit) silah düşürmez, yalnızca altın ve nadiren iksir düşürür. Kat boss'u kesilince 1 silah düşer; nadirliği katın normal oranlarıyla çıkar (ör. 3. kat: Yaygın %35, Ender %38, Destansı %22, Efsanevi %5). Eski "3-4. kat boss'u en az Destansı" kuralı kaldırıldı.
+- Gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan düşülür; **Yaygın yetmezse kalan Ender'den** düşülür (yalnızca 4. katta olur: Yaygın %0, Ender %16, Destansı %64, Efsanevi %20). Sandık, tüccar ve boss normal tabloyu kullanır.
 - Efsanevi seçilince 12 efsanevi kayıttan biri eşit olasılıkla gelir (tip ve element kayıttan).
 - Aynı seed aynı loot'u verir: kat loot'u `hash(kat seed'i, "loot")`, sandık ve tüccar `hash(kat seed'i, oda, "chest"/"merchant")` ile.
 
@@ -667,9 +670,9 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 
 | Kaynak | Altın | Silah | İksir | Diğer |
 | --- | --- | --- | --- | --- |
-| Normal düşman | 2-5 | %8 | %1,5 | — |
-| Elit | 25-35 | 1 (üst nadirlik ×2) | %25 | — |
-| Boss | 90-110 | 2 (3-4. katta en az Destansı) | — | — |
+| Normal düşman | 2-5 | — | %1,5 | — |
+| Elit | 25-35 | — | %25 | — |
+| Boss | 90-110 | 1 (katın normal oranlarıyla) | — | — |
 | Sandık | 30-50 | 1 | — | %20 ihtimalle silah yerine sahip olunmayan bir tılsım; %25 tuzaklı |
 | Gizli oda sandığı | 60-90 | 1 (üst nadirlik ×2) | — | tuzaksız |
 
