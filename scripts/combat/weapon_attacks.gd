@@ -3,6 +3,7 @@
 ## Kaynak (enerji/mana) ve bekleme süreleri Player.kit (RaceKit) üzerinden ödenir. Vuruşlar Player.deal_hit'ten geçer.
 ##   Sol tık:  arc (yay vuruşu) · thrust (mızrak dürtmesi) · projectile (ok, cıvata, sayfa, küre) · blast (rün patlaması)
 ##   Sağ tık:  spin · boomerang · flurry · arc · backstab · smash · charge_shot · fan · spear_throw · homing · orb · trap
+## Aşama 6: boss özel etkisi Ek mermi sol tıka küçük bir mermi (yakın silahta kılıç dalgası) ekler.
 class_name WeaponAttacks
 extends RefCounted
 
@@ -47,7 +48,24 @@ static func light(p: Player) -> bool:
 			g.delay = float(ld["delay"])
 			g.color = col
 			p.spawn(g, p.target_point(rng_t))
+	_extra_projectile(p, w, str(ld["style"]), id, rng_t)
 	return true
+
+
+## Boss özel etkisi Ek mermi: normal saldırı %30 hasarlı küçük bir mermi daha atar; yakın silahta kılıç dalgası.
+## Vuruşu "light_extra" kaynağıdır (Çift vuruş tetiklemez).
+static func _extra_projectile(p: Player, w: Weapon, style: String, id: int, rng_t: float) -> void:
+	var ex := GameState.special("extra_projectile")
+	if ex.is_empty():
+		return
+	var melee := style in ["arc", "thrust"]
+	var dir := p.facing_cart if melee else p.facing_cart.rotated(deg_to_rad(float(ex["angle_offset_degrees"])))
+	var pr := make_projectile(p, w, "light_extra", float(ex["damage_pct"]), id, dir)
+	pr.kind = "wave" if melee else "orb"
+	pr.speed_tiles = float(ex["speed"])
+	pr.radius_tiles = float(ex["radius"]) * (1.5 if melee else 1.0)
+	pr.max_range = float(ex["melee_range"]) if melee else rng_t
+	p.spawn(pr, p.global_position)
 
 
 ## Sağ tık basıldı. Yay'da dolum başlar (bırakınca atar); Mızrak havadaysa geri çağırır.
@@ -74,6 +92,7 @@ static func heavy_pressed(p: Player) -> bool:
 	p.end_phase()
 	p.uses["heavy"] = int(p.uses["heavy"]) + 1
 	_do_heavy(p, w, hd, style)
+	p.effects.on_heavy(w)
 	return true
 
 
@@ -101,6 +120,7 @@ static func heavy_released(p: Player) -> void:
 	p.charge_t = 0.0
 	if k >= 1.0:
 		Events.floating_text.emit(p.global_position + Vector2(0, -80), "TAM GÜÇ", Color(1.0, 0.9, 0.4), 18)
+	p.effects.on_heavy(w)
 
 
 static func _do_heavy(p: Player, w: Weapon, hd: Dictionary, style: String) -> void:

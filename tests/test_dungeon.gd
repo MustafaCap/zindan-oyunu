@@ -257,6 +257,8 @@ func test_boss_kill_opens_stairs_and_next_floor() -> void:
 	boss.call("execute", Vector2.RIGHT)
 	rc._process(0.1)
 	assert_eq(run.player.hp, run.player.max_hp, "boss sonrası can tamamen dolar")
+	var bw := run.drops.filter(func(d: LootDrop) -> bool: return d.kind == "weapon")
+	assert_eq(bw.size(), 1, "boss kesilince 1 silah düşer (Aşama 5 kullanıcı kararı)")
 	var stairs: RoomProp = null
 	for p: RoomProp in run.props:
 		if is_instance_valid(p) and p.kind == "stairs":
