@@ -21,9 +21,11 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 
 **Kalınan yer:** Aşama 5 (sürüm 0.5.0) kodlandı; `asama-5` dalı `asama-4`'ün üstünde. Kullanıcı onaylayınca Aşama 6'ya (ilerleme)
 geçilecek.
-- `LootGenerator`: katın nadirlik tablosu, elit/gizli oda üst nadirlik ×2, efsanevi 3. kattan, 3-4. kat boss'u en az Destansı,
+- `LootGenerator`: katın nadirlik tablosu, gizli oda üst nadirlik ×2, efsanevi 3. kattan,
   12 tip, element ve özellik sayısı nadirliğe göre, kat silah leveli (1 / 10 / 25-40 / 50). 10.000 düşüşlük testte oranlar ±%1.
-- Düşmeler: altın (yaklaşınca toplanır), silah (F), iksir (üstünden geçince), sandıkta tılsım; nadirliğe göre ışık sütunu.
+- Düşmeler (kullanıcı kararı): düşmanlar (elit dahil) silah düşürmez, altın düşürür (yaklaşınca toplanır; nadiren iksir).
+  Boss kesilince 1 silah düşer, nadirliği katın normal oranlarıyla (ör. 3. katta efsanevi %5). Silah ayrıca sandık, gizli oda
+  ve tüccardan gelir; sandıkta tılsım da çıkabilir. Silah F ile alınır; nadirliğe göre ışık sütunu.
   Sandıklar %25 tuzaklı (kırmızı işaret, 1 sn sonra patlar).
 - `Inventory` + `InventoryUI` (I): 12 gözlü çanta ve 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek); sürükle-bırak, sağ tık/çift tık
   ile tak-çıkar, yere bırakma, stat karşılaştırmalı tooltip. Kilitli silah aktif slota konamaz; savaşta slotlar kilitli.
@@ -34,10 +36,13 @@ geçilecek.
 - Tüccar (F): 3 silah + 1 tılsım + iksir satar, eşya alır (%30). Demirci (F): level atlatma, element/özellik yeniden çekme.
 - Run ırkın kendi ailesinden Yaygın bir silahla başlar.
 
+**Kullanıcının Aşama 5'te istediği değişiklik:** düşmanlardan silah düşmez, yalnızca altın; boss 1 silah düşürür ve bu silah
+garanti iyi değildir (katın normal nadirlik oranları). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kaldırıldı.
+
 **Aşama 5'te GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/economy.json` ve `data/legendaries.json` içinde;
 ayrıntılı liste GDD > Uygulamada Verilen Kararlar > Loot ve envanter):
 - Düşme oranları, altın miktarları (× kat çarpanı 1-4), tüccar fiyatları, demirci bedelleri, çanta 12 göz, tuzak %25.
-- 4. katta elit/gizli oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür.
+- 4. katta gizli oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür.
 - Başlangıç silahı: Warrior kılıç, Ghost hançer, Archer yay, Magical asa (Yaygın, level 1).
 - Silah XP eğrisi oyuncununkiyle aynı; XP'yi yalnızca 4 slottaki açık silahlar alır.
 - Rezonans ek hasarı element durumu bırakmaz ve kombo yapmaz (ikincil vuruş).

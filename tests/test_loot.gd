@@ -1,5 +1,6 @@
-## Aşama 5 — LootGenerator: nadirlik oranları (kabul: 10.000 düşüşlük simülasyonda tabloya ±%1), elit/gizli oda
-## üst nadirlik ×2, efsanevi 3. kattan, boss en az Destansı, silah alanları, düşmeler, sandık, tüccar tezgâhı.
+## Aşama 5 — LootGenerator: nadirlik oranları (kabul: 10.000 düşüşlük simülasyonda tabloya ±%1), gizli oda
+## üst nadirlik ×2, efsanevi 3. kattan, düşmanlar silah düşürmez / boss 1 silah (katın oranlarıyla), silah alanları,
+## düşmeler, sandık, tüccar tezgâhı.
 extends "res://tests/test_case.gd"
 
 const N := 10000
@@ -35,10 +36,10 @@ func test_rarity_rates_match_table_10000_drops() -> void:
 			assert_almost(float(got[r]), float(table[r]), TOL, "kat %d %s oranı" % [f, r])
 
 
-## Elit düşman ve gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan (örn. 3. kat: %8 / %38 / %44 / %10);
+## Gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan (örn. 3. kat: %8 / %38 / %44 / %10);
 ## Yaygın yetmezse kalan Ender'den (4. kat: %0 / %16 / %64 / %20).
 func test_elite_and_secret_double_upper_rarities() -> void:
-	for src: String in ["elite", "secret_room"]:
+	for src: String in ["secret_room"]:
 		for f: int in range(1, 5):
 			var t: Dictionary = DataDB.table("loot_tables")["floors"][str(f)]["rarity_weights"]
 			var want := {"rare": float(t["rare"]), "epic": float(t["epic"]) * 2.0, "legendary": float(t["legendary"]) * 2.0}
@@ -53,8 +54,9 @@ func test_elite_and_secret_double_upper_rarities() -> void:
 			var got := _freqs(f, src, 2000 + f)
 			for r2: String in want.keys():
 				assert_almost(float(got[r2]), float(want[r2]), TOL, "%s kat %d %s oranı (10.000 düşüş)" % [src, f, r2])
-	# Sandık ve tüccar normal tabloyu kullanır
-	assert_eq(LootGenerator.rarity_weights(3, "chest"), LootGenerator.rarity_weights(3, "normal"))
+	# Sandık, tüccar ve boss normal tabloyu kullanır; elit düşmanlar artık silah düşürmez (boost yok)
+	for src2: String in ["chest", "merchant", "boss", "elite"]:
+		assert_eq(LootGenerator.rarity_weights(3, src2), LootGenerator.rarity_weights(3, "normal"), src2 + " normal tablo")
 
 
 func test_no_legendary_before_floor_3() -> void:
@@ -64,23 +66,13 @@ func test_no_legendary_before_floor_3() -> void:
 	assert_true(float(LootGenerator.rarity_weights(3, "normal")["legendary"]) > 0.0, "3. katta efsanevi var")
 
 
-## 3. ve 4. kat boss'ları en az Destansı düşürür; 1-2. kat boss'ları normal tabloyla.
-func test_boss_min_rarity() -> void:
-	var rng := _rng(3)
-	for f: int in [3, 4]:
-		var epic := 0
-		var leg := 0
-		for i: int in 3000:
-			var w := LootGenerator.make_weapon(f, "boss", rng)
-			assert_true(w.rarity_id in ["epic", "legendary"], "kat %d boss en az Destansı (bulunan %s)" % [f, w.rarity_id])
-			if w.rarity_id == "epic":
-				epic += 1
-			else:
-				leg += 1
-		var t: Dictionary = DataDB.table("loot_tables")["floors"][str(f)]["rarity_weights"]
-		var want_leg := float(t["legendary"]) / (float(t["epic"]) + float(t["legendary"]))
-		assert_almost(float(leg) / 3000.0, want_leg, 0.02, "kat %d boss efsanevi payı" % f)
-	assert_eq(LootGenerator.rarity_weights(1, "boss"), LootGenerator.rarity_weights(1, "normal"), "1. kat boss'u normal tablo")
+## Kullanıcı kararı: boss'un silahı "direkt çok iyi" değil, katın normal oranlarıyla çıkar (ör. 3. kat efsanevi %5).
+func test_boss_weapon_uses_floor_rates() -> void:
+	for f: int in range(1, 5):
+		var table: Dictionary = DataDB.table("loot_tables")["floors"][str(f)]["rarity_weights"]
+		var got := _freqs(f, "boss", 3000 + f)
+		for r: String in table.keys():
+			assert_almost(float(got[r]), float(table[r]), TOL, "kat %d boss %s oranı" % [f, r])
 
 
 ## Nadirliğe göre element ve özellik sayısı, katın silah leveli aralığı, 12 tipin hepsi çıkar.
@@ -130,8 +122,8 @@ func test_same_seed_same_loot() -> void:
 	var a := _rng(77)
 	var b := _rng(77)
 	for i: int in 50:
-		var wa := LootGenerator.make_weapon(3, "elite", a)
-		var wb := LootGenerator.make_weapon(3, "elite", b)
+		var wa := LootGenerator.make_weapon(3, "secret_room", a)
+		var wb := LootGenerator.make_weapon(3, "secret_room", b)
 		assert_eq([wa.type_id, wa.rarity_id, wa.element, wa.traits, wa.level, wa.legendary_id],
 			[wb.type_id, wb.rarity_id, wb.element, wb.traits, wb.level, wb.legendary_id], "aynı seed aynı silah")
 
@@ -162,7 +154,7 @@ func test_legendaries() -> void:
 	assert_eq(seen.size(), 12, "12 efsanevinin hepsi düşebilir")
 
 
-## Düşmeler: altın her zaman (kat çarpanıyla), normal düşmanda %8 silah, elitte 1, boss'ta 2.
+## Düşmeler (kullanıcı kararı): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss 1 silah düşürür.
 func test_enemy_drops() -> void:
 	var rng := _rng(8)
 	var ec: Dictionary = DataDB.table("economy")
@@ -179,15 +171,15 @@ func test_enemy_drops() -> void:
 				weapons += 1
 			elif d["kind"] == "potion":
 				potions += 1
-	assert_almost(float(weapons) / N, float(ec["drops"]["normal_weapon_chance"]), TOL, "normal düşman silah oranı")
+	assert_eq(weapons, 0, "normal düşman silah düşürmez")
 	assert_almost(float(potions) / N, float(ec["drops"]["normal_potion_chance"]), 0.005, "normal düşman iksir oranı")
 	for i2: int in 50:
 		var e := LootGenerator.enemy_drops(1, "elite", rng).filter(func(d: Dictionary) -> bool: return d["kind"] == "weapon")
-		assert_eq(e.size(), int(ec["drops"]["elite_weapons"]), "elit silah sayısı")
+		assert_eq(e.size(), 0, "elit silah düşürmez")
+		var eg := LootGenerator.enemy_drops(1, "elite", rng).filter(func(d: Dictionary) -> bool: return d["kind"] == "gold")
+		assert_eq(eg.size(), 1, "elit altın düşürür")
 		var b := LootGenerator.enemy_drops(4, "boss", rng).filter(func(d: Dictionary) -> bool: return d["kind"] == "weapon")
-		assert_eq(b.size(), int(ec["drops"]["boss_weapons"]), "boss silah sayısı")
-		for d2: Dictionary in b:
-			assert_true((d2["item"] as Weapon).rarity_id in ["epic", "legendary"], "4. kat boss en az Destansı")
+		assert_eq(b.size(), 1, "boss 1 silah düşürür")
 
 
 ## Sandık: altın + silah ya da (%20) sahip olunmayan tılsım; gizli oda sandığı daha çok altın.

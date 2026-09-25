@@ -12,15 +12,13 @@
     "secret_chest": [60, 90]
   },
   "drops": {
-    "normal_weapon_chance": 0.08,
-    "elite_weapons": 1,
-    "boss_weapons": 2,
+    "boss_weapons": 1,
     "chest_weapons": 1,
     "normal_potion_chance": 0.015,
     "elite_potion_chance": 0.25,
     "boss_potion_chance": 0.0,
     "chest_talisman_chance": 0.2,
-    "_default": "Normal düşman %8 silah, %1,5 iksir; elit 1 silah (üst nadirlik ×2) + %25 iksir; boss 2 silah; sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
+    "_default": "Kullanıcı kararı (Aşama 5): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir: normal düşman %1,5, elit %25. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
   },
   "pickup": {
     "gold_magnet_tiles": 1.6,

@@ -38,7 +38,6 @@ const SCHEMA := {
 		"floors": {"_each": {"rarity_weights": "dict", "weapon_level": "array"}},
 		"legendary_from_floor": "number",
 		"upper_rarity_boost": {"sources": "array", "rarities": "array", "multiplier": "number"},
-		"boss_min_rarity": "dict",
 	},
 	"elements": {
 		"status_multipliers": {"immune": "number", "resistant": "number", "normal": "number", "weak": "number", "common_vs_ghost": "number"},
@@ -109,7 +108,7 @@ const SCHEMA := {
 	"economy": {
 		"bag_size": "number", "start_weapons": "dict", "floor_gold_mult": "dict",
 		"gold": {"normal": "array", "elite": "array", "boss": "array", "chest": "array", "secret_chest": "array"},
-		"drops": {"normal_weapon_chance": "number", "elite_weapons": "number", "boss_weapons": "number", "chest_weapons": "number",
+		"drops": {"boss_weapons": "number", "chest_weapons": "number",
 			"normal_potion_chance": "number", "elite_potion_chance": "number", "boss_potion_chance": "number",
 			"chest_talisman_chance": "number"},
 		"pickup": {"gold_magnet_tiles": "number", "potion_pickup_tiles": "number", "scatter_tiles": "number", "auto_equip_empty_active": "bool"},

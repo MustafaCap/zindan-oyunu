@@ -7,10 +7,9 @@
   },
   "legendary_from_floor": 3,
   "upper_rarity_boost": {
-    "_note": "Elit düşmanlar ve gizli odalar üst nadirlik şanslarını iki katına çıkarır; fark Yaygın'dan düşülür.",
-    "sources": ["elite", "secret_room"],
+    "_note": "Gizli odalar üst nadirlik şanslarını iki katına çıkarır; fark Yaygın'dan düşülür (Yaygın yetmezse Ender'den). Aşama 5 kullanıcı kararı: düşmanlar (elit dahil) silah düşürmez; boss'un tek silahı katın normal oranlarıyla çıkar (en az Destansı kuralı kaldırıldı).",
+    "sources": ["secret_room"],
     "rarities": ["epic", "legendary"],
     "multiplier": 2.0
-  },
-  "boss_min_rarity": { "3": "epic", "4": "epic" }
+  }
 }

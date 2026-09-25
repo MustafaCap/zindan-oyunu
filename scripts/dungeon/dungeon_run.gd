@@ -241,7 +241,7 @@ func new_run(from_floor: int = 1) -> void:
 		loot_rain(8)
 	if _fill_bag:
 		for i: int in 9:
-			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "elite" if i % 2 == 0 else "normal", loot_rng), GameState.level, false)
+			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "normal", loot_rng), GameState.level, false)
 		var t := LootGenerator.roll_talisman(loot_rng, [])
 		GameState.inventory.add_item(t, GameState.level, false)
 	print("[Zindan] Yeni run: seed %d, %d. kattan" % [seed_value, from_floor])
@@ -667,7 +667,7 @@ func try_interact() -> bool:
 
 # --- loot (Aşama 5) ---
 
-## Düşman ölünce loot: altın, bazen silah ve iksir (elit ve boss daha fazla).
+## Düşman ölünce loot: altın ve nadiren iksir; silahı yalnızca boss düşürür (1 tane, katın normal oranlarıyla).
 func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 	if layout == null or enemy == null or not is_instance_valid(enemy) or not (enemy as Node2D).is_inside_tree():
 		return
@@ -820,8 +820,7 @@ func _on_xp_gained(amount: float) -> void:
 func loot_rain(n: int) -> void:
 	var f := GameState.floor_index
 	for i: int in n:
-		var src := "elite" if i % 3 == 0 else "normal"
-		_spawn_drop({"kind": "weapon", "item": LootGenerator.make_weapon(f, src, loot_rng)}, player.global_position, 2.6)
+		_spawn_drop({"kind": "weapon", "item": LootGenerator.make_weapon(f, "normal", loot_rng)}, player.global_position, 2.6)
 	_spawn_drop({"kind": "gold", "amount": LootGenerator.gold_amount(f, "boss", loot_rng)}, player.global_position, 2.0)
 	_spawn_drop({"kind": "potion"}, player.global_position, 2.0)
 	var t := LootGenerator.roll_talisman(loot_rng, GameState.inventory.owned_talismans())

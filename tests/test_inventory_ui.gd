@@ -210,6 +210,7 @@ func test_dungeon_loot_flow() -> void:
 	e.execute(Vector2.RIGHT)
 	var golds := run.drops.filter(func(d: LootDrop) -> bool: return d.kind == "gold")
 	assert_eq(golds.size(), 1, "altın düştü")
+	assert_eq(run.drops.filter(func(d: LootDrop) -> bool: return d.kind == "weapon").size(), 0, "düşman silah düşürmez")
 	for d: LootDrop in golds:
 		d.global_position = run.player.global_position
 	run._update_drops()
