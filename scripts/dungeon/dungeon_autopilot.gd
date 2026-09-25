@@ -5,6 +5,7 @@
 ## Aşama 5: savaş dışında yerdeki silah ve tılsımları toplar (uygun boş slot varsa; yer yoksa değiştirmez), tüccarda satar/alır, demircide
 ## aktif silahı geliştirir (DungeonRun.bot_merchant / bot_blacksmith). Kat özetinde loot sayıları yazılır.
 ## Takılırsa (uzun süre ilerleyemezse) çıkış kodu 6, kat süresi dolarsa 3.
+## Aşama 7: --boss-rush'ta her katta yalnızca boss odasına gider (boss testi: make bosses).
 class_name DungeonAutopilot
 extends Node
 
@@ -55,6 +56,9 @@ func on_secret_opened() -> void:
 func _make_plan() -> void:
 	plan.clear()
 	var L := run.layout
+	if run.boss_rush:
+		plan.append(L.boss_id)
+		return
 	var seen := {}
 	var stack: Array[int] = [L.start_id]
 	while not stack.is_empty():
@@ -98,6 +102,10 @@ func _process(delta: float) -> void:
 	_status_t += delta
 	if _status_t >= 60.0:
 		_status_t = 0.0
+		if run._boss_node and is_instance_valid(run._boss_node):
+			var b := run._boss_node
+			print("[Otopilot] boss: %s can %.0f / %.0f, faz %s, %s, yardımcılar %d" % [b.get("display_name"), float(b.get("hp")),
+				float(b.get("max_hp")), b.get("phase"), b.get("status_text"), (b.get("summons") as Array).size()])
 		print("[Otopilot] durum: %.0f sn, oda %d, savaş %s, plan %s, oyuncu karo %s, hedef %s" % [run._floor_elapsed,
 			run.current_room, GameState.in_combat, plan, run.world_to_cell(p.global_position), _current_goal()])
 	# Savaş sürüyor: Player'ın savaş botu dövüşür; dalga arasında odanın ortasına yürü
@@ -235,7 +243,7 @@ func _report() -> void:
 	print("[Otopilot] loot (run toplamı): %s · altın %d · iksir %d · slot %d/4 dolu · aktif %s" % [run.loot_stats, inv.gold,
 		inv.potions, filled, inv.active_weapons().map(func(w: Weapon) -> String: return "%s Lv %d" % [w.display_name(), w.level])])
 	_log.clear()
-	if not missed.is_empty():
+	if not missed.is_empty() and not run.boss_rush:
 		print("[Otopilot] GEZİLEMEYEN ODALAR: %s" % [missed])
 		get_tree().quit(7)
 

@@ -7,6 +7,7 @@
 ## menüdeki iki silahı boş slotlara ekle, loot yağdır, +500 altın, slottaki silahlara +1000 XP.
 ## Aşama 6: "İlerleme (test)" satırı: +1 / +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve
 ## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
+## Aşama 7: zindanda "Boss odasına ışınlan" (savaş dışında); test odasında "Düşmanlar" listesinden her tür ya da eliti.
 ## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
 class_name DebugMenu
 extends CanvasLayer
@@ -17,6 +18,16 @@ signal action(action_name: String, config: Dictionary)
 
 const LEVELS := [1, 10, 20, 40, 60, 80]
 const ENEMY_MODES := [["waves", "1. kat dalgaları"], ["dummies", "Kuklalar (saldırmaz, ölmez)"]]
+
+## Aşama 7: test odasında her düşman türü (ve eliti) ayrı denenebilir: ENEMY_MODES + "type:<id>" + "elite:<id>".
+static func enemy_modes() -> Array:
+	var out: Array = ENEMY_MODES.duplicate()
+	var en: Dictionary = DataDB.table("enemies")["enemies"]
+	for id: String in DataDB.records(en):
+		out.append(["type:" + id, "%d. kat: %s" % [int(en[id]["floor"]), en[id]["name"]]])
+	for id2: String in DataDB.records(en):
+		out.append(["elite:" + id2, "Elit %s" % en[id2]["name"]])
+	return out
 
 var config: Dictionary = {}
 ## "test" (hata ayıklama odası) ya da "dungeon" (zindan); düğmeler ve satırlar buna göre değişir.
@@ -189,7 +200,7 @@ func _build() -> void:
 	# İlerleme testi (yalnızca zindan)
 	var pr_row := _row(box, "İlerleme (test)")
 	pr_row.visible = context == "dungeon"
-	for pair2: Array in [["xp_1", "+1 level (XP)"], ["xp_5", "+5 level (XP)"], ["boss_reward", "Boss ödülü aç"], ["mastery_reset", "Ustalıkları sıfırla"]]:
+	for pair2: Array in [["xp_1", "+1 level (XP)"], ["xp_5", "+5 level (XP)"], ["boss_reward", "Boss ödülü aç"], ["mastery_reset", "Ustalıkları sıfırla"], ["boss_teleport", "Boss odasına ışınlan"]]:
 		var pb := Button.new()
 		pb.text = str(pair2[1])
 		pb.custom_minimum_size = Vector2(0, 38)
@@ -203,8 +214,9 @@ func _build() -> void:
 	var en_row := _row(box, "Düşmanlar")
 	_enemy_row = en_row
 	en_row.visible = context == "test"
-	_enemies = _option(en_row, ENEMY_MODES.map(func(m: Array) -> String: return str(m[1])), 300)
-	_enemies.item_selected.connect(func(i: int) -> void: config["enemies"] = ENEMY_MODES[i][0])
+	var modes := enemy_modes()
+	_enemies = _option(en_row, modes.map(func(m: Array) -> String: return str(m[1])), 300)
+	_enemies.item_selected.connect(func(i: int) -> void: config["enemies"] = modes[i][0])
 
 	_info = _label("", 15, Color(0.82, 0.85, 0.9))
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -252,8 +264,9 @@ func _load_config() -> void:
 		(_slots[slot][2] as OptionButton).select(maxi(_trait_ids.find(wc["trait"]), 0))
 	_floor.select(clampi(int(config.get("floor", 1)) - 1, 0, 3))
 	_god.set_pressed_no_signal(bool(config.get("god", false)))
-	for i: int in ENEMY_MODES.size():
-		if ENEMY_MODES[i][0] == config.get("enemies", "waves"):
+	var modes := enemy_modes()
+	for i: int in modes.size():
+		if modes[i][0] == config.get("enemies", "waves"):
 			_enemies.select(i)
 	_refresh_info()
 

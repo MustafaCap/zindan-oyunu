@@ -98,6 +98,12 @@ var _move_override_done: Callable
 var _note_cd: float = 0.0
 var _bot := {"dash": 0.0, "swap": 0.0, "q": 0.0, "e": 0.0, "hold": 0.0}
 var _shape: CollisionPolygon2D
+## Aşama 7: düşmanlardan gelen yavaşlatma (Feryatçı'nın çığlığı) ve itme/çekme (Boşluk Kulu, Nyx'thar'ın yırtıkları).
+var slow_t: float = 0.0
+var slow_amount: float = 0.0
+var _push_vel: Vector2 = Vector2.ZERO     ## süreli itme (ekran uzayı hızı)
+var _push_t: float = 0.0
+var _pull_frame: Vector2 = Vector2.ZERO   ## bu karelik sürekli çekim (her karede yeniden verilir)
 
 
 func _ready() -> void:
@@ -252,6 +258,7 @@ func _physics_process(delta: float) -> void:
 	busy_t = maxf(busy_t - delta, 0.0)
 	_note_cd = maxf(_note_cd - delta, 0.0)
 	_lean_t = maxf(_lean_t - delta, 0.0)
+	slow_t = maxf(slow_t - delta, 0.0)
 	visual.lean = _lean_t / 0.12
 	kit.tick(delta)
 	effects.tick(delta)
@@ -286,6 +293,8 @@ func _physics_process(delta: float) -> void:
 			_start_dash(move_cart)
 		else:
 			var spd := move_speed_tiles * effects.move_speed_mult() * (1.0 + (float(_race["abilities"]["q"].get("speed_bonus", 0.0)) if is_flying() else 0.0))
+			if slow_t > 0.0:
+				spd *= 1.0 - slow_amount
 			velocity = Iso.to_screen(move_cart.limit_length(1.0) * Iso.tiles(spd))
 		if intent["q"]:
 			RaceAbilities.use(self, "q")
@@ -300,6 +309,12 @@ func _physics_process(delta: float) -> void:
 			WeaponAttacks.heavy_pressed(self)
 		elif intent["light"] and attack_cd <= 0.0 and busy_t <= 0.0 and not charging:
 			WeaponAttacks.light(self)
+	# Düşmanın itmesi/çekmesi yürümeye eklenir (atılma sırasında da işler; Space ile karşı koyulur)
+	if _push_t > 0.0:
+		_push_t -= delta
+		velocity += _push_vel
+	velocity += _pull_frame
+	_pull_frame = Vector2.ZERO
 	move_and_slide()
 	_rush_step(delta)
 
@@ -587,7 +602,7 @@ func enemies() -> Array[Node2D]:
 	var out: Array[Node2D] = []
 	for n: Node in get_tree().get_nodes_in_group("enemies"):
 		var e := n as Node2D
-		if e and not e.get("dead") and e.has_method("apply_damage"):
+		if e and not e.get("dead") and not e.get("untargetable") and e.has_method("apply_damage"):
 			out.append(e)
 	return out
 
@@ -666,6 +681,8 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 		var d := Iso.to_cart(target.global_position - global_position)
 		o["dir"] = d.normalized() if d.length() > 0.01 else facing_cart
 	var res := HitResolver.resolve(self, w, target, o, get_tree().get_nodes_in_group("enemies"), rng)
+	if bool(res.get("blocked", false)):
+		return res
 	var dealt := float(res.get("damage", 0.0))
 	var src_key := "light" if source == "light_extra" else source
 	damage_by_source[src_key] = float(damage_by_source.get(src_key, 0.0)) + dealt
@@ -739,6 +756,9 @@ func _on_enemy_killed(enemy: Node, is_elite: bool, _is_boss: bool) -> void:
 	if dead:
 		return
 	effects.on_kill(enemy as Node2D, is_elite)
+	# Çağrılan düşmanlar ve boss yardımcıları öldürme iyileşmesi vermez (Aşama 7)
+	if enemy != null and enemy.get("no_reward") == true:
+		return
 	var h: Dictionary = _race["healing"]
 	if not h.has("heal_on_kill"):
 		return
@@ -758,6 +778,29 @@ func _on_combo(_id: String, _t: Node) -> void:
 	combos_done += 1
 	if not dead:
 		effects.on_combo()
+
+
+## Yavaşlatma (Aşama 7): duration sn boyunca hareket hızı amount oranında düşer (güçlüsü geçerli).
+func apply_slow(duration: float, amount: float) -> void:
+	if dead or invulnerable:
+		return
+	slow_amount = maxf(amount, slow_amount if slow_t > 0.0 else 0.0)
+	slow_t = maxf(slow_t, duration)
+
+
+## Süreli itme/çekme: vel_screen hızı (ekran uzayı) duration sn boyunca yürümeye eklenir.
+func add_push(vel_screen: Vector2, duration: float) -> void:
+	if dead:
+		return
+	_push_vel = vel_screen
+	_push_t = duration
+
+
+## Sürekli çekim (Boşluk Yırtığı): yalnızca bu kare için; her karede yeniden çağrılır.
+func add_pull_frame(vel_screen: Vector2) -> void:
+	if dead:
+		return
+	_pull_frame += vel_screen
 
 
 ## Düşmandan gelen hasar (hasar formülünden geçer: ırk direnci ve zırh).
@@ -837,6 +880,24 @@ func _bot_think(delta: float) -> Dictionary:
 			nearest = e
 		if d < 2.0:
 			close_count += 1
+	# Aşama 7: öncelikli hedefler (şifacı, çağırıcı, Morvath'ın duvar gözleri, Mycela'nın totemleri) önce
+	var prio: Node2D = null
+	var prio_d := 14.0
+	for e2: Node2D in enemies():
+		if not e2.get("priority") == true:
+			continue
+		var d2 := Iso.tile_distance(global_position, e2.global_position)
+		if d2 < prio_d:
+			prio_d = d2
+			prio = e2
+	if prio != null:
+		nearest = prio
+		best = prio_d
+	if nearest != null and nearest.has_method("bot_redirect"):
+		var alt: Node2D = nearest.call("bot_redirect")
+		if alt != null and is_instance_valid(alt):
+			nearest = alt
+			best = Iso.tile_distance(global_position, alt.global_position)
 	if nearest == null:
 		# Zindanda düşman yok: çatlak duvara vur ya da sıradaki yol noktasına yürü
 		if bot_attack_point != Vector2.INF:
@@ -858,6 +919,10 @@ func _bot_think(delta: float) -> Dictionary:
 		out["move"] = bot_nav.call(global_position, nearest.global_position) if bot_nav.is_valid() else to_e.normalized()
 	elif ranged and best < minf(2.5, rng_t * 0.4):
 		out["move"] = -to_e.normalized()
+	# Kalkanlı düşman (Demir Muhafız) önden vuruşu engeller: yanından dolanıp arkasına geç
+	if nearest.has_method("blocks_hit_from") and bool(nearest.call("blocks_hit_from", global_position)):
+		var side := to_e.normalized().orthogonal()
+		out["move"] = (side + to_e.normalized() * (0.4 if best > 1.4 else -0.2)).normalized()
 	var in_range := best <= rng_t + 0.3
 	out["light"] = in_range
 	var hd: Dictionary = w.type_data()["heavy"]

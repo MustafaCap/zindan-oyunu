@@ -61,14 +61,22 @@ const SCHEMA := {
 	"talismans": {"_each": {"name": "string", "description": "string"}},
 	"enemies": {
 		"materials": {"_each": {"name": "string", "prefix": "string", "tint": "string", "immune": "array", "resistant": "array", "weak": "array"}},
-		"enemies": {"_each": {"name": "string", "floor": "number", "role": "string", "behavior": "string", "immune": "array", "resistant": "array", "weak": "array"}},
+		"enemies": {"_each": {"name": "string", "floor": "number", "role": "string", "ai": "string", "behavior": "string", "immune": "array",
+			"resistant": "array", "weak": "array", "stats": "dict", "attack": "dict", "placeholder_color": "string"}},
+		"boss_adds": {"_each": {"name": "string", "floor": "number", "role": "string", "ai": "string", "immune": "array",
+			"resistant": "array", "weak": "array", "stats": "dict", "attack": "dict", "placeholder_color": "string"}},
+		"floor_scaling": {"_each": {"hp": "number", "damage": "number"}},
+		"elite": {"hp_mult": "number", "damage_mult": "number", "scale": "number", "aura_radius": "number"},
+		"elite_auras": {"_each": {"name": "string", "color": "string", "description": "string"}},
+		"variants": "dict",
 	},
 	"bosses": {
 		"phase2_threshold": "number",
 		"first_kill_damage_bonus": "number",
 		"bosses": {
 			"_each": {
-				"name": "string", "floor": "number", "immune": "array", "weak": "array",
+				"name": "string", "floor": "number", "immune": "array", "weak": "array", "attack_gap": "number",
+				"stats": {"hp": "number", "damage": "number", "radius": "number", "move_speed": "number"},
 				"attacks": "array", "mechanic": {"id": "string", "name": "string"}, "phase2": {"description": "string"},
 			},
 		},
@@ -109,6 +117,7 @@ const SCHEMA := {
 				"name": "string", "theme": "string", "rooms": "number", "target_minutes": "array",
 				"level_range": "array", "enemy_pool": "array", "boss_pool": "array", "placeholder_color": "string",
 				"wall_color": "string", "obstacle_color": "string", "expected_normal_enemies": "number", "expected_elites": "number",
+				"spawn_pool": "array",
 			},
 		},
 		"room_types": {"_each": {"description": "string"}},
@@ -133,9 +142,7 @@ const SCHEMA := {
 		"obstacles": "dict", "template_pools": "dict", "room_type_names": "dict", "room_type_colors": "dict",
 		"waves": {"max_per_wave": "number", "min_waves": "number", "max_waves": "number", "wave_delay_sec": "number",
 			"first_wave_delay_sec": "number", "enemy_count_mult": "number", "spawn_min_distance_tiles": "number"},
-		"prototype_enemies": {"rat_group": "array"},
-		"placeholder_elite": {"base_pool": "array", "hp_mult": "number", "damage_mult": "number", "scale": "number"},
-		"placeholder_boss": {"base": "string", "hp_mult": "number", "damage_mult": "number", "scale": "number"},
+		"boss_back_offset": "number",
 		"secret_wall": {"hits_to_break": "number", "reach_tiles": "number"},
 		"interact_range_tiles": "number",
 		"templates": {"_each": {"name": "string", "rows": "array"}},
@@ -146,7 +153,11 @@ const ROOM_TYPES := ["start", "combat", "elite", "merchant", "blacksmith", "ches
 const TEMPLATE_CHARS := [".", "o", " "]
 
 const FAMILIES := ["warrior", "ghost", "archer", "magical"]
-## 1. kat düşmanlarında (Aşama 2'den itibaren) zorunlu stat alanları.
+## Aşama 7: düşman yapay zekâları, saldırı tipleri ve yetenekler (enemies.json; kodda karşılığı olanlar).
+const ENEMY_AIS := ["chase", "kite", "wall", "support", "inert"]
+const ENEMY_ATTACKS := ["arc", "projectile", "beam", "slam", "lunge", "cone", "none"]
+const ENEMY_ABILITIES := ["heal", "summon", "pull", "stealth"]
+## Her düşmanda (ve boss yardımcısında) zorunlu stat alanları.
 const ENEMY_STAT_FIELDS := ["hp", "damage", "armor", "move_speed", "radius", "attack_range",
 	"attack_arc_degrees", "attack_windup", "attack_cooldown", "knockback_resist"]
 ## Kombo sayılarının zorunlu alanları (kombo id -> alanlar).
@@ -440,11 +451,17 @@ func _cross_check() -> void:
 			for imm: Variant in en[k4]:
 				if not imm in damage_kinds:
 					errors.append("enemies.%s.%s: bilinmeyen hasar türü '%s'" % [eid, k4, imm])
-		if int(en["floor"]) == 1:
-			if not en.has("stats") or typeof(en["stats"]) != TYPE_DICTIONARY:
-				errors.append("enemies.%s: 1. kat düşmanında 'stats' olmalı" % eid)
-			else:
-				_require_numbers(en["stats"], ENEMY_STAT_FIELDS, "enemies.%s.stats" % eid)
+		_check_enemy_record(en, "enemies.%s" % eid)
+	var add_ids: Array = _records(tables["enemies"]["boss_adds"])
+	for aid: String in add_ids:
+		_check_enemy_record(tables["enemies"]["boss_adds"][aid], "enemies.boss_adds.%s" % aid)
+	for vid: String in _records(tables["enemies"]["variants"]):
+		var v: Variant = tables["enemies"]["variants"][vid]
+		if typeof(v) != TYPE_ARRAY or (v as Array).size() != 2 or not str(v[0]) in enemy_ids 				or not (tables["enemies"]["materials"] as Dictionary).has(str(v[1])):
+			errors.append("enemies.variants.%s: [bilinen düşman, bilinen malzeme] olmalı" % vid)
+	for fsid: String in ["1", "2", "3", "4"]:
+		if not (tables["enemies"]["floor_scaling"] as Dictionary).has(fsid):
+			errors.append("enemies.floor_scaling: %s. kat eksik" % fsid)
 	var boss_ids: Array = _records(tables["bosses"]["bosses"])
 	for bid: String in boss_ids:
 		for k2: String in ["immune", "weak"]:
@@ -460,6 +477,12 @@ func _cross_check() -> void:
 		for b: Variant in fl["boss_pool"]:
 			if not b in boss_ids:
 				errors.append("floors.%s.boss_pool: bilinmeyen boss '%s'" % [fid, b])
+		for entry: Variant in fl["spawn_pool"]:
+			if typeof(entry) != TYPE_ARRAY or (entry as Array).size() != 2 or typeof(entry[1]) not in [TYPE_INT, TYPE_FLOAT]:
+				errors.append("floors.%s.spawn_pool: her kayıt [düşman ya da varyant, ağırlık] olmalı" % fid)
+				continue
+			if not str(entry[0]) in enemy_ids and not (tables["enemies"]["variants"] as Dictionary).has(str(entry[0])):
+				errors.append("floors.%s.spawn_pool: bilinmeyen düşman '%s'" % [fid, entry[0]])
 		if not tables["progression"]["enemy_xp"].has(fid):
 			errors.append("progression.enemy_xp: %s. kat için XP değerleri yok" % fid)
 		if not tables["loot_tables"]["floors"].has(fid):
@@ -552,25 +575,6 @@ func _check_dungeon(enemy_ids: Array) -> void:
 		for tid: Variant in pool:
 			if not templates.has(str(tid)):
 				errors.append("dungeon.template_pools.%s: bilinmeyen şablon '%s'" % [rt, tid])
-	var materials: Dictionary = tables["enemies"]["materials"]
-	var enemies: Dictionary = tables["enemies"]["enemies"]
-	for fid: String in _records(tables["floors"]["floors"]):
-		var pe: Dictionary = dg["prototype_enemies"]
-		if not pe.has(fid) or typeof(pe[fid]) != TYPE_DICTIONARY or not (pe[fid] as Dictionary).has("pool"):
-			errors.append("dungeon.prototype_enemies: %s. kat için havuz yok" % fid)
-			continue
-		for entry: Variant in pe[fid]["pool"]:
-			if typeof(entry) != TYPE_ARRAY or (entry as Array).size() != 3:
-				errors.append("dungeon.prototype_enemies.%s.pool: her kayıt [düşman, malzeme, ağırlık] olmalı" % fid)
-				continue
-			var eid := str(entry[0])
-			if not eid in enemy_ids or not (enemies[eid] as Dictionary).has("stats"):
-				errors.append("dungeon.prototype_enemies.%s: '%s' düşmanının statları yok" % [fid, eid])
-			if str(entry[1]) != "" and not materials.has(str(entry[1])):
-				errors.append("dungeon.prototype_enemies.%s: bilinmeyen malzeme '%s'" % [fid, entry[1]])
-	for eid: Variant in dg["placeholder_elite"]["base_pool"] + [dg["placeholder_boss"]["base"]]:
-		if not str(eid) in enemy_ids or not (enemies[str(eid)] as Dictionary).has("stats"):
-			errors.append("dungeon: yer tutucu elit/boss için '%s' düşmanının statları yok" % eid)
 
 
 ## Aşama 5: efsanevi silahlar, tılsımlar ve ekonomi (başlangıç silahları, kat çarpanları, fiyatlar).
@@ -646,6 +650,29 @@ func _check_loot(rarity_ids: Array, element_ids: Array) -> void:
 
 
 ## Sözlükte verilen alanların hepsi sayı olmalı.
+## Aşama 7: düşman kaydı — statlar, yapay zekâ, saldırı tipi, yetenekler ve ölüm etkisi.
+func _check_enemy_record(en: Dictionary, where: String) -> void:
+	_require_numbers(en["stats"], ENEMY_STAT_FIELDS, where + ".stats")
+	if not str(en["ai"]) in ENEMY_AIS:
+		errors.append("%s.ai: bilinmeyen yapay zekâ '%s'" % [where, en["ai"]])
+	var at := str((en["attack"] as Dictionary).get("type", ""))
+	if not at in ENEMY_ATTACKS:
+		errors.append("%s.attack.type: bilinmeyen saldırı '%s'" % [where, at])
+	if str(en["ai"]) in ["kite", "support"]:
+		if not (en["stats"] as Dictionary).has("keep_distance"):
+			errors.append("%s.stats.keep_distance: mesafe koruyan düşmanda olmalı" % where)
+	for ab: Variant in en.get("abilities", []):
+		if typeof(ab) != TYPE_DICTIONARY or not str((ab as Dictionary).get("type", "")) in ENEMY_ABILITIES or not (ab as Dictionary).has("cooldown"):
+			errors.append("%s.abilities: her yetenekte bilinen 'type' ve 'cooldown' olmalı" % where)
+		elif str(ab["type"]) == "summon" and not (tables["enemies"]["enemies"] as Dictionary).has(str(ab.get("id", ""))) 				and not (tables["enemies"]["boss_adds"] as Dictionary).has(str(ab.get("id", ""))):
+			errors.append("%s.abilities: çağrılan '%s' bilinmiyor" % [where, ab.get("id", "")])
+	if en.has("on_death"):
+		var od: Dictionary = en["on_death"]
+		if not str(od.get("type", "")) in ["explode", "cloud"]:
+			errors.append("%s.on_death.type: explode ya da cloud olmalı" % where)
+		_require_numbers(od, ["radius", "damage_mult"], where + ".on_death")
+
+
 func _require_numbers(d: Dictionary, fields: Array, where: String) -> void:
 	for f: String in fields:
 		if not d.has(f):
