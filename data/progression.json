@@ -75,7 +75,7 @@
     "cooldown_reduction": 0.4,
     "dash_cooldown_reduction": 0.5,
     "_default_dash_cooldown_reduction": "GDD'de Space bekleme süresi azaltmanın tavanı yok; sonsuz atılmayı önlemek için ödüller + Rüzgâr Tüyü toplamı %50 ile sınırlandı (en kısa bekleme 0,5 sn).",
-    "_default": "Her statın tavanı tüm kaynakların toplamına uygulanır: ırk pasifi, ırk-silah matrisi, level/boss ödülleri, aktif silahın ustalığı ve efsanevi pasifler. Kritik şansı tavanı temel %5 dahil toplam şanstır. Hasar azaltma tavanı ırk zırhı, Warrior Zırh'ı ve ödüllerin toplamına uygulanır."
+    "_default": "Her statın tavanı tüm kaynakların toplamına uygulanır: ırk pasifi, ırk-silah matrisi, level/boss ödülleri, aktif silahın ustalığı ve efsanevi pasifler. Kritik şansı tavanı temel %5 dahil toplam şanstır. Hasar azaltma tavanı ırk zırhı ve ödüllerin toplamına uygulanır."
   },
   "combat": {
     "base_crit_chance": 0.05,

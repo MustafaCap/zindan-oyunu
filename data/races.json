@@ -21,9 +21,10 @@
     "cooldowns": { "heavy": [5, 7] },
     "abilities": {
       "q": {
-        "id": "armor_up", "name": "Zırh", "description": "Kısa süreli, az hasar emen zırh ve +%3 hasar",
-        "damage_bonus": 0.03, "armor_bonus": 0.2, "duration": 3.0,
-        "_default": "armor_bonus (hasar azaltma) ve duration"
+        "id": "shield_charge", "name": "Kalkan Hücumu", "description": "İleri atılır; yolundaki düşmanlara vurur, onları iter ve sersemletir",
+        "distance": 4.0, "duration": 0.25, "skill_mult": 1.5, "hit_radius": 0.9,
+        "stun_duration": 0.6, "boss_slow_duration": 1.0, "boss_slow": 0.3,
+        "_default": "Kullanıcı kararı (Aşama 6): Zırh yeteneği yerine Kalkan Hücumu. Farenin yönünde 0,25 sn'de 4 karo atılır (atılırken dokunulmaz, düşmanların içinden geçer, duvarda durur); yoluna 0,9 karo yaklaşan her düşmana bir kez aktif silahın vuruşunun ×1,5'i (güçlü vuruş: savrulur, elementi ve kombosu işler) ve 0,6 sn sersemletme (boss'ta 1 sn %30 yavaşlatma). Bedel 40 enerji; sayılar _default."
       },
       "e": {
         "id": "ground_slam", "name": "Yer sarsıntısı", "description": "Önündeki alana büyük hasar",

@@ -44,6 +44,12 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
   ustalık dahil.
 - Hata ayıklama menüsünde yeni "İlerleme (test)" satırı: +1 / +5 level (XP ile), boss ödülü aç, ustalıkları sıfırla.
 
+**Kullanıcının Aşama 6'da istediği değişiklikler:**
+- Geçici "kata inince level alt sınıra çıkar" kuralı kaldırıldı.
+- Warrior'ın Q yeteneği **Zırh** yerine **Kalkan Hücumu**: farenin yönünde 4 karo atılır (dokunulmaz), yolundaki düşmanlara aktif silahın
+  ×1,5'i kadar güçlü vuruş, itme ve 0,6 sn sersemletme (boss'ta 1 sn %30 yavaşlatma); bedeli 40 enerji.
+- İksir düşme oranı azaltıldı: normal düşman %1,5 → %1, elit %25 → %10 (kat başına ortalama ~0,8 iksir; tüccar aynı).
+
 **Aşama 6'da GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/rewards.json` ve `data/progression.json` içinde `_default`
 notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
 - Ustalık level 1'den başlar ve level 1 de bonus verir (+%5 hasar, +%3,33 hız, +%1,67 menzil, +%2,5 element) — GDD tablosu level × bonus
@@ -59,7 +65,7 @@ notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
 **Aşama 5 (loot ve envanter, onaylandı) özeti:**
 - `LootGenerator`: katın nadirlik tablosu, gizli oda üst nadirlik ×2, efsanevi 3. kattan, 12 tip, element ve özellik sayısı nadirliğe göre,
   kat silah leveli (1 / 10 / 25-40 / 50). 10.000 düşüşlük testte oranlar ±%1.
-- Düşmeler (kullanıcı kararı): düşmanlar (elit dahil) silah düşürmez, altın düşürür (yaklaşınca toplanır; nadiren iksir). Boss kesilince
+- Düşmeler (kullanıcı kararı): düşmanlar (elit dahil) silah düşürmez, altın düşürür (yaklaşınca toplanır; nadiren iksir: Aşama 6'dan beri normal %1, elit %10). Boss kesilince
   1 silah düşer, nadirliği katın normal oranlarıyla. Silah ayrıca sandık, gizli oda ve tüccardan gelir; sandıkta tılsım da çıkabilir.
   Silah F ile alınır; nadirliğe göre ışık sütunu. Sandıklar %25 tuzaklı (kırmızı işaret, 1 sn sonra patlar).
 - `Inventory` + `InventoryUI` (I): envanterin tamamı 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek), çanta yok (kullanıcı kararı). Yer yoksa F

@@ -1,5 +1,5 @@
 ## RaceAbilities — 4 ırkın Q/E yetenekleri (GDD: Irklar). Sayılar races.json > abilities içinden okunur.
-##   Warrior  Q Zırh (hasar azaltma + %3 hasar) · E Yer sarsıntısı (önde geniş yay, büyük hasar)
+##   Warrior  Q Kalkan Hücumu (ileri atılıp yoldakilere vurur, iter, sersemletir; Aşama 6'da Zırh'ın yerine) · E Yer sarsıntısı
 ##   Ghost    Q Faz (maks 1 sn dokunulmaz ve görünmez) · E Gölge adımı (farenin yakınındaki düşmanın arkasına ışınlanma)
 ##   Archer   Q Geri sıçrama (geriye atılıp öne 3 ok) · E Ok yağmuru (seçilen alana dalga dalga ok)
 ##   Magical  Q Uçuş (engellerin üstünden) · E Element fırtınası (aktif silahın elementinde alan hasarı)
@@ -32,9 +32,8 @@ static func use(p: Player, slot: String) -> bool:
 	var id := p.next_attack_id()
 	var col := Weapon.kind_color(w.element)
 	match str(ab["id"]):
-		"armor_up":
-			p.start_armor_buff(float(ab["duration"]))
-			Events.area_pulse.emit(p.global_position, 1.0, Color(1.0, 0.8, 0.3))
+		"shield_charge":
+			p.start_rush(ab, w, id)
 		"ground_slam":
 			p.end_phase()
 			var r := float(ab["range"])

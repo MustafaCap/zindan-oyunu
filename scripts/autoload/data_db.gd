@@ -177,7 +177,7 @@ const RESOURCE_KEYS := {
 }
 ## Irk yeteneği id -> zorunlu sayılar (kodda karşılığı olan yetenekler).
 const ABILITY_FIELDS := {
-	"armor_up": ["damage_bonus", "armor_bonus", "duration"],
+	"shield_charge": ["distance", "duration", "skill_mult", "hit_radius", "stun_duration", "boss_slow_duration", "boss_slow"],
 	"ground_slam": ["skill_mult", "range", "arc_degrees"],
 	"phase": ["max_duration"],
 	"shadow_step": ["range", "behind_distance", "iframes"],
