@@ -15,7 +15,7 @@ DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2 --enemy-hp=0.25
 # Aşama 7 boss testi: bot her katta doğrudan boss'a gider, katın beklenen level ve silah gücüyle (ateş + buz kılıç)
 BOSS_ARGS ?= --autoplay --god --boss-test --seed=7 --weapons=sword:fire,sword:ice
 
-.PHONY: all import test unit smoke matrix dungeon bosses sprites sfx export-windows clean
+.PHONY: all import test quick unit smoke matrix dungeon bosses sprites sfx export-windows clean
 
 all: sprites sfx test export-windows
 
@@ -25,6 +25,9 @@ import:
 	@$(GODOT) --headless --path . --import > /dev/null 2>&1
 
 test: unit smoke matrix dungeon bosses
+
+# Geliştirme sırasında hızlı kontrol (~1 dk): birim testleri + test odası smoke. Tam paket (make test) aşama sonunda bir kez.
+quick: unit smoke
 
 # Birim testleri (bir test script hatasıyla yarıda kesilirse de başarısız sayılır)
 unit: import

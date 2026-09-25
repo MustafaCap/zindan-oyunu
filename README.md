@@ -14,14 +14,15 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 4 | Zindan üretimi | ✅ Bitti (onaylandı) |
 | 5 | Loot ve envanter | ✅ Bitti (onaylandı) |
 | 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
-| 7 | Düşmanlar ve boss'lar | ✅ Bitti (kullanıcı testi bekliyor; yalnızca yerel commit) |
+| 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 8 | Sanat | — |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 7 (sürüm 0.7.0) bitti; `main`'den açılan `asama-7` dalında **yalnızca yerelde commit edildi**. Kullanıcı
-.exe'yi (`ZindanOyunu-Derlemeler/asama-7/`) test edip onaylayınca `asama-7` push edilir ve `main`'e birleştirilir. Sonra sırada Aşama 8
-(sanat): `main`'den `asama-8` dalı açılır.
+**Kalınan yer:** Aşama 7 (sürüm 0.7.0) bitti, onaylandı; `asama-7` GitHub'a push edildi ve `main`'e birleştirildi.
+Sırada Aşama 8 (sanat): `main`'den `asama-8` dalı açılır.
+
+**Test süresi (kullanıcı kararı):** geliştirme sırasında `make quick` (birim + smoke, ~1 dk); tam `make test` (~3,5 dk) aşama sonunda bir kez.
 
 **Aşama 7'de yapılanlar (düşmanlar ve boss'lar):**
 - **55 düşman:** 17 temel düşman (5 rol) + her birinin eliti + 21 malzeme varyantı (yeni **Zehirli** malzemesi; Taş, Alevli, Hayalet).
@@ -170,7 +171,8 @@ PowerShell'in `Compress-Archive`'ini kullanır. Bu bilgisayarda Godot `C:\Users\
 (`Godot_v4.7.2-stable_win64_console.exe` komut satırı için), şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\` içinde.
 
 ```bash
-make test            # birim testleri (206) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
+make quick           # geliştirirken hızlı kontrol: birim testleri + test odası smoke (~1 dk)
+make test            # aşama sonunda bir kez: birim testleri (206) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites         # sprite'ları üretir (Aşama 8)
 make sfx             # ses efektlerini üretir (Aşama 9)
