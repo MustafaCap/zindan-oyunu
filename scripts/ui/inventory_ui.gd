@@ -1,11 +1,12 @@
-## InventoryUI — çanta ve 4 slot arayüzü; tüccar ve demirci panelleri (GDD: Görsel Stil > Arayüz: envanter ızgarası,
+## InventoryUI — 4 slotluk envanter arayüzü (kullanıcı kararı: çanta yok; economy.bag_size > 0 olursa çanta ızgarası da
+## görünür); tüccar ve demirci panelleri (GDD: Görsel Stil > Arayüz: envanter ızgarası,
 ## sürükle-bırak, stat karşılaştırmalı tooltip). I ile açılır (tüccar/demirci F ile), açıkken oyun duraklar.
 ##   Sürükle-bırak: eşyayı taşı ya da yer değiştir; "Yere bırak" alanına bırakınca yere düşer.
-##   Sağ tık / çift tık: çantadaki silahı tak (boş aktif slota, yoksa kullanılan aktif silahla yer değiştir; kilitliyse
-##   Rezonans'a; tılsım Esnek'e), slottakini çantaya çıkar.   Sol tık: seç (tüccarda satmak, demircide işlemek için).
+##   Sağ tık / çift tık: aktif slottaki silah Rezonans'la yer değiştirir; Rezonans/Esnek'teki açık silah boş aktif slota
+##   (yoksa kullanılan aktif silahla yer değiştirir).   Sol tık: seç (tüccarda satmak, demircide işlemek için).
 ##   Tüccar: tezgâhtaki eşyayı satın al, iksir al; seçileni sat ya da "Sat" alanına sürükle.
 ##   Demirci: silahı örse sürükle ya da seç; level atlat, elementi ya da özellikleri yeniden çek.
-## Savaş sürerken (GameState.in_combat) slotlara dokunulamaz; çanta içinde düzenleme serbest.
+## Savaş sürerken (GameState.in_combat) slotlara dokunulamaz.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu ilk sürümdür.
 class_name InventoryUI
 extends CanvasLayer
@@ -208,8 +209,26 @@ func quick_action(s: ItemSlot) -> void:
 	var lvl := player_level()
 	var combat := GameState.in_combat
 	if str(s.ref["area"]) == "slot":
-		var free := I.first_free_bag()
-		_result("Çanta dolu" if free < 0 else I.move(s.ref, Inventory.bag_ref(free), lvl, combat), "")
+		var n0 := str(s.ref["name"])
+		if I.bag.size() > 0:
+			var free := I.first_free_bag()
+			_result("Çanta dolu" if free < 0 else I.move(s.ref, Inventory.bag_ref(free), lvl, combat), "")
+			return
+		# Çanta yok: aktif silah ↔ Rezonans; Rezonans/Esnek'teki açık silah → aktif slot
+		var dest := ""
+		if Inventory.ACTIVE_SLOTS.has(n0):
+			dest = "resonance"
+		elif it is Weapon and not (it as Weapon).is_locked(lvl):
+			for n: String in Inventory.ACTIVE_SLOTS:
+				if I.slots[n] == null:
+					dest = n
+					break
+			if dest == "":
+				dest = I.active_slot
+		if dest == "":
+			_result("Bu eşyayı sürükleyerek taşı (kilitli silah aktif slota konamaz)", "")
+			return
+		_result(I.move(s.ref, Inventory.slot_ref(dest), lvl, combat), "")
 		return
 	var target := ""
 	if it is Talisman:
@@ -250,7 +269,7 @@ func buy_stock(i: int) -> void:
 		return
 	var it: Variant = stock()[i] if i >= 0 and i < stock().size() else null
 	var name := _item_name(it)
-	_result(Shop.buy(inv(), stock(), i, floor_i()), "Satın alındı: %s" % name, true)
+	_result(Shop.buy(inv(), stock(), i, floor_i(), player_level()), "Satın alındı: %s" % name, true)
 
 
 func buy_potion() -> void:
@@ -318,7 +337,7 @@ func refresh() -> void:
 	_gold_label.text = "Altın: %d    ·    İksir: %d / %d%s" % [I.gold, I.potions, I.potion_max,
 		"" if race_id() == "" or bool(DataDB.table("races")[race_id()]["healing"]["potions"]) else " (kullanamazsın)"]
 	if GameState.in_combat:
-		_status.text = "SAVAŞ SÜRÜYOR: slotlar kilitli (çanta içinde düzenleme serbest)"
+		_status.text = "SAVAŞ SÜRÜYOR: slotlar kilitli (oda temizlenince düzenle)"
 		_status.add_theme_color_override("font_color", Color(1, 0.55, 0.5))
 	for n: Node in _slot_nodes.values() + _bag_nodes:
 		(n as Control).queue_redraw()
@@ -508,7 +527,7 @@ func _build() -> void:
 	_smith_box.add_theme_constant_override("separation", 10)
 	side.add_child(_smith_box)
 	_smith_box.add_child(_label("Demirci", 28, Color(0.7, 0.8, 1.0)))
-	_smith_box.add_child(_label("Silahı örse sürükle ya da çantada/slotta seç. Level atlatma bir sonraki 5'in katına çıkarır (en fazla senin levelin).", 14, Color(0.7, 0.7, 0.75), true))
+	_smith_box.add_child(_label("Silahı örse sürükle ya da slotta seç. Level atlatma bir sonraki 5'in katına çıkarır (en fazla senin levelin).", 14, Color(0.7, 0.7, 0.75), true))
 	var smith_row := HBoxContainer.new()
 	smith_row.add_theme_constant_override("separation", 14)
 	_smith_slot = _make_slot("smith", {}, Vector2(110, 110))
@@ -536,7 +555,7 @@ func _build() -> void:
 	box.add_theme_constant_override("separation", 10)
 	box.custom_minimum_size = Vector2(600, 0)
 	_inv_panel.add_child(box)
-	box.add_child(_label("Çanta ve Slotlar", 28, Color(1, 0.9, 0.6)))
+	box.add_child(_label("Envanter (4 slot)", 28, Color(1, 0.9, 0.6)))
 	_gold_label = _label("", 18, Color(1, 0.85, 0.35))
 	box.add_child(_gold_label)
 
@@ -552,7 +571,9 @@ func _build() -> void:
 	box.add_child(slot_row)
 	box.add_child(_label("Aktif: tam güç · Rezonans: kilitliyken normal saldırının %10'u, açıkken %7'si ek hasar · Esnek: silahın özellik/pasifinin %9'u ya da tılsım", 13, Color(0.65, 0.65, 0.7), true))
 
-	box.add_child(_label("Çanta", 18, Color(0.85, 0.85, 0.9)))
+	box.add_child(_label("Çanta yok: taşıyabileceğin her şey bu 4 slot. Yeni eşya için yer açmak, birini geride bırakmak demek.", 14, Color(0.9, 0.8, 0.55), true))
+	if GameState.inventory.bag.size() > 0:
+		box.add_child(_label("Çanta", 18, Color(0.85, 0.85, 0.9)))
 	var grid := GridContainer.new()
 	grid.columns = 6
 	grid.add_theme_constant_override("h_separation", 8)
@@ -568,7 +589,7 @@ func _build() -> void:
 	_drop_slot = _make_slot("drop", {}, Vector2(140, 56))
 	_drop_slot.title = "Yere bırak"
 	drop_row.add_child(_drop_slot)
-	drop_row.add_child(_label("Sürükle-bırak: taşı / yer değiştir\nSağ tık ya da çift tık: tak / çıkar · Sol tık: seç\nI ya da Esc: kapat", 13, Color(0.65, 0.65, 0.7)))
+	drop_row.add_child(_label("Sürükle-bırak: slotlar arası taşı / yer değiştir\nSağ tık ya da çift tık: aktif ↔ Rezonans · Sol tık: seç\nI ya da Esc: kapat", 13, Color(0.65, 0.65, 0.7)))
 	box.add_child(drop_row)
 	_status = _label("", 16, Color(0.6, 1.0, 0.65), true)
 	box.add_child(_status)

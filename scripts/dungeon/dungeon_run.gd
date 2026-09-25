@@ -6,7 +6,7 @@
 ## Irk ve level hata ayıklama menüsünden (M) seçilir; savaş sırasında değiştirilemez (GDD: slot değişimi yalnızca
 ## oda dışında). Tab ile iki aktif silah arasında geçiş her zaman serbest.
 ## Aşama 5: run ırkın başlangıç silahıyla başlar; düşmanlar, sandıklar ve boss'lar loot düşürür (LootGenerator →
-## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: çanta ve slotlar
+## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: 4 slotluk envanter
 ## (InventoryUI; sürükle-bırak), F: tüccar ve demirci panelleri. Silahlar, Rezonans ve Esnek slot GameState.inventory'den.
 ## Komut satırı ("--" sonrasına):
 ##   --autoplay        Bot oynar: her odayı gezer, gizli duvarı kırar, boss'ları keser, 4 katı bitirir (çıkış 0).
@@ -17,9 +17,9 @@
 ##   --open-menu       Hata ayıklama menüsü açık başlar.
 ##   --race=… --level=… --weapons=…   Test odasıyla aynı (--weapons verilirse aktif slotlara o silahlar konur).
 ##   --loot-rain       Run başında oyuncunun çevresine test için loot saçar.
-##   --fill-bag        Run başında çantaya katın loot'undan 9 silah ve bir tılsım koyar (arayüz testi).
-##   --hover-bag=N     (Ekran görüntüsü için) çantanın N. gözünün tooltip'ini gösterir.
-##   --open-bag        Çanta açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
+##   --fill-bag        Run başında boş slotları katın loot'uyla doldurur (arayüz testi).
+##   --hover-bag=N     (Ekran görüntüsü için) N. slotun (0 Aktif 1 … 3 Esnek) tooltip'ini gösterir.
+##   --open-bag        Envanter açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
 class_name DungeonRun
 extends Node2D
 
@@ -156,7 +156,7 @@ func _ready() -> void:
 	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
-		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I çanta · Esc çık",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · Esc çık",
 		"M: HATA AYIKLAMA MENÜSÜ (ırk, level, kat, loot testi, ölümsüz, test odası) · Çatlak duvarlara vur: gizli oda! · R: yeni run (ölünce)",
 	]))
 
@@ -195,7 +195,7 @@ func _ready() -> void:
 	if _open_bag:
 		bag_ui.open_ui.call_deferred("bag", player)
 	if _hover_bag >= 0:
-		(func() -> void: bag_ui.on_slot_hover(bag_ui._bag_nodes[_hover_bag], true)).call_deferred()
+		(func() -> void: bag_ui.on_slot_hover(bag_ui._slot_nodes[Inventory.SLOT_NAMES[clampi(_hover_bag, 0, 3)]], true)).call_deferred()
 	if _open_ui != "":
 		for p: RoomProp in props:
 			if p.kind == _open_ui:
@@ -240,10 +240,9 @@ func new_run(from_floor: int = 1) -> void:
 	if _loot_rain:
 		loot_rain(8)
 	if _fill_bag:
-		for i: int in 9:
-			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "normal", loot_rng), GameState.level, false)
-		var t := LootGenerator.roll_talisman(loot_rng, [])
-		GameState.inventory.add_item(t, GameState.level, false)
+		for i: int in 3:
+			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "normal", loot_rng), GameState.level)
+		_on_inventory_changed()
 	print("[Zindan] Yeni run: seed %d, %d. kattan" % [seed_value, from_floor])
 
 
@@ -756,8 +755,8 @@ func _update_drops() -> void:
 					loot_stats["potions"] = int(loot_stats["potions"]) + 1
 					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+1 iksir", LootDrop.POTION_COLOR, 18)
 					_remove_drop(d)
-		if autoplay and d.is_item() and is_instance_valid(d) and not d.picked and dist <= 1.2 and inv.first_free_bag() >= 0:
-			pick_up(d)
+		if autoplay and d.is_item() and is_instance_valid(d) and not d.picked and dist <= 1.2:
+			pick_up(d, false)
 	if nearest != null and is_instance_valid(nearest) and not nearest.picked:
 		nearest.player_near = true
 
@@ -768,23 +767,32 @@ func _remove_drop(d: LootDrop) -> void:
 	d.queue_free()
 
 
-## Yerdeki silah/tılsımı alır: boş aktif slota (açık silahsa ve savaş dışındaysa), yoksa çantaya.
-func pick_up(d: LootDrop) -> bool:
+## Yerdeki silah/tılsımı alır (yalnızca savaş dışında): uygun boş slota; yer yoksa yerdekiyle değiştirir ve eski eşya
+## yere düşer (açık silah kullanılan aktif silahla, kilitli silah Rezonans'la, tılsım Esnek'le). Envanterin tamamı
+## 4 slottur (kullanıcı kararı): çok eşya taşınamaz, geride bırakılır.
+## swap false ise (bot) yer yoksa almaz.
+func pick_up(d: LootDrop, swap: bool = true) -> bool:
 	if d.picked or not d.is_item():
 		return false
-	var inv := GameState.inventory
-	var auto_eq := bool(DataDB.table("economy")["pickup"]["auto_equip_empty_active"])
-	var where := inv.add_item(d.item, GameState.level, auto_eq, GameState.in_combat)
-	if where == "":
-		hud.flash_note("Çanta dolu! (I: çantayı aç, bir şey bırak ya da sat)")
+	if GameState.in_combat:
+		hud.flash_note("Savaş sürerken eşya alınamaz (oda temizlenince al)")
 		return false
-	loot_stats["weapons" if d.kind == "weapon" else "talismans"] = int(loot_stats["weapons" if d.kind == "weapon" else "talismans"]) + 1
+	var inv := GameState.inventory
 	var name := d.label_text()
-	hud.flash_note("%s → %s" % [name, "çanta" if where == "bag" else Inventory.SLOT_TITLES[where]])
+	var where := inv.add_item(d.item, GameState.level)
+	var msg := ""
+	if where == "":
+		if not swap:
+			return false
+		where = inv.swap_slot_for(d.item, GameState.level)
+		var old: Variant = inv.swap_in(d.item, where)
+		if old != null:
+			_spawn_drop({"kind": "talisman" if old is Talisman else "weapon", "item": old}, d.global_position, 0.0)
+			msg = " (yere bıraktın: %s)" % (old as Object).call("display_name")
+	loot_stats["weapons" if d.kind == "weapon" else "talismans"] = int(loot_stats["weapons" if d.kind == "weapon" else "talismans"]) + 1
+	hud.flash_note("%s → %s%s" % [name, "çanta" if where == "bag" else Inventory.SLOT_TITLES[where], msg])
 	_remove_drop(d)
-	Events.inventory_changed.emit()
-	if where != "bag":
-		_on_inventory_changed()
+	_on_inventory_changed()
 	return true
 
 
@@ -830,17 +838,17 @@ func loot_rain(n: int) -> void:
 
 # --- bot (zindan smoke testi) tüccar ve demircide ---
 
-## Bot: çantadakileri satar, iksir alır, altın yetiyorsa tezgâhtan bir eşya alır.
+## Bot: Rezonans ve Esnek'tekini satar, iksir alır, altın yetiyorsa tezgâhtan bir eşya alır.
 func bot_merchant(p: RoomProp) -> void:
 	var inv := GameState.inventory
 	var f := GameState.floor_index
-	for i: int in inv.bag.size():
-		if inv.bag[i] != null and Shop.sell(inv, Inventory.bag_ref(i), f, GameState.in_combat) == "":
+	for s: String in ["resonance", "flex"]:
+		if inv.slots[s] != null and Shop.sell(inv, Inventory.slot_ref(s), f, GameState.in_combat) == "":
 			loot_stats["sold"] = int(loot_stats["sold"]) + 1
 	if Shop.buy_potion(inv, f, player.race_id) == "":
 		loot_stats["bought"] = int(loot_stats["bought"]) + 1
 	for i2: int in p.stock.size():
-		if Shop.item_price(p.stock[i2], f) <= inv.gold and Shop.buy(inv, p.stock, i2, f) == "":
+		if Shop.item_price(p.stock[i2], f) <= inv.gold and Shop.buy(inv, p.stock, i2, f, GameState.level) == "":
 			loot_stats["bought"] = int(loot_stats["bought"]) + 1
 			break
 	_on_inventory_changed()
@@ -945,12 +953,12 @@ func _update_hud() -> void:
 			room_txt += " · Dalga %d / %d · Kalan düşman %d" % [maxi(rc.wave_index + 1, 1), rc.info.waves.size(), rc.alive_count()]
 		elif rc.state == RoomController.State.CLEARED and rc.has_enemies():
 			room_txt += " · temizlendi"
-	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest (I: çanta)"
+	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest (I: envanter)"
 	hud.wave_text = "%d. Kat — %s   ·   %s\n%s   ·   Seed %d%s" % [GameState.floor_index, fl["name"], room_txt, slot_txt,
 		GameState.run_seed, "   ·   ÖLÜMSÜZ (test)" if player.invulnerable else ""]
 
 
-## Menü "Uygula": ırk ve level (silahlar envanterde kalır; menüdeki silahlar "Silahları çantaya ekle" ile gelir).
+## Menü "Uygula": ırk ve level (silahlar envanterde kalır; menüdeki silahlar "Silahları boş slotlara ekle" ile gelir).
 func _on_menu_applied(c: Dictionary) -> void:
 	if GameState.in_combat:
 		hud.flash_note("Savaş sürerken ırk ve level değiştirilemez")
@@ -974,9 +982,10 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 			for wc: Dictionary in c["weapons"]:
 				var w := TestRoom.make_weapon(wc)
 				w.level = GameState.level
-				if GameState.inventory.add_item(w, GameState.level, false) != "":
+				if GameState.inventory.add_item(w, GameState.level) != "":
 					added += 1
-			hud.flash_note("%d silah çantaya eklendi" % added if added > 0 else "Çanta dolu")
+			_on_inventory_changed()
+			hud.flash_note("%d silah boş slotlara eklendi" % added if added > 0 else "Boş slot yok")
 		"loot_rain":
 			loot_rain(8)
 		"gold":

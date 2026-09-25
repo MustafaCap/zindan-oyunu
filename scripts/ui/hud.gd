@@ -190,7 +190,7 @@ func _mini_slot(p: Vector2, title: String, it: Variant) -> void:
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.6))
 	var border := Color(0.35, 0.35, 0.4)
 	var line1 := "%s: boş" % title
-	var line2 := "I: çantayı aç"
+	var line2 := "I: envanteri aç"
 	if it is Weapon:
 		var w := it as Weapon
 		border = w.rarity_color()
