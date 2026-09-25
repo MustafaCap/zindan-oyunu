@@ -47,7 +47,7 @@ func _next() -> void:
 		"race": c[0], "level": LEVEL, "enemies": "dummies",
 		"weapons": [{"type": type_id, "element": c[2], "trait": ""}, {"type": second, "element": "fire", "trait": ""}],
 	}
-	var dummies: Array[EnemyMelee] = room.spawn_dummies([[Vector2(1.15, 0), ""], [Vector2(2.6, 1.3), ""], [Vector2(2.6, -1.3), ""]])
+	var dummies: Array[Enemy] = room.spawn_dummies([[Vector2(1.15, 0), ""], [Vector2(2.6, 1.3), ""], [Vector2(2.6, -1.3), ""]])
 	_dummy = dummies[0]
 	var p: Player = room.spawn_player(cfg)
 	p.external_intent = {"aim": _dummy.global_position}

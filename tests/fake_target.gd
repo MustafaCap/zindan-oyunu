@@ -1,4 +1,4 @@
-## Testlerde HitResolver için sahte hedef/saldıran (EnemyMelee'nin savaş arayüzünün küçük bir kopyası).
+## Testlerde HitResolver için sahte hedef/saldıran (Enemy'nin savaş arayüzünün küçük bir kopyası).
 extends Node2D
 
 var dead: bool = false

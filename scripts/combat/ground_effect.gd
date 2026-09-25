@@ -81,7 +81,7 @@ func _pulse() -> void:
 			_streaks.append([Iso.to_screen(Vector2(cos(a), sin(a)) * Iso.tiles(r)), 0.18])
 	for e: Node2D in player.enemies_in_circle(global_position, radius):
 		var d := Iso.to_cart(e.global_position - global_position)
-		var opts := {"dir": d.normalized() if d.length() > 0.01 else Vector2.RIGHT, "heavy": mode != "pulses"}
+		var opts := {"dir": d.normalized() if d.length() > 0.01 else Vector2.RIGHT, "heavy": mode != "pulses", "area": true}
 		player.deal_hit(e, weapon, source, skill_mult, attack_id, opts)
 
 

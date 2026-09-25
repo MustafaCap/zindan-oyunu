@@ -21,6 +21,29 @@
         "eye_spawn",
         "vein_mass"
       ],
+      "_default_spawn_pool": "Aşama 7: savaş odası dalgalarının havuzu [düşman ya da varyant id, ağırlık]. Sürü düşmanları (pack) gruplar halinde gelir; destek düşmanları dalga başına en fazla max_per_wave kadar. Elitler enemy_pool'dan (katın temel düşmanları) seçilir.",
+      "spawn_pool": [
+        [
+          "skeleton_warrior",
+          5
+        ],
+        [
+          "skeleton_archer",
+          3
+        ],
+        [
+          "cave_rat",
+          3
+        ],
+        [
+          "eye_spawn",
+          1.5
+        ],
+        [
+          "vein_mass",
+          1
+        ]
+      ],
       "boss_pool": [
         "morvath"
       ],
@@ -47,6 +70,45 @@
         "mushroom_man",
         "poison_spitter",
         "mushroom_healer"
+      ],
+      "_default_spawn_pool": "Aşama 7: savaş odası dalgalarının havuzu [düşman ya da varyant id, ağırlık]. Sürü düşmanları (pack) gruplar halinde gelir; destek düşmanları dalga başına en fazla max_per_wave kadar. Elitler enemy_pool'dan (katın temel düşmanları) seçilir.",
+      "spawn_pool": [
+        [
+          "spore_beetle",
+          3
+        ],
+        [
+          "mushroom_man",
+          2
+        ],
+        [
+          "poison_spitter",
+          3
+        ],
+        [
+          "mushroom_healer",
+          1.2
+        ],
+        [
+          "toxic_skeleton_warrior",
+          2
+        ],
+        [
+          "toxic_skeleton_archer",
+          1
+        ],
+        [
+          "toxic_cave_rat",
+          1
+        ],
+        [
+          "toxic_eye_spawn",
+          0.8
+        ],
+        [
+          "toxic_vein_mass",
+          1
+        ]
       ],
       "boss_pool": [
         "mycela"
@@ -75,6 +137,49 @@
         "slag_mage",
         "iron_guard"
       ],
+      "_default_spawn_pool": "Aşama 7: savaş odası dalgalarının havuzu [düşman ya da varyant id, ağırlık]. Sürü düşmanları (pack) gruplar halinde gelir; destek düşmanları dalga başına en fazla max_per_wave kadar. Elitler enemy_pool'dan (katın temel düşmanları) seçilir.",
+      "spawn_pool": [
+        [
+          "stone_golemling",
+          2
+        ],
+        [
+          "ember_hound",
+          3
+        ],
+        [
+          "slag_mage",
+          2.5
+        ],
+        [
+          "iron_guard",
+          2
+        ],
+        [
+          "stone_skeleton_warrior",
+          2
+        ],
+        [
+          "fire_skeleton_archer",
+          1
+        ],
+        [
+          "stone_mushroom_man",
+          1
+        ],
+        [
+          "fire_spore_beetle",
+          1
+        ],
+        [
+          "fire_poison_spitter",
+          1
+        ],
+        [
+          "stone_vein_mass",
+          1
+        ]
+      ],
       "boss_pool": [
         "kordrak"
       ],
@@ -101,6 +206,65 @@
         "wailer",
         "void_slave",
         "void_summoner"
+      ],
+      "_default_spawn_pool": "Aşama 7: savaş odası dalgalarının havuzu [düşman ya da varyant id, ağırlık]. Sürü düşmanları (pack) gruplar halinde gelir; destek düşmanları dalga başına en fazla max_per_wave kadar. Elitler enemy_pool'dan (katın temel düşmanları) seçilir.",
+      "spawn_pool": [
+        [
+          "shade",
+          3
+        ],
+        [
+          "wailer",
+          2.5
+        ],
+        [
+          "void_slave",
+          2
+        ],
+        [
+          "void_summoner",
+          1.2
+        ],
+        [
+          "ghost_skeleton_warrior",
+          1
+        ],
+        [
+          "ghost_skeleton_archer",
+          0.8
+        ],
+        [
+          "ghost_cave_rat",
+          0.8
+        ],
+        [
+          "ghost_eye_spawn",
+          0.6
+        ],
+        [
+          "ghost_ember_hound",
+          1
+        ],
+        [
+          "ghost_slag_mage",
+          0.8
+        ],
+        [
+          "ghost_mushroom_healer",
+          0.5
+        ],
+        [
+          "ghost_iron_guard",
+          0.8
+        ],
+        [
+          "ghost_vein_mass",
+          0.6
+        ],
+        [
+          "ghost_stone_golemling",
+          0.6
+        ]
       ],
       "boss_pool": [
         "nyxthar"
@@ -160,5 +324,6 @@
       "description": "Kat sonu"
     }
   },
-  "_default_palette": "Aşama 4: katların placeholder renk paletleri (zemin, duvar, engel). Aşama 8'de gerçek karo setleri gelir."
+  "_default_palette": "Aşama 4: katların placeholder renk paletleri (zemin, duvar, engel). Aşama 8'de gerçek karo setleri gelir.",
+  "_note_stage7": "Aşama 7: prototip havuz (dungeon.json > prototype_enemies) kaldırıldı; her katın kendi düşmanları ve malzeme varyantları spawn_pool'dan gelir."
 }

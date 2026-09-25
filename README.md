@@ -14,15 +14,53 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 4 | Zindan üretimi | ✅ Bitti (onaylandı) |
 | 5 | Loot ve envanter | ✅ Bitti (onaylandı) |
 | 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
-| 7 | Düşmanlar ve boss'lar | — |
+| 7 | Düşmanlar ve boss'lar | ✅ Bitti (kullanıcı testi bekliyor; yalnızca yerel commit) |
 | 8 | Sanat | — |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 6 (sürüm 0.6.0) bitti; `asama-6` (ve altındaki `asama-5`) GitHub'a push edildi ve `main`'e birleştirildi.
-Sırada Aşama 7 (düşmanlar ve boss'lar): `main`'den `asama-7` dalı açılır.
+**Kalınan yer:** Aşama 7 (sürüm 0.7.0) bitti; `main`'den açılan `asama-7` dalında **yalnızca yerelde commit edildi**. Kullanıcı
+.exe'yi (`ZindanOyunu-Derlemeler/asama-7/`) test edip onaylayınca `asama-7` push edilir ve `main`'e birleştirilir. Sonra sırada Aşama 8
+(sanat): `main`'den `asama-8` dalı açılır.
 
-**Aşama 6'da yapılanlar (ilerleme):**
+**Aşama 7'de yapılanlar (düşmanlar ve boss'lar):**
+- **55 düşman:** 17 temel düşman (5 rol) + her birinin eliti + 21 malzeme varyantı (yeni **Zehirli** malzemesi; Taş, Alevli, Hayalet).
+  Her kat artık kendi düşmanlarıyla gelir (prototip havuz ve yer tutucu elit/boss kaldırıldı). `EnemyMelee` → `Enemy` (veri odaklı:
+  `enemies.json`'daki ai, attack, abilities, on_death, front_shield alanları).
+- Rol yapay zekâları: takip, mesafe koruma (okçu, tükürücü, büyücü, feryatçı), duvara yapışık (Göz Yavrusu), destek (Şifacı, Çağırıcı:
+  öncelikli hedef, başında sarı "!"). Saldırı tipleri: yay, mermi, ışın, yere vuruş, atılıp ısırma (Kor Köpeği), çığlık konisi. Her saldırının
+  hazırlığında yerde kırmızı işaret dolar.
+- Özel davranışlar: Damar Kütlesi ölünce işaretli patlar, Sporlu Böcek zehir bulutu, Tükürücü/Cüruf Büyücüsü yere birikinti/lav bırakır,
+  Şifacı dostlarını iyileştirir, Demir Muhafız'ın kalkanı önden vuruşu engeller (arkasına geç; sersem/donmuşken iner), Gölge görünmezleşip
+  arkandan saldırır, Feryatçı yavaşlatır, Boşluk Kulu seni kendine çeker, Boşluk Çağırıcı Gölge çağırır.
+- **Elitler:** ×3 can, ×1,5 hasar, ×1,35 boy ve bir aura (Hız, Kalkan, Yenilenme, Öfke; renkli halkayla görünür).
+- **Kat ölçeklemesi:** düşman canı ×1 / ×2,5 / ×5 / ×8, hasarı ×1 / ×1,9 / ×2,9 / ×4.
+- **4 gerçek boss** (tüm saldırıları yerde önceden işaretli, %50'de 2. faz, HUD'da faz çizgisi ve mekanik ipucu):
+  - Morvath: döner Bakış Işını (sütun arkası güvenli), Damar Kırbacı, Göz Yavruları; göz kapağı kapanınca duvardaki 3 gözü kır → 6 sn +%50.
+  - Mycela: Spor Bulutu, Kök Patlaması, Spor Oku; 3 iyileştiren totem; ateş bulutu Zehir Patlaması'yla yakar; 2. fazda sporla dolan arena.
+  - Kordrak: Örs Darbesi şok halkası, lav kanalları, Kor Yumruğu; plakalar %70 azaltır, 5 buz vuruşu plakaları 10 sn kırar.
+  - Nyx'thar: Gölge Kopyaları (gerçeğin gölgesi var), Boşluk Yırtığı (çeker), Çığlık; karanlık arena, meşaleler (ateş yakar); 2. fazda kenarlar çöker.
+- Çağrılanlar ve boss yardımcıları XP/altın/iksir vermez (kat XP toplamları değişmedi).
+- Hata ayıklama: zindanda M → "Boss odasına ışınlan"; test odasında M → "Düşmanlar" listesinden her tür ya da eliti tek tek denenir.
+- Testler: 13 yeni birim testi (toplam 206) ve yeni `make bosses` (bot 4 boss'u katın beklenen gücüyle 240 sn içinde keser; tüm saldırılar,
+  2. faz ve ≥ 0,4 sn uyarı denetlenir).
+
+**Aşama 7'de GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/enemies.json`, `data/bosses.json`, `data/floors.json` içinde
+`_default` notuyla; ayrıntılı liste ve tüm sayılar GDD > Uygulamada Verilen Kararlar > Düşmanlar ve boss'lar):
+- 55 = 17 temel + 17 elit + 21 varyant; varyantlar önceki katların düşmanlarının yeni katın malzemesiyle gelmesi (2. kat için yeni
+  "Zehirli" malzemesi: zehre bağışık, ateşe zayıf).
+- Düşman tablosunda yalnızca bağışıklık vardı; malzeme tablosuyla tutarlı zayıflıklar eklendi (taş → buz, ateş → buz/su, hayalet ve
+  mantar → ateş). Bağışık olunan element zayıflıktan düşer.
+- Tüm yeni düşmanların statları, saldırı süreleri, aura oranları (%30 / %1,5), sürü boyları (fare/böcek 3-5, köpek 2-4), dalgada en
+  fazla 1 destek ve 2 Göz Yavrusu, sürü elitlerinin can çarpanı (fare ×9, böcek ×8, köpek ×6).
+- Kat ölçeklemesi sayıları; boss can/hasarları (Morvath 9.000 / 26, Mycela 22.000 / 45, Kordrak 42.000 / 70, Nyx'thar 65.000 / 95) ve
+  bütün boss saldırı/mekanik sayıları.
+- Kalkan: yerden/gökten gelen alanlar, ikincil vuruşlar ve süreli hasar kalkandan geçer; sersem/donmuşken kalkan iner.
+- Morvath: kapak 14 sn açık, 22 sn'de gözler kırılmazsa bonussuz açılır. Nyx'thar: en az 2 meşale hep yanar; sahte kopya vurulunca
+  oyuncunun yanına ışınlanıp işaretli kesik atar ve dağılır. Mycela: totemler 30 sn sonra yeniden dikilir.
+- Zindan smoke testinde düşman canı ×0,25 (`--enemy-hp`).
+
+**Aşama 6 (ilerleme, onaylandı) özeti:**
 - Oyuncu XP'si ve leveli (`Leveling`, `GameState.add_xp`): sonraki levele 100 + 20 × level, maks 80. Düşmanlar kat ve türe göre XP verir
   (normal 40/120/180/280, elit 150/500/900/1800, boss 800/2400/3600/7200). Üretilen haritalarda katın tüm düşmanları kesilirse oyuncu tam
   15 / 35 / 55 / 80'de çıkar (testte 4 seed'le doğrulandı). Level atlayınca can, mana ve statlar yenilenir, silahlar da aynı XP'yi alır
@@ -80,11 +118,12 @@ notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
   oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür; silah XP eğrisi oyuncununkiyle aynı; Rezonans ek hasarı element durumu
   bırakmaz ve kombo yapmaz; 12 efsanevi silah önerildi (kullanıcı değiştirebilir).
 
-Aşama 0-6'da verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
+Aşama 0-7'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
 
 **Bilinen durumlar / notlar:**
-- Düşmanlar Aşama 7'ye kadar katla güçlenmez ve tüm katlarda 1. kat modelleri (yer tutucu elit/boss) kullanılır; artık level XP ile
-  arttığı için 2-4. katlar görece kolaylaşır. Denge Aşama 7 ve 10'da.
+- Denge (düşman ve boss sayıları, kat ölçeklemesi) ilk değerlerdir; Aşama 10'da simülasyon ve oyun testleriyle ayarlanır. Boss testi
+  ölümsüz botla yapılır (bot saldırılardan kaçmaz); gerçek zorluk oynayarak değerlendirilmeli.
+- Görseller hâlâ renkli şekiller (boss'lar büyük gövdeler, üstlerinde göz/çekirdek); sanat Aşama 8'de.
 - Ustalık ve boss ilk kesişleri `%APPDATA%\Godot\app_userdata\Zindan Oyunu\save.json` dosyasına kaydedilir. Sıfırlamak için M menüsü →
   "Ustalıkları sıfırla". Testler ve bot (autoplay) ayrı dosya kullanır, oyuncunun kaydına dokunmaz.
 - Test için M menüsünden level seçilebilir (XP'siz, ödül vermez) ya da "+1/+5 level (XP)" ile gerçek XP verilir; "Ölümsüz (test)" açılabilir.
@@ -115,7 +154,7 @@ Aşama 0-6'da verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 | F | Etkileşim: yerdeki silah/tılsım, sandık, tüccar, demirci, merdiven |
 | I | Envanter: 4 slot (sürükle-bırak, sağ tık aktif ↔ Rezonans; açıkken oyun durur) |
 | 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seç (kartlara tıklamak da olur; açıkken oyun durur) |
-| M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, ilerleme testi (+level, boss ödülü, ustalık sıfırla), test odası ↔ zindan |
+| M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, ilerleme testi (+level, boss ödülü, ustalık sıfırla, boss odasına ışınlan), test odası ↔ zindan; test odasında düşman türü (her tür ya da eliti) |
 | R | Zindan: ölünce ya da kazanınca (özet ekranında) yeni run · Test odası: odayı yeniden başlat |
 | 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
 | 8 | (Test odası) Aktif silahın özelliğini değiştir (Öfke, İnfaz, Can Emme, Sekme, Sersemletme) |
@@ -131,7 +170,7 @@ PowerShell'in `Compress-Archive`'ini kullanır. Bu bilgisayarda Godot `C:\Users\
 (`Godot_v4.7.2-stable_win64_console.exe` komut satırı için), şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\` içinde.
 
 ```bash
-make test            # birim testleri (193) + test odası smoke + ırk×silah matrisi + zindan smoke (loot, tüccar, demirci, ödüller, ustalık kaydı dahil) (make unit / smoke / matrix / dungeon ayrı da çalışır)
+make test            # birim testleri (206) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites         # sprite'ları üretir (Aşama 8)
 make sfx             # ses efektlerini üretir (Aşama 9)
@@ -144,6 +183,8 @@ Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırk
 - Zindan: `--seed=N` (aynı seed aynı haritalar) · `--floor=N` (N. kattan başla) · `--god` (hasar alınmaz) ·
   `--enemy-mult=0.2` (düşman sayısı çarpanı) · `--reveal` (minimapin tamamı) · `--open-menu` · `--autoplay` (bot 4 katı oynar)
 - Loot/arayüz: `--loot-rain` (çevreye loot saçar) · `--fill-bag` (boş slotları doldurur) · `--open-bag` (envanteri açar) · `--open-ui=merchant` / `blacksmith`
+- Düşmanlar (Aşama 7): `--enemy-hp=X` (tüm düşmanların canı çarpanı) · `--boss-rush` (her katta boss odasının kapısında başla) ·
+  `--boss-test` (boss-rush + katın beklenen level/silah gücü; boss'lar denetlenir, make bosses bunu kullanır)
 - İlerleme: `--grant-levels=N` (run başında N level'lik XP; ödül ekranı açılır) · `--end-run=SN` (SN saniye sonra oyuncu ölür; özet ekranı).
   `--autoplay` kalıcı kaydı `user://save_autoplay.json`'a yazar (her seferinde sıfırdan)
 - Bir katın haritasını ASCII basmak: `godot --headless --path . -s tools/dev/print_dungeon.gd -- --floor=2 --seed=42`
@@ -161,7 +202,7 @@ project.godot          proje ayarları (1920×1080, canvas_items, input map, aut
 export_presets.cfg     Windows Desktop ön ayarı
 data/                  tüm denge sayıları (JSON) — koda sayı yazılmaz
 scripts/autoload/      Events, DataDB, GameState, SaveManager
-scripts/...            combat, player, enemies, bosses, dungeon, loot, progression (Leveling, Mastery, Rewards, RunBonuses), ui
+scripts/...            combat, player, enemies (Enemy, EnemyHazard, EnemyProjectile), bosses (Boss, Morvath, Mycela, Kordrak, Nyxthar…), dungeon, loot, progression, ui
 scenes/                sahneler
 assets/                sprite, normal map, ses, font, shader
 tools/                 Blender sprite üretici, ses sentezleyici

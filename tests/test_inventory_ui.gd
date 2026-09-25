@@ -192,7 +192,7 @@ func test_dungeon_loot_flow() -> void:
 	assert_eq((inv.slots["active_1"] as Weapon).type_id, "sword", "Warrior kılıçla başlar")
 	assert_eq(run.player.weapons.size(), 1)
 	# Düşman ölünce altın düşer ve yaklaşınca toplanır
-	var e := EnemyMelee.new()
+	var e := Enemy.new()
 	e.enemy_id = "skeleton_warrior"
 	run.world.add_child(e)
 	e.global_position = run.player.global_position + Iso.to_screen(Vector2(1.5, 0) * Iso.KARO)

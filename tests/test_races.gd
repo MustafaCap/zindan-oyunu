@@ -250,6 +250,7 @@ func test_deal_hit_applies_matrix_and_passive() -> void:
 ## Kullanıcı kararı (Aşama 6): Warrior Q artık Kalkan Hücumu — ileri atılır, yoldaki düşmanlara ×1,5 vurur, iter ve sersemletir.
 func test_warrior_shield_charge() -> void:
 	var p := _player("warrior", [Weapon.make("sword", "common")] as Array[Weapon])
+	p.rng.seed = 12345  # kritik zarı sabit: vuruş kritik olmasın (test rastgeleliğe bağlı kalmasın)
 	p.aim_point = Iso.to_screen(Vector2(6, 0) * Iso.KARO)
 	p.facing_cart = Vector2.RIGHT
 	var on_path := _target(Vector2(2, 0))
