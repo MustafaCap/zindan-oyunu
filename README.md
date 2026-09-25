@@ -13,14 +13,14 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 3 | Irklar ve silahlar | ✅ Bitti (onaylandı) |
 | 4 | Zindan üretimi | ✅ Bitti (onaylandı) |
 | 5 | Loot ve envanter | ✅ Bitti (onaylandı) |
-| 6 | İlerleme | 🧪 Kullanıcı testinde |
+| 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
 | 7 | Düşmanlar ve boss'lar | — |
 | 8 | Sanat | — |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 6 (sürüm 0.6.0) kodlandı; `asama-6` dalı `asama-5`'in üstünde ve GitHub'a push edildi. Kullanıcı onaylayınca
-`asama-5` ve `asama-6` PR ile `main`'e birleştirilecek, sonra Aşama 7'ye (düşmanlar ve boss'lar) geçilecek.
+**Kalınan yer:** Aşama 6 (sürüm 0.6.0) bitti; `asama-6` (ve altındaki `asama-5`) GitHub'a push edildi ve `main`'e birleştirildi.
+Sırada Aşama 7 (düşmanlar ve boss'lar): `main`'den `asama-7` dalı açılır.
 
 **Aşama 6'da yapılanlar (ilerleme):**
 - Oyuncu XP'si ve leveli (`Leveling`, `GameState.add_xp`): sonraki levele 100 + 20 × level, maks 80. Düşmanlar kat ve türe göre XP verir
@@ -178,6 +178,5 @@ söyleyen bir hata verir (oyun ekranında da kırmızıyla görünür). `_` ile 
 ## Git akışı
 
 Her aşama kendi branch'inde yapılır (`asama-0`, `asama-1`, …), bitince bir Pull Request ile `main`'e birleştirilir (merge).
-Commit ve push'u Claude kendisi yapar (kullanıcının git hesabıyla ya da GitHub bağlantısıyla) ve GitHub'a ulaştığını kontrol eder;
-yapamazsa kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`). Kullanıcı aşamayı test edip onaylayınca PR ile
-`main`'e birleştirilir.
+Claude aşama sonunda yalnızca yerelde commit eder; kullanıcı uygulamayı test edip onaylayınca push eder (kullanıcının git hesabıyla),
+GitHub'a ulaştığını kontrol eder ve `main`'e birleştirir. Yapamazsa kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`).
