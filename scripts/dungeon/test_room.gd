@@ -295,14 +295,14 @@ func clear_enemies() -> void:
 
 
 ## Kukla modu: oyuncunun önünde, saldırmayan ve ölmeyen 5 hedef (biri Taş, biri Hayalet).
-func spawn_dummies(offsets: Array = []) -> Array[EnemyMelee]:
+func spawn_dummies(offsets: Array = []) -> Array[Enemy]:
 	clear_enemies()
 	var center := Vector2i(room_size / 2, room_size / 2)
 	var cells: Array = offsets if not offsets.is_empty() else [
 		[Vector2i(3, 0), ""], [Vector2i(3, 2), "stone"], [Vector2i(3, -2), "ghost"], [Vector2i(5, 1), ""], [Vector2i(5, -1), ""]]
-	var out: Array[EnemyMelee] = []
+	var out: Array[Enemy] = []
 	for c: Array in cells:
-		var e := EnemyMelee.new()
+		var e := Enemy.new()
 		e.enemy_id = "skeleton_warrior"
 		e.material_id = str(c[1])
 		e.dummy = true
@@ -327,16 +327,34 @@ func _start_wave(i: int) -> void:
 		if not finished and is_instance_valid(hud):
 			hud.show_message(""))
 	var free_cells := _spawn_cells()
-	for spec: Variant in waves[i]:
+	for spec: Variant in wave_specs(i):
 		var parts := str(spec).split(":")
-		var e := EnemyMelee.new()
+		var e := Enemy.new()
 		e.enemy_id = parts[0]
-		e.material_id = parts[1] if parts.size() > 1 else ""
+		e.material_id = parts[1] if parts.size() > 1 and parts[1] != "elite" else ""
+		e.is_elite = str(spec).ends_with(":elite")
+		# Tek tür denemesinde düşman kendi katının gücüyle gelir (kat ölçeklemesi)
+		e.floor_index = int(Enemy.record(parts[0]).get("floor", 1)) if str(config.get("enemies", "waves")).contains(":") else 1
 		e.rng.seed = rng.randi()
 		world.add_child(e)
 		var idx := rng.randi_range(0, free_cells.size() - 1)
 		e.global_position = floor_layer.map_to_local(free_cells[idx])
 		free_cells.remove_at(idx)
+
+
+## Dalganın düşmanları: "waves" modunda sabit liste; "type:<id>" modunda o türden 3 (sürüde 5); "elite:<id>" modunda
+## o türün tek eliti (Aşama 7: menüden her düşman türü ayrı denenebilir).
+func wave_specs(i: int) -> Array:
+	var mode := str(config.get("enemies", "waves"))
+	if mode.begins_with("type:"):
+		var id := mode.get_slice(":", 1)
+		var out: Array = []
+		for k: int in (5 if Enemy.record(id).has("pack") else 3):
+			out.append(id)
+		return out
+	if mode.begins_with("elite:"):
+		return [mode.get_slice(":", 1) + ":elite"]
+	return waves[i]
 
 
 ## Oyuncudan en az 4 karo uzakta, sütun olmayan zemin karoları.

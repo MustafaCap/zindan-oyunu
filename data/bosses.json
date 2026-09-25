@@ -1,48 +1,346 @@
 {
-  "_note": "İlk sürümde kat başına 1 boss; havuzlar sonradan 5'er boss'a tamamlanacak. Can/hasar değerleri Aşama 7'de.",
+  "_note": "İlk sürümde kat başına 1 boss; havuzlar sonradan 5'er boss'a tamamlanacak. Aşama 7: gerçek boss'lar. Boss can ve hasarı kat ölçeklemesinden geçmez (buradaki değerler son değerdir); boss'un çağırdıkları (enemies.json > boss_adds) ölçeklenir. Her saldırının 'warn' süresi boyunca yerde kırmızı (ya da renkli) işaret görünür. Sayılar _default: Aşama 10'da oyun testleriyle ayarlanır.",
+  "_default_damage": "Saldırı hasarı = boss.damage × saldırının damage_mult'u (oyuncunun zırhından geçer). Alan (zone) hasarları tick saniyede bir vurur.",
   "pool_size_target": 5,
   "phase2_threshold": 0.5,
   "first_kill_damage_bonus": 0.003,
+  "min_warn_sec": 0.4,
+  "phase2_banner_sec": 2.0,
   "bosses": {
     "morvath": {
-      "name": "Morvath, Ana Göz", "floor": 1, "immune": [], "weak": ["lightning"], "stationary": true,
-      "attacks": [
-        { "id": "gaze_beam",   "name": "Bakış Işını",  "description": "Arenayı yavaşça tarayan döner ışın" },
-        { "id": "vein_lash",   "name": "Damar Kırbacı", "description": "Zeminde çizgiler halinde damarlar fışkırır" },
-        { "id": "eye_spawns",  "name": "Göz Yavruları", "description": "4-6 küçük sürünen göz doğurur", "count": [4, 6] }
+      "name": "Morvath, Ana Göz",
+      "floor": 1,
+      "immune": [],
+      "weak": [
+        "lightning"
       ],
-      "mechanic": { "id": "closing_eyelid", "name": "Kapanan Göz Kapağı", "wall_eyes": 3, "open_duration": 6.0, "open_damage_bonus": 0.5, "lightning_jumps_to_wall_eyes": true },
-      "phase2": { "description": "Zeminin bazı bölgeleri sürekli hasar verir; Bakış Işını ikiye bölünür ve ters yönlere döner", "beams": 2 }
+      "stationary": true,
+      "stats": {
+        "hp": 9000,
+        "damage": 26,
+        "radius": 1.3,
+        "move_speed": 0.0
+      },
+      "attack_gap": 1.4,
+      "attacks": [
+        {
+          "id": "gaze_beam",
+          "name": "Bakış Işını",
+          "description": "Arenayı yavaşça tarayan döner ışın",
+          "warn": 1.2,
+          "length": 13.0,
+          "width": 0.7,
+          "sweep_degrees": 150,
+          "speed_degrees": 40,
+          "damage_mult": 1.0,
+          "hit_interval": 0.6
+        },
+        {
+          "id": "vein_lash",
+          "name": "Damar Kırbacı",
+          "description": "Zeminde çizgiler halinde damarlar fışkırır",
+          "warn": 0.9,
+          "lines": 3,
+          "fan_degrees": 44,
+          "length": 10.0,
+          "width": 0.9,
+          "stagger": 0.15,
+          "damage_mult": 1.2
+        },
+        {
+          "id": "eye_spawns",
+          "name": "Göz Yavruları",
+          "description": "4-6 küçük sürünen göz doğurur",
+          "count": [
+            4,
+            6
+          ],
+          "warn": 0.8,
+          "add_id": "crawling_eye",
+          "max_alive": 8,
+          "distance": [
+            2.5,
+            5.0
+          ]
+        }
+      ],
+      "mechanic": {
+        "id": "closing_eyelid",
+        "name": "Kapanan Göz Kapağı",
+        "wall_eyes": 3,
+        "open_duration": 6.0,
+        "open_damage_bonus": 0.5,
+        "lightning_jumps_to_wall_eyes": true,
+        "lightning_jump_pct": 0.5,
+        "open_interval": 14.0,
+        "closed_timeout": 22.0,
+        "_default": "Kapak açıkken Morvath normal hasar alır; open_interval saniyede bir kapanır. Kapalıyken hasar almaz ve duvardaki 3 göz (wall_eye) belirir; üçü kırılınca kapak açılır ve open_duration sn +%50 hasar alır. closed_timeout sonunda kapak bonussuz kendiliğinden açılır (takılmayı önler). Morvath'a gelen yıldırım hasarının %50'si duvardaki gözlere de sıçrar."
+      },
+      "phase2": {
+        "description": "Zeminin bazı bölgeleri sürekli hasar verir; Bakış Işını ikiye bölünür ve ters yönlere döner",
+        "beams": 2,
+        "zones": 4,
+        "zone_radius": 1.8,
+        "zone_warn": 1.5,
+        "zone_damage_mult": 0.45,
+        "zone_tick": 0.5,
+        "zone_relocate_sec": 12.0,
+        "beam_speed_mult": 1.2
+      }
     },
     "mycela": {
-      "name": "Mycela, Spor Kraliçesi", "floor": 2, "immune": ["poison"], "weak": ["fire"],
-      "attacks": [
-        { "id": "spore_cloud", "name": "Spor Bulutu",  "description": "Arenada birkaç saniye kalan zehirli bulutlar" },
-        { "id": "root_burst",  "name": "Kök Patlaması", "description": "Oyuncunun altından sırayla kökler fışkırır" },
-        { "id": "spore_shot",  "name": "Spor Oku",     "description": "Oyuncuya yelpaze şeklinde 5 spor", "count": 5 }
+      "name": "Mycela, Spor Kraliçesi",
+      "floor": 2,
+      "immune": [
+        "poison"
       ],
-      "mechanic": { "id": "healing_totems", "name": "İyileştiren Mantarlar", "totems": 3, "fire_burns_clouds": true },
-      "phase2": { "description": "Arena yavaşça sporla dolar; Mycela hızla yer değiştirir" }
+      "weak": [
+        "fire"
+      ],
+      "stats": {
+        "hp": 22000,
+        "damage": 45,
+        "radius": 0.7,
+        "move_speed": 1.6
+      },
+      "attack_gap": 1.3,
+      "attacks": [
+        {
+          "id": "spore_cloud",
+          "name": "Spor Bulutu",
+          "description": "Arenada birkaç saniye kalan zehirli bulutlar",
+          "warn": 0.8,
+          "count": 3,
+          "radius": 1.6,
+          "duration": 7.0,
+          "damage_mult": 0.35,
+          "tick": 0.5,
+          "spread": 4.0
+        },
+        {
+          "id": "root_burst",
+          "name": "Kök Patlaması",
+          "description": "Oyuncunun altından sırayla kökler fışkırır",
+          "warn": 0.7,
+          "count": 4,
+          "interval": 0.4,
+          "radius": 1.0,
+          "damage_mult": 1.1
+        },
+        {
+          "id": "spore_shot",
+          "name": "Spor Oku",
+          "description": "Oyuncuya yelpaze şeklinde 5 spor",
+          "count": 5,
+          "warn": 0.6,
+          "fan_degrees": 50,
+          "speed": 8.0,
+          "range": 11.0,
+          "damage_mult": 0.8
+        }
+      ],
+      "mechanic": {
+        "id": "healing_totems",
+        "name": "İyileştiren Mantarlar",
+        "totems": 3,
+        "fire_burns_clouds": true,
+        "heal_pct_per_sec": 0.002,
+        "replant_sec": 30.0,
+        "plant_warn": 1.0,
+        "totem_distance": 5.5,
+        "add_id": "spore_totem",
+        "burst_radius": 2.5,
+        "burst_boss_pct": 0.025,
+        "_default": "Her totem yaşadıkça Mycela'yı saniyede maks canının %0,2'si kadar iyileştirir; üçü de kırılınca 30 sn sonra yeniden dikilir. Spor bulutuna ateşle vurulunca bulut Zehir Patlaması'yla yok olur: 2,5 karo içindeki düşmanlara (Mycela ve totemler dahil) Mycela'nın maks canının %2,5'i kadar hasar (oyuncuya dokunmaz)."
+      },
+      "phase2": {
+        "description": "Arena yavaşça sporla dolar; Mycela hızla yer değiştirir",
+        "clean_zones": 3,
+        "clean_radius_start": 4.0,
+        "clean_radius_end": 2.0,
+        "shrink_sec": 30.0,
+        "clean_warn": 3.0,
+        "outside_damage_mult": 0.25,
+        "outside_tick": 0.5,
+        "relocate_sec": 6.0,
+        "relocate_warn": 0.7
+      }
     },
     "kordrak": {
-      "name": "Kordrak, Erimiş Demirci", "floor": 3, "immune": ["lightning"], "weak": ["ice"],
-      "attacks": [
-        { "id": "anvil_slam", "name": "Örs Darbesi", "description": "Genişleyen şok halkası" },
-        { "id": "lava_fill",  "name": "Lav Dolumu",  "description": "Zemindeki kanalları lavla doldurur" },
-        { "id": "ember_fist", "name": "Kor Yumruğu", "description": "Oyuncuya hızlı atılım ve yumruk" }
+      "name": "Kordrak, Erimiş Demirci",
+      "floor": 3,
+      "immune": [
+        "lightning"
       ],
-      "mechanic": { "id": "cooling", "name": "Soğutma", "plate_damage_reduction": 0.70, "ice_stacks_to_break": 5, "armor_off_duration": 10.0 },
-      "phase2": { "description": "Plakalar kalıcı düşer, çekirdek açığa çıkar; hızlanır, Örs Darbesi'nden sonra ateş topları saçar" }
+      "weak": [
+        "ice"
+      ],
+      "stats": {
+        "hp": 42000,
+        "damage": 70,
+        "radius": 0.9,
+        "move_speed": 1.5
+      },
+      "attack_gap": 1.3,
+      "attacks": [
+        {
+          "id": "anvil_slam",
+          "name": "Örs Darbesi",
+          "description": "Genişleyen şok halkası",
+          "warn": 1.1,
+          "impact_radius": 1.6,
+          "impact_damage_mult": 1.0,
+          "ring_radius": 9.0,
+          "ring_speed": 6.0,
+          "ring_thickness": 0.8,
+          "damage_mult": 1.2
+        },
+        {
+          "id": "lava_fill",
+          "name": "Lav Dolumu",
+          "description": "Zemindeki kanalları lavla doldurur",
+          "warn": 1.6,
+          "duration": 6.0,
+          "damage_mult": 0.4,
+          "tick": 0.5,
+          "channel_offset": 4.5,
+          "channel_width": 1.3
+        },
+        {
+          "id": "ember_fist",
+          "name": "Kor Yumruğu",
+          "description": "Oyuncuya hızlı atılım ve yumruk",
+          "warn": 0.9,
+          "max_distance": 7.0,
+          "speed": 16.0,
+          "hit_radius": 1.3,
+          "damage_mult": 1.4
+        }
+      ],
+      "mechanic": {
+        "id": "cooling",
+        "name": "Soğutma",
+        "plate_damage_reduction": 0.7,
+        "ice_stacks_to_break": 5,
+        "armor_off_duration": 10.0,
+        "stack_decay_sec": 5.0,
+        "_default": "Plakalar hasarı %70 azaltır (zırh terimi). Her buz vuruşu 1 soğuma yığını ekler; 5 sn buz gelmezse yığınlar söner. 5 yığında plakalar kırılır ve 10 sn zırh kalkar."
+      },
+      "phase2": {
+        "description": "Plakalar kalıcı düşer, çekirdek açığa çıkar; hızlanır, Örs Darbesi'nden sonra ateş topları saçar",
+        "speed_mult": 1.4,
+        "fireballs": 6,
+        "fireball_distance": [
+          2.5,
+          6.5
+        ],
+        "fireball_warn": 0.9,
+        "fireball_radius": 1.2,
+        "fireball_damage_mult": 0.8
+      }
     },
     "nyxthar": {
-      "name": "Nyx'thar, Yankısız", "floor": 4, "immune": ["physical"], "weak": ["fire"], "final": true,
-      "attacks": [
-        { "id": "shadow_copies", "name": "Gölge Kopyaları", "description": "3 kopyaya bölünür; gerçek olan gölge düşürür", "copies": 3 },
-        { "id": "void_rift",     "name": "Boşluk Yırtığı",  "description": "Oyuncuyu içine çeken portallar" },
-        { "id": "scream",        "name": "Çığlık",          "description": "Etrafındaki alana gecikmeli patlama" }
+      "name": "Nyx'thar, Yankısız",
+      "floor": 4,
+      "immune": [
+        "physical"
       ],
-      "mechanic": { "id": "veil_of_darkness", "name": "Karanlık Perdesi", "fire_relights_torches": true },
-      "phase2": { "description": "Platform kenarları çöker, arena küçülür; kopyalar 5'e çıkar ve Boşluk Yırtığı açabilir", "copies": 5 }
+      "weak": [
+        "fire"
+      ],
+      "final": true,
+      "stats": {
+        "hp": 65000,
+        "damage": 95,
+        "radius": 0.7,
+        "move_speed": 2.2
+      },
+      "attack_gap": 1.3,
+      "attacks": [
+        {
+          "id": "shadow_copies",
+          "name": "Gölge Kopyaları",
+          "description": "3 kopyaya bölünür; gerçek olan gölge düşürür",
+          "copies": 3,
+          "warn": 0.7,
+          "duration": 10.0,
+          "spread": 4.5,
+          "fake_hit_warn": 0.6,
+          "fake_damage_mult": 0.8,
+          "fake_hp_pct": 0.02
+        },
+        {
+          "id": "void_rift",
+          "name": "Boşluk Yırtığı",
+          "description": "Oyuncuyu içine çeken portallar",
+          "warn": 1.0,
+          "portals": 2,
+          "duration": 5.0,
+          "pull_radius": 5.0,
+          "pull_speed": 2.2,
+          "core_radius": 0.9,
+          "damage_mult": 0.4,
+          "tick": 0.5
+        },
+        {
+          "id": "scream",
+          "name": "Çığlık",
+          "description": "Etrafındaki alana gecikmeli patlama",
+          "warn": 1.5,
+          "radius": 4.0,
+          "damage_mult": 1.5
+        }
+      ],
+      "mechanic": {
+        "id": "veil_of_darkness",
+        "name": "Karanlık Perdesi",
+        "fire_relights_torches": true,
+        "torches": 6,
+        "torch_inset": 2.0,
+        "light_radius": 3.2,
+        "drain_damage_mult": 0.12,
+        "drain_tick": 0.5,
+        "grace_sec": 1.0,
+        "extinguish_sec": 12.0,
+        "extinguish_warn": 2.0,
+        "min_lit": 2,
+        "relight_reach": 1.2,
+        "_default": "Arena kararır; yanan meşalelerin 3,2 karo çevresi güvenlidir. Karanlıkta 1 sn'den fazla kalan oyuncu 0,5 sn'de bir hasar alır (karanlık). Nyx'thar 12 sn'de bir meşale söndürür (2 sn önce meşale kırmızı titrer); en az 2 meşale hep yanar (ateş silahı olmayan oyuncu için). Ateş hasarı (meşaleye yakın ateş vuruşu ya da ateş mermisi) sönmüş meşaleyi yakar."
+      },
+      "phase2": {
+        "description": "Platform kenarları çöker, arena küçülür; kopyalar 5'e çıkar ve Boşluk Yırtığı açabilir",
+        "copies": 5,
+        "collapse_radius_ratio": 0.62,
+        "collapse_warn": 2.5,
+        "fall_damage_pct": 0.1,
+        "portals": 3
+      }
+    }
+  },
+  "boss_test": {
+    "_default": "make bosses (--boss-test): bot her katta doğrudan boss'a gider; oyuncu leveli ve iki aktif silahın nadirliği/leveli o katın boss'una varırken beklenen değerlere ayarlanır. Boss max_seconds içinde kesilmeli, her saldırısını kullanmalı, 2. faza girmeli ve her uyarı en az min_warn_sec sürmeli.",
+    "max_seconds": 240,
+    "floors": {
+      "1": {
+        "level": 13,
+        "rarity": "rare",
+        "weapon_level": 12
+      },
+      "2": {
+        "level": 33,
+        "rarity": "epic",
+        "weapon_level": 30
+      },
+      "3": {
+        "level": 53,
+        "rarity": "epic",
+        "weapon_level": 45
+      },
+      "4": {
+        "level": 76,
+        "rarity": "epic",
+        "weapon_level": 65
+      }
     }
   }
 }

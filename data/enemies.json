@@ -1,301 +1,251 @@
 {
-  "_note": "17 temel düşman. 1. kat düşmanlarının statları Aşama 2'de eklendi (prototip değerleri, Aşama 7'de kat ölçeklemesiyle ayarlanacak). XP değerleri progression.json > enemy_xp içinde. 'material' varyantı düşmana malzeme bağışıklıklarını ekler (Taş İskelet, Hayalet İskelet...).",
+  "_note": "Aşama 7: 17 temel düşman (5 rol), her birinin elit sürümü ve 21 malzeme varyantı = 55 sıradan düşman. Statlar 1. kat ölçeğindedir; zindanda floor_scaling ile çarpılır. XP değerleri progression.json > enemy_xp içinde. 'material' varyantı düşmana malzeme bağışıklıklarını ekler (Taş İskelet, Hayalet İskelet...). Sayılar _default: oyun testlerinde (Aşama 10) ayarlanır.",
+  "_default_ai": "ai: chase (oyuncuya yürür), kite (mesafe korur), wall (duvara yapışık, yürümez), support (dostlarının yakınında kalır, oyuncudan uzak durur), inert (hareket etmez, saldırmaz). attack.type: arc (yakın yay), projectile (mermi), beam (ışın), slam (etrafına alan), lunge (atılıp vurma), cone (çığlık konisi). Her saldırının hazırlığı boyunca yerde kırmızı işaret görünür.",
+  "floor_scaling": {
+    "_default": "Kat bazında güç ölçeklemesi (GDD: düşman canı ve hasarı katın hedef oyuncu level aralığına göre artar). Oyuncunun kattaki beklenen gücüne (silah leveli, nadirlik, ödüller, can) göre seçildi. Boss'lar bosses.json'daki kendi değerlerini kullanır (ölçeklenmez); boss'un çağırdıkları ölçeklenir.",
+    "1": {"hp": 1.0, "damage": 1.0},
+    "2": {"hp": 2.5, "damage": 1.9},
+    "3": {"hp": 5.0, "damage": 2.9},
+    "4": {"hp": 8.0, "damage": 4.0}
+  },
+  "elite": {
+    "_default": "Elit: ×3 can, ×1,5 hasar, ×1,35 boy ve bir aura (aynı odadaki düşmanlara ve kendisine). Sürü düşmanlarının eliti elite_hp_mult ile daha dayanıklıdır (odada tek başına durabilsin).",
+    "hp_mult": 3.0,
+    "damage_mult": 1.5,
+    "scale": 1.35,
+    "aura_radius": 4.5
+  },
+  "elite_auras": {
+    "haste":   {"name": "Hız aurası",       "color": "#ffd24a", "move_speed": 0.3, "attack_speed": 0.3, "description": "Yakındaki düşmanlar %30 hızlı yürür ve saldırır"},
+    "fortify": {"name": "Kalkan aurası",    "color": "#8fb4ff", "damage_taken": 0.3, "description": "Yakındaki düşmanlar %30 az hasar alır"},
+    "regen":   {"name": "Yenilenme aurası", "color": "#7be07b", "regen_pct": 0.015, "description": "Yakındaki düşmanlar saniyede maks canlarının %1,5'ini yeniler (Çürüme engeller)"},
+    "fury":    {"name": "Öfke aurası",      "color": "#ff5a4a", "damage": 0.3, "description": "Yakındaki düşmanlar %30 fazla hasar verir"}
+  },
   "materials": {
-    "stone": {
-      "name": "Taş",
-      "immune": [
-        "lightning"
-      ],
-      "weak": [
-        "ice"
-      ],
-      "prefix": "Taş",
-      "resistant": [],
-      "tint": "#8d8a86"
-    },
-    "ghost": {
-      "name": "Hayalet",
-      "immune": [
-        "physical"
-      ],
-      "weak": [
-        "fire"
-      ],
-      "prefix": "Hayalet",
-      "resistant": [],
-      "tint": "#9fd6ff"
-    },
-    "fire_elemental": {
-      "name": "Ateş elementali",
-      "immune": [
-        "fire"
-      ],
-      "weak": [
-        "ice",
-        "water"
-      ],
-      "prefix": "Alevli",
-      "resistant": [],
-      "tint": "#ff8a4a"
-    }
+    "stone": {"name": "Taş", "prefix": "Taş", "immune": ["lightning"], "resistant": [], "weak": ["ice"], "tint": "#8d8a86"},
+    "ghost": {"name": "Hayalet", "prefix": "Hayalet", "immune": ["physical"], "resistant": [], "weak": ["fire"], "tint": "#9fd6ff"},
+    "fire_elemental": {"name": "Ateş elementali", "prefix": "Alevli", "immune": ["fire"], "resistant": [], "weak": ["ice", "water"], "tint": "#ff8a4a"},
+    "toxic": {"name": "Zehirli", "prefix": "Zehirli", "immune": ["poison"], "resistant": [], "weak": ["fire"], "tint": "#8fd14f"}
+  },
+  "variants": {
+    "_default": "Katlar arası malzeme varyantları (21): önceki katların düşmanları yeni katın malzemesiyle gelir. 17 temel + 17 elit + 21 varyant = 55. Varyant = [temel düşman, malzeme]; katın spawn_pool'unda kullanılır.",
+    "toxic_skeleton_warrior": ["skeleton_warrior", "toxic"],
+    "toxic_skeleton_archer": ["skeleton_archer", "toxic"],
+    "toxic_cave_rat": ["cave_rat", "toxic"],
+    "toxic_eye_spawn": ["eye_spawn", "toxic"],
+    "toxic_vein_mass": ["vein_mass", "toxic"],
+    "stone_skeleton_warrior": ["skeleton_warrior", "stone"],
+    "fire_skeleton_archer": ["skeleton_archer", "fire_elemental"],
+    "stone_mushroom_man": ["mushroom_man", "stone"],
+    "fire_spore_beetle": ["spore_beetle", "fire_elemental"],
+    "fire_poison_spitter": ["poison_spitter", "fire_elemental"],
+    "stone_vein_mass": ["vein_mass", "stone"],
+    "ghost_skeleton_warrior": ["skeleton_warrior", "ghost"],
+    "ghost_skeleton_archer": ["skeleton_archer", "ghost"],
+    "ghost_cave_rat": ["cave_rat", "ghost"],
+    "ghost_eye_spawn": ["eye_spawn", "ghost"],
+    "ghost_ember_hound": ["ember_hound", "ghost"],
+    "ghost_slag_mage": ["slag_mage", "ghost"],
+    "ghost_mushroom_healer": ["mushroom_healer", "ghost"],
+    "ghost_iron_guard": ["iron_guard", "ghost"],
+    "ghost_vein_mass": ["vein_mass", "ghost"],
+    "ghost_stone_golemling": ["stone_golemling", "ghost"]
   },
   "enemies": {
     "skeleton_warrior": {
-      "name": "İskelet Savaşçı",
-      "floor": 1,
-      "role": "melee",
+      "name": "İskelet Savaşçı", "floor": 1, "role": "melee", "ai": "chase",
       "behavior": "Oyuncuya yürür, basit kılıç darbesi",
-      "immune": [],
-      "stats": {
-        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
-        "hp": 380,
-        "damage": 14,
-        "armor": 0.0,
-        "move_speed": 2.2,
-        "radius": 0.35,
-        "attack_range": 1.1,
-        "attack_arc_degrees": 90,
-        "attack_windup": 0.45,
-        "attack_cooldown": 1.3,
-        "knockback_resist": 0.0
-      },
-      "resistant": [],
-      "weak": [],
+      "immune": [], "resistant": [], "weak": [],
+      "stats": {"hp": 380, "damage": 14, "armor": 0.0, "move_speed": 2.2, "radius": 0.35, "attack_range": 1.1,
+        "attack_arc_degrees": 90, "attack_windup": 0.45, "attack_cooldown": 1.3, "knockback_resist": 0.0},
+      "attack": {"type": "arc"},
       "placeholder_color": "#d1ccb8"
     },
     "skeleton_archer": {
-      "name": "İskelet Okçu",
-      "floor": 1,
-      "role": "ranged",
+      "name": "İskelet Okçu", "floor": 1, "role": "ranged", "ai": "kite",
       "behavior": "Mesafe korur, tek ok atar",
-      "immune": [],
-      "resistant": [],
-      "weak": [],
-      "stats": {
-        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
-        "hp": 260,
-        "damage": 12,
-        "armor": 0.0,
-        "move_speed": 2.0,
-        "radius": 0.33,
-        "attack_range": 7.0,
-        "attack_arc_degrees": 10,
-        "attack_windup": 0.7,
-        "attack_cooldown": 2.0,
-        "knockback_resist": 0.0,
-        "projectile_speed": 9.0,
-        "keep_distance": 5.0
-      },
+      "immune": [], "resistant": [], "weak": [],
+      "stats": {"hp": 260, "damage": 12, "armor": 0.0, "move_speed": 2.0, "radius": 0.33, "attack_range": 7.0,
+        "attack_arc_degrees": 10, "attack_windup": 0.7, "attack_cooldown": 2.0, "knockback_resist": 0.0, "keep_distance": 5.0},
+      "attack": {"type": "projectile", "projectile_speed": 9.0, "look": "arrow"},
       "placeholder_color": "#bfb9a0"
     },
     "cave_rat": {
-      "name": "Mağara Faresi",
-      "floor": 1,
-      "role": "swarm",
-      "behavior": "5-8'li gruplar, hızlı ve zayıf",
-      "immune": [],
-      "group_size": [
-        5,
-        8
-      ],
-      "resistant": [],
-      "weak": [],
-      "stats": {
-        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
-        "hp": 90,
-        "damage": 6,
-        "armor": 0.0,
-        "move_speed": 3.6,
-        "radius": 0.22,
-        "attack_range": 0.8,
-        "attack_arc_degrees": 90,
-        "attack_windup": 0.25,
-        "attack_cooldown": 0.9,
-        "knockback_resist": 0.0
-      },
+      "name": "Mağara Faresi", "floor": 1, "role": "swarm", "ai": "chase",
+      "behavior": "Sürü halinde gelir, hızlı ve zayıf",
+      "immune": [], "resistant": [], "weak": [],
+      "pack": [3, 5],
+      "elite_hp_mult": 9.0,
+      "stats": {"hp": 90, "damage": 6, "armor": 0.0, "move_speed": 3.6, "radius": 0.22, "attack_range": 0.8,
+        "attack_arc_degrees": 90, "attack_windup": 0.25, "attack_cooldown": 0.9, "knockback_resist": 0.0},
+      "attack": {"type": "arc"},
       "placeholder_color": "#7a6450"
     },
     "eye_spawn": {
-      "name": "Göz Yavrusu",
-      "floor": 1,
-      "role": "ranged",
+      "name": "Göz Yavrusu", "floor": 1, "role": "ranged", "ai": "wall", "max_per_wave": 2,
       "behavior": "Duvara yapışık durur, kısa ışın atar",
-      "immune": [],
-      "resistant": [],
-      "weak": [],
-      "stats": {
-        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
-        "hp": 200,
-        "damage": 10,
-        "armor": 0.0,
-        "move_speed": 0.0,
-        "radius": 0.3,
-        "attack_range": 4.0,
-        "attack_arc_degrees": 8,
-        "attack_windup": 0.9,
-        "attack_cooldown": 2.4,
-        "knockback_resist": 1.0,
-        "beam_duration": 0.4
-      },
+      "immune": [], "resistant": [], "weak": [],
+      "stats": {"hp": 200, "damage": 10, "armor": 0.0, "move_speed": 0.0, "radius": 0.3, "attack_range": 5.0,
+        "attack_arc_degrees": 8, "attack_windup": 0.9, "attack_cooldown": 2.4, "knockback_resist": 1.0},
+      "attack": {"type": "beam", "width": 0.5, "beam_duration": 0.4},
       "placeholder_color": "#c9486a"
     },
     "vein_mass": {
-      "name": "Damar Kütlesi",
-      "floor": 1,
-      "role": "tank",
+      "name": "Damar Kütlesi", "floor": 1, "role": "tank", "ai": "chase",
       "behavior": "Yavaş, ölünce etrafına patlar",
-      "immune": [],
-      "resistant": [],
-      "weak": [],
-      "stats": {
-        "_note": "Prototip değerleri; Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak.",
-        "hp": 900,
-        "damage": 20,
-        "armor": 0.1,
-        "move_speed": 1.2,
-        "radius": 0.5,
-        "attack_range": 1.3,
-        "attack_arc_degrees": 120,
-        "attack_windup": 0.8,
-        "attack_cooldown": 2.2,
-        "knockback_resist": 0.7,
-        "death_explosion_radius": 2.0,
-        "death_explosion_damage": 25
-      },
+      "immune": [], "resistant": [], "weak": [],
+      "stats": {"hp": 900, "damage": 20, "armor": 0.1, "move_speed": 1.2, "radius": 0.5, "attack_range": 1.3,
+        "attack_arc_degrees": 120, "attack_windup": 0.8, "attack_cooldown": 2.2, "knockback_resist": 0.7},
+      "attack": {"type": "arc"},
+      "on_death": {"type": "explode", "radius": 2.0, "damage_mult": 1.25, "warn": 0.7},
       "placeholder_color": "#8e2a3a"
     },
     "spore_beetle": {
-      "name": "Sporlu Böcek",
-      "floor": 2,
-      "role": "swarm",
+      "name": "Sporlu Böcek", "floor": 2, "role": "swarm", "ai": "chase",
       "behavior": "Ölünce zehir bulutu bırakır",
-      "immune": [
-        "poison"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["poison"], "resistant": [], "weak": ["fire"],
+      "pack": [3, 5],
+      "elite_hp_mult": 8.0,
+      "stats": {"hp": 110, "damage": 7, "armor": 0.0, "move_speed": 3.2, "radius": 0.24, "attack_range": 0.8,
+        "attack_arc_degrees": 90, "attack_windup": 0.3, "attack_cooldown": 1.0, "knockback_resist": 0.0},
+      "attack": {"type": "arc"},
+      "on_death": {"type": "cloud", "radius": 1.3, "duration": 4.0, "damage_mult": 0.6, "kind": "poison", "warn": 0.35},
+      "placeholder_color": "#6f8f3a"
     },
     "mushroom_man": {
-      "name": "Mantar Adam",
-      "floor": 2,
-      "role": "tank",
+      "name": "Mantar Adam", "floor": 2, "role": "tank", "ai": "chase",
       "behavior": "Yavaş, geniş yumruk",
-      "immune": [
-        "poison"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["poison"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 1000, "damage": 22, "armor": 0.1, "move_speed": 1.1, "radius": 0.5, "attack_range": 1.6,
+        "attack_arc_degrees": 160, "attack_windup": 0.9, "attack_cooldown": 2.4, "knockback_resist": 0.75},
+      "attack": {"type": "arc"},
+      "placeholder_color": "#b58a6a"
     },
     "poison_spitter": {
-      "name": "Zehir Tükürücü",
-      "floor": 2,
-      "role": "ranged",
+      "name": "Zehir Tükürücü", "floor": 2, "role": "ranged", "ai": "kite",
       "behavior": "Yerde zehir birikintisi bırakan tükürük",
-      "immune": [
-        "poison"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["poison"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 240, "damage": 10, "armor": 0.0, "move_speed": 1.9, "radius": 0.33, "attack_range": 6.5,
+        "attack_arc_degrees": 10, "attack_windup": 0.8, "attack_cooldown": 2.4, "knockback_resist": 0.0, "keep_distance": 4.5},
+      "attack": {"type": "projectile", "projectile_speed": 7.0, "look": "spit", "kind": "poison",
+        "puddle": {"radius": 1.0, "duration": 4.0, "damage_mult": 0.5, "kind": "poison", "warn": 0.3}},
+      "placeholder_color": "#9ccf3c"
     },
     "mushroom_healer": {
-      "name": "Mantar Şifacı",
-      "floor": 2,
-      "role": "support",
+      "name": "Mantar Şifacı", "floor": 2, "role": "support", "ai": "support", "priority": true, "max_per_wave": 1,
       "behavior": "Yakındaki düşmanları iyileştirir, öncelikli hedef",
-      "immune": [
-        "poison"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["poison"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 300, "damage": 8, "armor": 0.0, "move_speed": 2.0, "radius": 0.32, "attack_range": 6.0,
+        "attack_arc_degrees": 10, "attack_windup": 0.8, "attack_cooldown": 3.0, "knockback_resist": 0.0, "keep_distance": 5.5},
+      "attack": {"type": "projectile", "projectile_speed": 7.0, "look": "spore", "kind": "poison"},
+      "abilities": [{"type": "heal", "cooldown": 3.0, "radius": 4.5, "heal_pct": 0.08}],
+      "placeholder_color": "#d98fd0"
     },
     "stone_golemling": {
-      "name": "Taş Golemcik",
-      "floor": 3,
-      "role": "tank",
+      "name": "Taş Golemcik", "floor": 3, "role": "tank", "ai": "chase",
       "behavior": "Zırhlı, yavaş, yere vurur",
-      "immune": [
-        "lightning"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["lightning"], "resistant": [], "weak": ["ice"],
+      "stats": {"hp": 1100, "damage": 24, "armor": 0.3, "move_speed": 1.0, "radius": 0.48, "attack_range": 1.9,
+        "attack_arc_degrees": 360, "attack_windup": 1.0, "attack_cooldown": 2.6, "knockback_resist": 0.85},
+      "attack": {"type": "slam"},
+      "placeholder_color": "#7d766c"
     },
     "ember_hound": {
-      "name": "Kor Köpeği",
-      "floor": 3,
-      "role": "melee",
-      "behavior": "Sürü halinde hızlı saldırır",
-      "immune": [
-        "fire"
-      ],
-      "resistant": [],
-      "weak": []
+      "name": "Kor Köpeği", "floor": 3, "role": "melee", "ai": "chase",
+      "behavior": "Sürü halinde hızlı saldırır: atılıp ısırır",
+      "immune": ["fire"], "resistant": [], "weak": ["ice", "water"],
+      "pack": [2, 4],
+      "elite_hp_mult": 6.0,
+      "stats": {"hp": 260, "damage": 12, "armor": 0.0, "move_speed": 3.8, "radius": 0.3, "attack_range": 3.0,
+        "attack_arc_degrees": 100, "attack_windup": 0.5, "attack_cooldown": 2.2, "knockback_resist": 0.0},
+      "attack": {"type": "lunge", "kind": "fire", "lunge_distance": 3.2, "lunge_speed": 14.0, "hit_range": 1.0},
+      "placeholder_color": "#e0602a"
     },
     "slag_mage": {
-      "name": "Cüruf Büyücüsü",
-      "floor": 3,
-      "role": "ranged",
+      "name": "Cüruf Büyücüsü", "floor": 3, "role": "ranged", "ai": "kite",
       "behavior": "Ateş topu atar, yere lav bırakır",
-      "immune": [
-        "fire"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["fire"], "resistant": [], "weak": ["ice", "water"],
+      "stats": {"hp": 280, "damage": 15, "armor": 0.0, "move_speed": 1.9, "radius": 0.33, "attack_range": 7.0,
+        "attack_arc_degrees": 10, "attack_windup": 0.9, "attack_cooldown": 2.6, "knockback_resist": 0.0, "keep_distance": 5.0},
+      "attack": {"type": "projectile", "projectile_speed": 8.0, "look": "fireball", "kind": "fire",
+        "puddle": {"radius": 1.0, "duration": 4.0, "damage_mult": 0.5, "kind": "fire", "warn": 0.3}},
+      "placeholder_color": "#a04020"
     },
     "iron_guard": {
-      "name": "Demir Muhafız",
-      "floor": 3,
-      "role": "melee",
+      "name": "Demir Muhafız", "floor": 3, "role": "melee", "ai": "chase",
       "behavior": "Kalkanı önden hasarı engeller; arkadan vurulmalı",
-      "immune": [
-        "lightning"
-      ],
-      "front_shield": true,
-      "resistant": [],
-      "weak": []
+      "immune": ["lightning"], "resistant": [], "weak": [],
+      "front_shield": {"arc_degrees": 120, "turn_rate_degrees": 100},
+      "stats": {"hp": 700, "damage": 18, "armor": 0.1, "move_speed": 1.7, "radius": 0.42, "attack_range": 1.3,
+        "attack_arc_degrees": 100, "attack_windup": 0.6, "attack_cooldown": 1.6, "knockback_resist": 0.6},
+      "attack": {"type": "arc"},
+      "placeholder_color": "#8a93a0"
     },
     "shade": {
-      "name": "Gölge",
-      "floor": 4,
-      "role": "melee",
+      "name": "Gölge", "floor": 4, "role": "melee", "ai": "chase",
       "behavior": "Kısa süre görünmezleşip arkadan saldırır",
-      "immune": [
-        "physical"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["physical"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 320, "damage": 16, "armor": 0.0, "move_speed": 3.0, "radius": 0.32, "attack_range": 1.1,
+        "attack_arc_degrees": 100, "attack_windup": 0.5, "attack_cooldown": 1.5, "knockback_resist": 0.0},
+      "attack": {"type": "arc", "kind": "dark"},
+      "abilities": [{"type": "stealth", "cooldown": 6.0, "duration": 1.4, "behind_tiles": 1.2, "min_dist": 2.0}],
+      "placeholder_color": "#3a2f55"
     },
     "wailer": {
-      "name": "Feryatçı",
-      "floor": 4,
-      "role": "ranged",
+      "name": "Feryatçı", "floor": 4, "role": "ranged", "ai": "kite",
       "behavior": "Çığlığı yavaşlatır",
-      "immune": [
-        "physical"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["physical"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 300, "damage": 12, "armor": 0.0, "move_speed": 2.0, "radius": 0.33, "attack_range": 6.0,
+        "attack_arc_degrees": 50, "attack_windup": 1.0, "attack_cooldown": 3.0, "knockback_resist": 0.0, "keep_distance": 4.5},
+      "attack": {"type": "cone", "kind": "dark", "slow": 0.4, "slow_duration": 2.0},
+      "placeholder_color": "#b6a6e0"
     },
     "void_slave": {
-      "name": "Boşluk Kulu",
-      "floor": 4,
-      "role": "tank",
+      "name": "Boşluk Kulu", "floor": 4, "role": "tank", "ai": "chase",
       "behavior": "Karanlık hasarı, oyuncuyu kendine çeker",
-      "immune": [
-        "dark"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["dark"], "resistant": [], "weak": [],
+      "stats": {"hp": 1200, "damage": 24, "armor": 0.1, "move_speed": 1.1, "radius": 0.5, "attack_range": 1.4,
+        "attack_arc_degrees": 120, "attack_windup": 0.85, "attack_cooldown": 2.3, "knockback_resist": 0.8},
+      "attack": {"type": "arc", "kind": "dark"},
+      "abilities": [{"type": "pull", "cooldown": 7.0, "radius": 6.0, "warn": 0.9, "pull_tiles": 2.5, "min_dist": 2.5}],
+      "placeholder_color": "#2a1f4a"
     },
     "void_summoner": {
-      "name": "Boşluk Çağırıcı",
-      "floor": 4,
-      "role": "support",
+      "name": "Boşluk Çağırıcı", "floor": 4, "role": "support", "ai": "support", "priority": true, "max_per_wave": 1,
       "behavior": "Sürekli Gölge çağırır, öncelikli hedef",
-      "immune": [
-        "physical"
-      ],
-      "resistant": [],
-      "weak": []
+      "immune": ["physical"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 360, "damage": 10, "armor": 0.0, "move_speed": 1.9, "radius": 0.33, "attack_range": 6.0,
+        "attack_arc_degrees": 10, "attack_windup": 0.9, "attack_cooldown": 3.0, "knockback_resist": 0.0, "keep_distance": 6.0},
+      "attack": {"type": "projectile", "projectile_speed": 8.0, "look": "shadow", "kind": "dark"},
+      "abilities": [{"type": "summon", "id": "shade", "cooldown": 7.0, "max_alive": 2, "warn": 0.9}],
+      "placeholder_color": "#6a4aa0"
+    }
+  },
+  "boss_adds": {
+    "_default": "Boss'ların çağırdığı ya da arenaya koyduğu yardımcılar (55 düşmana dahil değil; XP, altın ve iksir vermez). Kat ölçeklemesiyle çarpılır.",
+    "crawling_eye": {
+      "name": "Sürünen Göz", "floor": 1, "role": "swarm", "ai": "chase", "behavior": "Morvath'ın doğurduğu küçük göz",
+      "immune": [], "resistant": [], "weak": [],
+      "stats": {"hp": 120, "damage": 8, "armor": 0.0, "move_speed": 2.6, "radius": 0.24, "attack_range": 0.8,
+        "attack_arc_degrees": 90, "attack_windup": 0.3, "attack_cooldown": 1.0, "knockback_resist": 0.0},
+      "attack": {"type": "arc"},
+      "placeholder_color": "#d86a8a"
+    },
+    "wall_eye": {
+      "name": "Duvar Gözü", "floor": 1, "role": "support", "ai": "inert", "priority": true, "behavior": "Morvath'ın göz kapağını tutar; kırılınca kapak açılır",
+      "immune": [], "resistant": [], "weak": ["lightning"],
+      "stats": {"hp": 450, "damage": 0, "armor": 0.0, "move_speed": 0.0, "radius": 0.4, "attack_range": 0.0,
+        "attack_arc_degrees": 0, "attack_windup": 1.0, "attack_cooldown": 1.0, "knockback_resist": 1.0},
+      "attack": {"type": "none"},
+      "placeholder_color": "#e8c8c8"
+    },
+    "spore_totem": {
+      "name": "Mantar Totemi", "floor": 2, "role": "support", "ai": "inert", "priority": true, "behavior": "Yaşadıkça Mycela'yı iyileştirir",
+      "immune": ["poison"], "resistant": [], "weak": ["fire"],
+      "stats": {"hp": 1200, "damage": 0, "armor": 0.0, "move_speed": 0.0, "radius": 0.45, "attack_range": 0.0,
+        "attack_arc_degrees": 0, "attack_windup": 1.0, "attack_cooldown": 1.0, "knockback_resist": 1.0},
+      "attack": {"type": "none"},
+      "placeholder_color": "#9a6ad0"
     }
   }
 }

@@ -176,9 +176,17 @@ func _draw_panel() -> void:
 		_panel.draw_rect(Rect2(bp - Vector2(3, 3), Vector2(bw + 6, 26)), Color(0, 0, 0, 0.8))
 		_panel.draw_rect(Rect2(bp, Vector2(bw, 20)), Color(0.25, 0.05, 0.05))
 		_panel.draw_rect(Rect2(bp, Vector2(bw * k, 20)), Color(0.8, 0.12, 0.15))
-		var bn := str(boss.get("display_name"))
+		# Aşama 7: %50'de 2. faz çizgisi, faz yazısı ve boss'un durumu (mekanik ipucu)
+		var th := float(DataDB.get_value("bosses", "phase2_threshold"))
+		_panel.draw_line(bp + Vector2(bw * th, -2), bp + Vector2(bw * th, 22), Color(1, 0.9, 0.6), 2.0)
+		var ph := int(boss.get("phase")) if boss.get("phase") != null else 1
+		var bn := "%s  ·  %d. faz" % [boss.get("display_name"), ph]
 		_panel.draw_string_outline(ThemeDB.fallback_font, bp + Vector2(0, -8), bn, HORIZONTAL_ALIGNMENT_CENTER, bw, 20, 5, Color.BLACK)
 		_panel.draw_string(ThemeDB.fallback_font, bp + Vector2(0, -8), bn, HORIZONTAL_ALIGNMENT_CENTER, bw, 20, Color(1, 0.8, 0.75))
+		var stx := str(boss.get("status_text")) if boss.get("status_text") != null else ""
+		if stx != "":
+			_panel.draw_string_outline(ThemeDB.fallback_font, bp + Vector2(0, 44), stx, HORIZONTAL_ALIGNMENT_CENTER, bw, 18, 5, Color.BLACK)
+			_panel.draw_string(ThemeDB.fallback_font, bp + Vector2(0, 44), stx, HORIZONTAL_ALIGNMENT_CENTER, bw, 18, Color(1, 0.92, 0.7))
 	# Kısa not (silah değişti vb.)
 	if _note_t > 0.0:
 		var a := clampf(_note_t / 0.5, 0.0, 1.0)

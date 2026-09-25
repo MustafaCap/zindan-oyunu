@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 25 Eyl 2026 (Aşama 6)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 26 Eyl 2026 (Aşama 7)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -280,7 +280,7 @@ Boss'lar dondurulduktan sonra 8 sn donmaya bağışık olur. İki aktif silah ar
 
 ### İlk düşman listesi
 
-17 temel düşman, 5 rolde: yakın dövüş, uzak, sürü, tank, destek. Her birinin elit sürümü (daha büyük, bir auralı) ve katlar arası element varyantlarıyla 55'e tamamlanır.
+17 temel düşman, 5 rolde: yakın dövüş, uzak, sürü, tank, destek. Her birinin elit sürümü (daha büyük, bir auralı) ve katlar arası element varyantlarıyla 55'e tamamlanır (Aşama 7'de yapıldı: 17 temel + 17 elit + 21 malzeme varyantı; ayrıntılar Uygulamada Verilen Kararlar > Düşmanlar ve boss'lar).
 
 | Kat | Düşman | Rol | Davranış | Bağışık |
 | --- | --- | --- | --- | --- |
@@ -589,7 +589,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 - Zincir, sekme ve kombo alan hasarları "ikincil vuruş"tur: element bırakır ama yeni kombo, zincir ya da özellik tetiklemez; kritik ve arkadan vuruş almaz.
 - Fiziksel hasara element hasarı bonusları uygulanmaz.
 - Gizli odadaki "üst nadirlik ×2" farkı Yaygın'dan düşülür (Aşama 5'ten beri elit düşmanlar silah düşürmediği için yalnızca gizli oda).
-- 1\. kat düşmanlarının prototip statları (Aşama 7'de kat ölçeklemesiyle yeniden ayarlanacak):
+- 1\. kat düşmanlarının prototip statları (Aşama 7'de değişmeden kaldı; zindanda kat ölçeklemesiyle çarpılır — bkz. Düşmanlar ve boss'lar):
 
 | Düşman | Can | Hasar | Zırh | Hız | Saldırı menzili | Hazırlık | Bekleme | Not |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -645,9 +645,9 @@ Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
 - **Seed:** Her run yeni bir seed alır; her katın haritası `hash(run seed, kat)` ile üretilir, yani aynı seed aynı haritaları verir. Seed ekranın solunda görünür (hata bildiriminde yazılır).
 - **Oda akışı:** Oyuncu kapı ağzından 2 karodan fazla içeri girince kapılar demir parmaklıklarla kilitlenir. İlk dalga 0,6 sn sonra, sonrakiler önceki dalga ölünce 1,2 sn arayla gelir. Düşmanlar oyuncudan en az 4 karo uzakta, kapı ağzına ve engellere bitişik olmayan karolarda doğar. Son dalga ölünce kapılar açılır. Düşmansız odalar girildiği anda temizlenmiş sayılır.
 - **Dalgalar:** Katın normal düşman sayısı (60 / 70 / 80 / 90) savaş odalarına eşit bölünür; her oda 2-4 dalgaya ayrılır (dalga başına en fazla 8 düşman). Her elit odasında 1 elit vardır; kat başına 2 elitten eksik kalan, rastgele bir savaş odasının son dalgasına eklenir. Mağara Fareleri 3-5'li sürüler halinde gelir.
-- **Prototip düşmanlar (Aşama 7'ye kadar):** Tüm katlarda 1. kat modelleri kullanılır: İskelet Savaşçı, Mağara Faresi, Damar Kütlesi. Katı belli etmek için malzeme varyantları karışır: 2. kat Alevli, 3. kat Taş ve Alevli, 4. kat Hayalet. İskelet Okçu ve Göz Yavrusu uzak yapay zekâyla Aşama 7'de gelir. Düşman statları katla ölçeklenmez (Aşama 7).
-- **Yer tutucu elit:** İskelet Savaşçı ya da Damar Kütlesi; ×3 can, ×1,5 hasar, ×1,35 boy, altın halka, adı "Elit …".
-- **Yer tutucu boss:** Katın boss havuzundan seçilen boss'un adını taşıyan dev bir Damar Kütlesi; ×6 can, ×1,6 hasar, ×2,1 boy (çarpışma gövdesi en fazla ×1,5), kırmızı halka ve ekranın üstünde can barı. Gerçek boss'lar Aşama 7'de.
+- ~~**Prototip düşmanlar (Aşama 7'ye kadar):**~~ (Aşama 7'de kaldırıldı; her katın kendi düşmanları gelir.) Tüm katlarda 1. kat modelleri kullanılır: İskelet Savaşçı, Mağara Faresi, Damar Kütlesi. Katı belli etmek için malzeme varyantları karışır: 2. kat Alevli, 3. kat Taş ve Alevli, 4. kat Hayalet. İskelet Okçu ve Göz Yavrusu uzak yapay zekâyla Aşama 7'de gelir. Düşman statları katla ölçeklenmez (Aşama 7).
+- ~~**Yer tutucu elit:**~~ (Aşama 7'de gerçek elitler geldi.) İskelet Savaşçı ya da Damar Kütlesi; ×3 can, ×1,5 hasar, ×1,35 boy, altın halka, adı "Elit …".
+- ~~**Yer tutucu boss:**~~ (Aşama 7'de gerçek boss'lar geldi.) Katın boss havuzundan seçilen boss'un adını taşıyan dev bir Damar Kütlesi; ×6 can, ×1,6 hasar, ×2,1 boy (çarpışma gövdesi en fazla ×1,5), kırmızı halka ve ekranın üstünde can barı. Gerçek boss'lar Aşama 7'de.
 - **Boss sonrası:** Kat boss'u kesilince can tamamen dolar (Ghost dahil), boss odasının ortasında merdiven belirir; F ile bir alt kata inilir. 4. kat boss'u kesilince "KAZANDIN!" yazısı çıkar. Ölünce ya da kazanınca R yeni run başlatır (yeni seed, 1. kat).
 - **Gizli oda:** Bir odanın boş ızgara komşusuna konur; aradaki geçit 3 karoluk **çatlak duvarla** kapalıdır (açık renkli, kırık çizgili duvar). Yakın saldırıyla (menzil + 1,2 karo içinde ve duvara dönükken) ya da duvara 1,2 karodan fazla yaklaşan bir mermiyle vurulur; 3 vuruşta kırılır. Gizli oda ve koridoru duvar kırılana kadar çizilmez ve haritada görünmez. İçinde bir sandık vardır.
 - **Etkileşim (F):** Sandık, tüccar ve demirci (loot ve arayüzleri Aşama 5'te geldi; bkz. Loot ve envanter); yerdeki silah ve tılsım da F ile alınır. Etkileşim menzili 1,6 karo; yakındaki nesnenin ipucu ekranın ortasında "F: …" olarak görünür.
@@ -658,7 +658,7 @@ Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
 - **Yol bulma:** Düşmanlar ve test botu, arada engel varsa oda içinde engelin etrafından dolaşır (mesafe haritası).
 - **Güvenlik ağları:** Kilitli odanın dışına düşen oyuncu (örn. Gölge adımı kapının ötesine ışınlarsa) ve duvarın ötesine itilen düşman odanın içindeki son konumuna geri alınır.
 - **Hata ayıklama menüsü (zindanda):** "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında kapalı). "Zindan" satırı: kat seçimi + "Bu kattan yeni harita", "Test odasına git" ve "Ölümsüz (test)" kutusu (hasar alınmaz; katları hızlı gezmek için).
-- **Zorluk notu:** Aşama 6'dan beri oyuncu XP ile level atlar; düşmanlar Aşama 7'ye kadar katla güçlenmez (2-4. katlar görece kolaydır). Test için menüden level seçilebilir, "+1/+5 level (XP)" kullanılabilir ya da "Ölümsüz" açılabilir.
+- **Zorluk notu:** Aşama 6'dan beri oyuncu XP ile level atlar; Aşama 7'den beri düşmanlar katla güçlenir (kat ölçeklemesi). Test için menüden level seçilebilir, "+1/+5 level (XP)" kullanılabilir, "Ölümsüz" açılabilir ya da "Boss odasına ışınlan" kullanılabilir.
 
 ### Loot ve envanter (Aşama 5)
 
@@ -837,6 +837,100 @@ Sayıların hepsi `data/progression.json` ve `data/rewards.json` içindedir (`_d
 - Test odası run dışıdır: açılınca run durumu sıfırlanır (ödüller taşınmaz); ustalık kalıcı olduğu için orada da geçerlidir.
 - Geliştirme bayrakları: `--grant-levels=N` (run başında N level'lik XP), `--end-run=SN` (SN saniye sonra oyuncu ölür; özet ekranı). Zindan botu level ödülünde ilk seçeneği, boss ödülünde özel etkiyi alır (özel etkiler de smoke testinde denenir).
 
+### Düşmanlar ve boss'lar (Aşama 7)
+
+Sayıların hepsi `data/enemies.json`, `data/bosses.json`, `data/floors.json` (spawn_pool) ve `data/dungeon.json` içindedir (`_default` notlarıyla). Kod: `scripts/enemies/` (Enemy, EnemyHazard, EnemyProjectile), `scripts/bosses/` (Boss, BossArena, BossOverlay, Morvath, Mycela, Kordrak, Nyxthar, NyxCopy). Aşama 1-6'daki `EnemyMelee` sınıfı `Enemy` oldu; yer tutucu elit/boss ve prototip düşman havuzu kaldırıldı.
+
+**55 düşman**
+
+- 17 temel düşman + her birinin **elit sürümü** (17) + **21 malzeme varyantı** = 55. Varyantlar, önceki katların düşmanlarının yeni katın malzemesiyle gelmesidir: 2. kat **Zehirli** (yeni malzeme: zehre bağışık, ateşe zayıf) İskelet Savaşçı, İskelet Okçu, Mağara Faresi, Göz Yavrusu, Damar Kütlesi; 3. kat Taş İskelet Savaşçı, Alevli İskelet Okçu, Taş Mantar Adam, Alevli Sporlu Böcek, Alevli Zehir Tükürücü, Taş Damar Kütlesi; 4. kat Hayalet İskelet Savaşçı, Hayalet İskelet Okçu, Hayalet Mağara Faresi, Hayalet Göz Yavrusu, Hayalet Kor Köpeği, Hayalet Cüruf Büyücüsü, Hayalet Mantar Şifacı, Hayalet Demir Muhafız, Hayalet Damar Kütlesi, Hayalet Taş Golemcik.
+- Malzemenin bağışıklıkları düşmanınkine eklenir; bağışık olunan element zayıflık ve direnç listesinden düşer (ör. Alevli Sporlu Böcek ateşe bağışıktır, artık ateşe zayıf değildir).
+- **Zayıflıklar** (GDD'nin düşman tablosunda yalnızca bağışıklık vardı): GDD'nin malzeme tablosuyla tutarlı olsun diye eklendi — Taş Golemcik buza zayıf (taş), Kor Köpeği ve Cüruf Büyücüsü buz ve suya zayıf (ateş elementali), Gölge, Feryatçı ve Boşluk Çağırıcı ateşe zayıf (hayalet), mantar düşmanları (Sporlu Böcek, Mantar Adam, Zehir Tükürücü, Mantar Şifacı) ateşe zayıf (Mycela gibi). Boşluk Kulu ve Demir Muhafız'ın zayıflığı yok.
+
+**Yapay zekâ ve saldırılar** — her saldırının hazırlığı boyunca yerde kırmızı işaret dolar; şekli saldırıya göredir (yay, şerit, daire, atılma yolu, koni).
+
+| ai | Davranış |
+| --- | --- |
+| chase | Oyuncuya yürür (engellerin etrafından dolaşır), menzile girince saldırır |
+| kite | Koruduğu mesafenin %75'inden yakınsa geri çekilir; menzil dışında ya da görüş yoksa yaklaşır |
+| wall | Duvara yapışık doğar (duvara bitişik, kapı ağzından en az 3 karo uzak karo), yürümez |
+| support | Dostlarının yakınında (3,5 karo) kalır, oyuncudan uzak durur; öncelikli hedeftir (başında sarı "!", can barı hep görünür) |
+| inert | Hareketsiz, saldırmaz (boss yardımcıları: Duvar Gözü, Mantar Totemi) |
+
+| Düşman | Can | Hasar | Zırh | Hız | Saldırı (hazırlık / bekleme) | Özel |
+| --- | --- | --- | --- | --- | --- | --- |
+| İskelet Savaşçı | 380 | 14 | %0 | 2,2 | Yay 1,1 karo 90° (0,45 / 1,3 sn) | — |
+| İskelet Okçu | 260 | 12 | %0 | 2,0 | Ok 7 karo, hız 9 (0,7 / 2,0 sn) | 5 karo mesafe korur |
+| Mağara Faresi | 90 | 6 | %0 | 3,6 | Yay 0,8 karo (0,25 / 0,9 sn) | 3-5'li sürü |
+| Göz Yavrusu | 200 | 10 | %0 | 0 | Işın 5 karo, 0,5 genişlik (0,9 / 2,4 sn) | Duvara yapışık; dalgada en fazla 2 |
+| Damar Kütlesi | 900 | 20 | %10 | 1,2 | Yay 1,3 karo 120° (0,8 / 2,2 sn) | Ölünce 0,7 sn işaretli 2 karo patlama (hasarının ×1,25'i) |
+| Sporlu Böcek | 110 | 7 | %0 | 3,2 | Yay 0,8 karo (0,3 / 1,0 sn) | 3-5'li sürü; ölünce 1,3 karo zehir bulutu (4 sn, 0,5 sn'de bir hasarının ×0,6'sı) |
+| Mantar Adam | 1.000 | 22 | %10 | 1,1 | Geniş yumruk 1,6 karo 160° (0,9 / 2,4 sn) | — |
+| Zehir Tükürücü | 240 | 10 | %0 | 1,9 | Tükürük 6,5 karo, hız 7 (0,8 / 2,4 sn) | Düştüğü yerde 1 karo zehir birikintisi (4 sn); 4,5 karo mesafe |
+| Mantar Şifacı | 300 | 8 | %0 | 2,0 | Spor 6 karo (0,8 / 3,0 sn) | 3 sn'de bir 4,5 karo içindeki yaralı dostları maks canlarının %8'i kadar iyileştirir (Çürüme engeller); dalgada en fazla 1 |
+| Taş Golemcik | 1.100 | 24 | %30 | 1,0 | Yere vuruş: etrafında 1,9 karo (1,0 / 2,6 sn) | — |
+| Kor Köpeği | 260 | 12 (ateş) | %0 | 3,8 | Atılıp ısırma: 3 karodan başlar, 3,2 karo atılır (0,5 / 2,2 sn) | 2-4'lü sürü |
+| Cüruf Büyücüsü | 280 | 15 (ateş) | %0 | 1,9 | Ateş topu 7 karo, hız 8 (0,9 / 2,6 sn) | Düştüğü yerde lav (1 karo, 4 sn); 5 karo mesafe |
+| Demir Muhafız | 700 | 18 | %10 | 1,7 | Yay 1,3 karo 100° (0,6 / 1,6 sn) | Önde 120°'lik kalkan; saniyede en fazla 100° döner |
+| Gölge | 320 | 16 (karanlık) | %0 | 3,0 | Yay 1,1 karo 100° (0,5 / 1,5 sn) | 6 sn'de bir 1,4 sn görünmez (vurulamaz), sonra oyuncunun 1,2 karo arkasında belirip işaretli saldırır |
+| Feryatçı | 300 | 12 (karanlık) | %0 | 2,0 | Çığlık konisi 6 karo 50° (1,0 / 3,0 sn) | Vurursa 2 sn %40 yavaşlatır; 4,5 karo mesafe |
+| Boşluk Kulu | 1.200 | 24 (karanlık) | %10 | 1,1 | Yay 1,4 karo 120° (0,85 / 2,3 sn) | 7 sn'de bir çekim: 6 karo mor işaret (0,9 sn), sonra oyuncuyu 2,5 karo kendine çeker (Space'in dokunulmazlığı korur) |
+| Boşluk Çağırıcı | 360 | 10 (karanlık) | %0 | 1,9 | Gölge oku 6 karo (0,9 / 3,0 sn) | 7 sn'de bir Gölge çağırır (en fazla 2 canlı, 0,9 sn işaretli); dalgada en fazla 1 |
+
+- Statlar 1. kat ölçeğindedir. Güçlü vuruş sıradan düşmanın hazırlığını böler (boss'unkini bölmez). Donmuş ya da sersem düşman hazırlığı ve atılmayı bırakır.
+- **Kat ölçeklemesi** (GDD Denge: "düşman canı ve hasarı katın hedef oyuncu level aralığına göre artar"): can ×1 / ×2,5 / ×5 / ×8, hasar ×1 / ×1,9 / ×2,9 / ×4 (1-4. kat). Oyuncunun kattaki beklenen gücüne göre seçildi (silah leveli, nadirlik, ödüller, can); Aşama 10'da ayarlanır. Boss'lar ölçeklenmez (kendi değerleri vardır); çağırdıkları ölçeklenir.
+- **Elit:** ×3 can, ×1,5 hasar, ×1,35 boy, altın halka ve bir **aura** (4,5 karo içindeki düşmanlara ve kendisine; aura renginde halkayla görünür): Hız (%30 hızlı yürüme ve saldırı), Kalkan (%30 az hasar), Yenilenme (saniyede maks canın %1,5'i; Çürüme engeller), Öfke (%30 fazla hasar). Sürü düşmanlarının eliti odada tek başına durabilsin diye daha dayanıklıdır: fare ×9, böcek ×8, köpek ×6 can. Elit odasındaki ve kat başına 2 elitin tamamlanmasında gelen elit, katın temel düşmanlarından (enemy_pool) rastgele seçilir; aurası da rastgeledir.
+- **Demir Muhafız'ın kalkanı:** önden (120°) gelen birincil vuruşlar tamamen engellenir ("ENGELLENDİ"; Rezonans ve eşya etkileri de işlemez). Yerden/gökten gelen alanlar (Rün, Ok yağmuru, Element fırtınası), zincir/sekme/kombo gibi ikincil vuruşlar ve süreli hasar kalkandan geçer. Sersem ya da donmuşken kalkan iner.
+- **Görünmez Gölge** vurulamaz ve hedef alınamaz; yerde belli belirsiz bir titreşim görünür.
+- **Çağrılanlar ve boss yardımcıları** (çağrılan Gölge, Sürünen Göz, Duvar Gözü, Mantar Totemi) XP, altın, iksir ve öldürme iyileşmesi (Ghost) vermez, öldürme sayılmaz; böylece kat XP toplamları (15 / 35 / 55 / 80) değişmez. Çağıranları ölünce dağılırlar. Savaş sırasında gelenler odanın canlılarına eklenir (oda onlar ölmeden açılmaz).
+- **Dalgalar:** katın normal düşman sayısı yine birebir üretilir (60 / 70 / 80 / 90); dalga düşmanları katın `spawn_pool`'undan ağırlıklı seçilir (katın temel düşmanları + o katın varyantları). Sürüler grup halinde (fare ve böcek 3-5, köpek 2-4), destek düşmanları dalgada en fazla 1, Göz Yavrusu en fazla 2.
+- **Oyuncuya yeni etkiler:** yavaşlatma (hareket hızı; güçlüsü geçerli) ve itme/çekme (yürümeye eklenir, atılırken de işler; karşı yürüyerek ya da Space ile karşı konur). Düşman mermileri duvar ve sütunlarda durur; Ghost'un Faz'ında içinden geçer. Hasar yine oyuncunun zırh ve dirençlerinden geçer; vurulduktan sonraki 0,4 sn dokunulmazlık alan hasarlarına da uygulanır.
+
+**Boss'lar** (bosses.json; değerler son değerdir, kat ölçeklemesinden geçmez)
+
+| Boss | Can | Hasar | Saldırılar arası |
+| --- | --- | --- | --- |
+| Morvath | 9.000 | 26 | 1,4 sn |
+| Mycela | 22.000 | 45 | 1,3 sn |
+| Kordrak | 42.000 (plakalıyken %70 az hasar alır) | 70 | 1,3 sn |
+| Nyx'thar | 65.000 (fiziksele bağışık) | 95 | 1,3 sn |
+
+- Saldırılar rastgele seçilir, art arda aynısı gelmez. Saldırı hasarı = boss hasarı × saldırının çarpanı. Canı %50'ye inince 2. faz başlar ("2. FAZ!"). HUD'daki boss can barında %50 çizgisi, faz ve mekanik ipucu (ör. "Göz kapağı KAPALI — duvardaki 3 gözü kır!") görünür. Gerekirse arenanın zeminine bir katman çizilir (spor sisi, lav kanalları, karanlık, çöken kenarlar).
+- Her saldırının uyarısı en az 0,4 sn'dir (`min_warn_sec`; uygulamada en kısası 0,6 sn). Boss ölünce yardımcıları ve yerdeki işaretleri kalkar.
+- **Morvath** (duvara gömülü, hareket etmez; arenanın kapının karşısındaki tarafında, merkezden yarıçapın %62'si kadar geride):
+  - Bakış Işını: taranacak 150°'lik dilim ve başlangıç çizgisi 1,2 sn işaretlenir; ışın (13 karo, 0,7 genişlik) saniyede 40° döner, değdiği oyuncuya 0,6 sn'de bir ×1 vurur. Sütunların arkası güvenlidir, Space'in dokunulmazlığıyla içinden geçilir.
+  - Damar Kırbacı: oyuncuya doğru 44°'lik yelpazede 3 şerit (10 karo, 0,9 genişlik), 0,15 sn arayla, her biri 0,9 sn işaretli (×1,2).
+  - Göz Yavruları: 0,8 sn işaretli noktalarda 4-6 Sürünen Göz (en fazla 8 canlı).
+  - Kapanan Göz Kapağı: 14 sn açık kalır, sonra kapanır (hasar almaz, "KAPALI") ve duvarda 3 Duvar Gözü belirir (450 can, öncelikli hedef); üçü kırılınca kapak açılır ve 6 sn +%50 hasar alır; 22 sn'de kırılmazsa kapak bonussuz açılır. Morvath'a gelen yıldırım hasarının %50'si duvar gözlerine sıçrar.
+  - 2. faz: 4 nabız bölgesi (1,8 karo, 1,5 sn işaretli, 0,5 sn'de bir ×0,45; 12 sn'de bir yer değiştirir); iki ışın ters yönlere ×1,2 hızla döner.
+- **Mycela** (arenada oyuncudan en az 4 karo uzakta dolaşır):
+  - Spor Bulutu: oyuncunun olduğu yere ve çevresine (4 karo) 3 bulut (1,6 karo, 7 sn, 0,5 sn'de bir ×0,35 zehir), 0,8 sn işaretli.
+  - Kök Patlaması: 0,4 sn arayla 4 kez oyuncunun o anki yerine 1 karo, her biri 0,7 sn işaretli (×1,1).
+  - Spor Oku: 50°'lik yelpazede 5 spor (hız 8, 11 karo), yolları 0,6 sn çizilir (×0,8).
+  - İyileştiren Mantarlar: dövüş başında 3 Mantar Totemi (1.200 can × kat ölçeği, öncelikli hedef; merkezden 5,5 karo). Her totem saniyede boss'un maks canının %0,2'sini iyileştirir; üçü kırılınca 30 sn sonra yeniden dikilir (1 sn işaretli).
+  - Ateş bulutu yakar: bir buluta ateş mermisi/alanı ya da menzile uzanan ateşli yakın saldırı değerse bulut Zehir Patlaması'yla yok olur ve 2,5 karo içindeki düşmanlara (Mycela ve totemler dahil) Mycela'nın maks canının %2,5'i kadar hasar verir (oyuncuya dokunmaz).
+  - 2. faz: arena sporla dolar — 3 temiz hava alanı kalır (yarıçap 30 sn'de 4 → 2 karo küçülür); 3 sn uyarıdan sonra dışarıdaki oyuncu 0,5 sn'de bir ×0,25 zehir hasarı alır. Mycela 6 sn'de bir 0,7 sn işaretli bir yere ışınlanır.
+- **Kordrak** (oyuncuya yavaşça yürür):
+  - Örs Darbesi: 1,1 sn işaret — çarpma alanı (1,6 karo, ×1) ve şok halkasının varacağı sınır; halka saniyede 6 karo genişleyerek 9 karoya kadar gider (0,8 kalınlık, ×1,2; Space'le atlanır).
+  - Lav Dolumu: arenada hep görünen 4 lav kanalı ("#" şekli, merkezden ±4,5 karo, 1,3 genişlik) 1,6 sn parlar, sonra 6 sn lavla dolar (0,5 sn'de bir ×0,4 ateş).
+  - Kor Yumruğu: atılma yolu 0,9 sn işaretlenir; sonra oyuncunun olduğu yere (en fazla 7 karo) saniyede 16 karo atılır, 1,3 karo içindekine ×1,4 ateş.
+  - Soğutma: plakalar hasarı %70 azaltır (zırh terimi). Her buz vuruşu 1 soğuma yığını ekler (5 sn buz gelmezse söner); 5 yığında plakalar 10 sn kırılır. Yıldırıma bağışık (taş gövde).
+  - 2. faz: plakalar kalıcı düşer, ×1,4 hızlanır; her Örs Darbesi'nden sonra çevresine 6 ateş topu düşer (2,5-6,5 karo, 1,2 karo, 0,9 sn işaretli, ×0,8).
+- **Nyx'thar** (süzülür, sütunların üstünden geçer; fiziksele bağışık):
+  - Gölge Kopyaları: 0,7 sn işaretli noktalarda toplam 3 (2. fazda 5) beden belirir; gerçek Nyx'thar bunlardan rastgele birine geçer ve yere koyu gölge düşürür (kopyalar düşürmez). Sahteye vurulursa sahte oyuncunun yanına ışınlanır, 0,6 sn işaretli 140°'lik bir kesik atar (×0,8) ve dağılır. Gerçeğine vurulunca ("BULDUN!") kopyalar dağılır; kopyalar 10 sn sonra da dağılır.
+  - Boşluk Yırtığı: 2 (2. fazda 3) portal, 1 sn işaretli, 5 sn açık kalır: 5 karo içindeki oyuncuyu saniyede 2,2 karo içine çeker, merkezi (0,9 karo) 0,5 sn'de bir ×0,4 karanlık hasar verir. 2. fazda kopyaların yerinde de açılır.
+  - Çığlık: etrafında 4 karo, 1,5 sn işaretli (×1,5 karanlık).
+  - Karanlık Perdesi: arena kararır; 6 meşalenin (kenardan 2 karo içeride) 3,2 karo çevresi güvenlidir; karanlıkta 1 sn'den fazla kalan oyuncu 0,5 sn'de bir ×0,12 karanlık hasar alır. 12 sn'de bir meşale 2 sn kırmızı titreyip söner; en az 2 meşale hep yanar (ateş silahı olmayan oyuncu için adillik). Sönmüş meşaleye ateş mermisi/alanı ya da ateşli yakın saldırı (1,2 karo) değerse yanar.
+  - 2. faz: platformun kenarları 2,5 sn kırmızı yanıp söner, sonra çöker: arena yarıçapın %62'sine iner, meşaleler içeri taşınır. Uçuruma basan oyuncu maks canının %10'u kadar hasar alır ve platforma geri konur.
+
+**Test ve hata ayıklama**
+
+- `make bosses` (`--boss-test`): bot her katta doğrudan boss odasının kapısında başlar; oyuncu leveli ve iki aktif silahın (ateş + buz kılıç) nadirliği/leveli, katın boss'una varırken beklenen değerlere ayarlanır (1. kat: level 13, Ender Lv 12 · 2. kat: 33, Destansı Lv 30 · 3. kat: 53, Destansı Lv 45 · 4. kat: 76, Destansı Lv 65). Her boss 240 sn içinde kesilmeli, her saldırısını kullanmalı, 2. faza girmeli ve her uyarı en az 0,4 sn sürmeli; değilse çıkış kodu 9. Aşama 7 sonuçları (ölümsüz bot; bot saldırılardan kaçmaz): Morvath 67 sn, Mycela 170 sn, Kordrak 58 sn, Nyx'thar 143 sn.
+- Zindan smoke testinde düşman canı ×0,25 (`--enemy-hp=0.25`): bot, düşman sayısı ×0,2 olduğu için düşük levelde kalır; tam canlı boss'larla kat süresi dolar.
+- Hata ayıklama menüsü: zindanda "Boss odasına ışınlan" (savaş dışında; boss odasının kapısının dışına); test odasında "Düşmanlar" listesinden her düşman türü (kendi katının gücüyle, 3'lü; sürüde 5'li) ya da tek eliti ayrı denenebilir. Geliştirme bayrakları: `--boss-rush`, `--boss-test`, `--enemy-hp=X`.
+- Botun yeni davranışları (yalnızca testler için): öncelikli hedefe (14 karo içinde) önce saldırır; kalkanlı düşmanın önündeyse yanından dolanır.
+- Rastgeleliğe bağlı kalan bir eski test (Kalkan Hücumu'nun ×1,5 hasarı; %5 kritik ihtimali) oyuncunun zar tohumu sabitlenerek düzeltildi.
+
 ## Uygulama Rehberi
 
 Bu bölüm, oyunu sıfırdan yapacak bir Claude oturumu için yazıldı. Oyun 11 aşamada (0-10) yapılır; her aşama oynanabilir ya da test edilebilir bir sonuçla biter ve kullanıcının onayıyla bir sonrakine geçilir. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
@@ -869,14 +963,15 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | 4 — Zindan üretimi | ✅ Bitti, onaylandı (`asama-4` dalı, sürüm 0.4.0) |
 | 5 — Loot ve envanter | ✅ Bitti, onaylandı (`asama-5` dalı, sürüm 0.5.0) |
 | 6 — İlerleme | ✅ Bitti, main'e birleştirildi (`asama-6` dalı, sürüm 0.6.0; Warrior Kalkan Hücumu ve iksir oranı değişiklikleriyle) |
-| 7-10 | Sırada: Aşama 7 — Düşmanlar ve boss'lar |
+| 7 — Düşmanlar ve boss'lar | ✅ Bitti, kullanıcı testi bekliyor (`asama-7` dalı, sürüm 0.7.0; yalnızca yerel commit — onaydan sonra push ve main'e birleştirme) |
+| 8-10 | Sırada: Aşama 8 — Sanat |
 
-- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapılır.
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`); Aşama 8, Aşama 7 onaylanıp main'e birleştirildikten sonra `main`'den açılan `asama-8` dalında yapılır.
 - **Çalışma düzeni (Aşama 6'dan itibaren): Claude Code.** Kullanıcı devamını kendi bilgisayarında, yerel klonda (`C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler\zindan-oyunu`) Claude Code ile, aşama aşama yapar. Claude Code reponun kökündeki `CLAUDE.md`'yi otomatik okur; kurallar orada da yazılıdır. Her aşama: önceki aşamanın dalından yeni `asama-N` dalı → kod → testler → README Durum + GDD (`docs/GDD.md`) güncellemesi → commit → **push** → kullanıcı onaylayınca PR ile main'e birleştirme. Kullanıcı **Git Bash** kullanır: git komutlarında yol ayıracı `/` olmalıdır.
 - **Push kuralı (kullanıcı kararı, 25 Eyl 2026; Aşama 6 sonunda güncellendi):** Claude GitHub'a yazabiliyor: bilgisayardaki Claude (Claude Code ya da bilgisayara bağlı Claude) kullanıcının git hesabıyla, bulut oturumu da GitHub bağlantısına yazma izni verildiğinde doğrudan. Claude aşama sonunda **yalnızca yerelde commit eder; push'tan önce kullanıcının uygulamayı test edip onaylamasını bekler.** Onaydan sonra push eder, GitHub'a ulaştığını kontrol eder (`git ls-remote origin`) ve `main`'e birleştirir (kullanıcı izin verdi; `gh` kurulu olmadığı için yerel merge + `git push origin main`). Kendisi push edemezse (izin/erişim hatası) kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`; bulut oturumundan ise aşağıdaki bundle yoluyla).
 - **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır; Claude Code yoksa kurulumunu kullanıcıya adım adım anlatır. **Kullanıcının bilgisayarında (Aşama 6'da kuruldu):** Godot `C:\Users\mcap5\Godot\Godot_v4.7.2-stable_win64.exe` (komut satırı için `..._win64_console.exe`; PATH'te değil, `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`), export şablonları `%APPDATA%\Godot\export_templates\4.7.2.stable\`, `make` MSYS2'den (`C:\msys64\ucrt64\bin\make`), Python `C:\msys64\ucrt64\bin\python3`. `zip` yok: `make export-windows` bu durumda PowerShell `Compress-Archive` kullanır. `make` yoksa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
 - **Yedek teslim yolu (Aşama 0-4'te kullanıldı; push edilemezse hâlâ geçerli):** Claude'un GitHub bağlantısı yalnızca okuyabildiğinde kod `git bundle` olarak `ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakıldı (`git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`); 30 MB'tan büyük zip 19 MB'lık parçalara bölünüp `asama-N\` klasörüne `birlestir-ve-ac.bat` ile kondu.
-- **Test:** `make test` dört adımı çalıştırır: birim testleri (193 test; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8).
+- **Test:** `make test` beş adımı çalıştırır: birim testleri (206 test; Aşama 7: 55 düşman, kat ölçeklemesi, elit/aura, varyantlar, dalgalar, tehlike şekilleri ve uyarı, kalkan, çağrılanların ödülsüzlüğü, 4 boss'un mekanikleri; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8; Aşama 7'den beri düşman canı ×0,25) ve boss testi (`make bosses`: 4 boss katın beklenen gücüyle 240 sn içinde kesilir, her saldırı kullanılır, 2. faz görülür, her uyarı ≥ 0,4 sn; sorun varsa çıkış kodu 9).
 - **Bilinen:** `bpy` paket deposunda bulunamadı (Aşama 8'de yeniden denenecek). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
 
 **Kaldığın yerden devam mesajı (Claude Code, repo klasöründe):** "Bu repo zindan oyunum. Önce docs/GDD.md'nin tamamını (özellikle 'Uygulamada Verilen Kararlar' ve 'Proje Durumu ve Çalışma Düzeni'), README'deki Durum bölümünü ve CLAUDE.md'yi oku. Aşama N'den devam et; bu aşamayı bitirince dur ve bana neyi test etmem gerektiğini yaz."
@@ -909,7 +1004,9 @@ zindan-oyunu/
   scripts/
     autoload/             # Events, DataDB, GameState, SaveManager
     combat/               # DamageCalc, StatusEffects, Combos
-    player/  enemies/  bosses/
+    player/
+    enemies/              # Enemy (17 düşman, elit, aura), EnemyHazard (işaretli yer tehlikeleri), EnemyProjectile
+    bosses/               # Boss, BossArena, BossOverlay, Morvath, Mycela, Kordrak, Nyxthar, NyxCopy
     dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
     ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, RewardUI, RunSummary
@@ -925,8 +1022,9 @@ zindan-oyunu/
 
 | Make hedefi | Ne yapar |
 | --- | --- |
-| `make test` | Birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke testi |
+| `make test` | Birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke testi + boss testi |
 | `make dungeon` | Zindan smoke testi: bot 4 katı baştan sona yürür, loot toplar, tüccar/demirci kullanır (Aşama 4-5 kabulü) |
+| `make bosses` | Boss testi: bot her katın boss'unu katın beklenen gücüyle keser; saldırılar, 2. faz ve uyarı süreleri denetlenir (Aşama 7 kabulü) |
 | `make sprites` | Blender script'iyle tüm sprite ve normal map'leri yeniden üretir |
 | `make sfx` | Ses efektlerini sentezleyip `assets/audio/sfx` içine yazar |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
@@ -947,13 +1045,13 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `traits.json` | 5 özellik | Elementler |
 | `legendaries.json` | 12 efsanevi silah; pasif ve sağ tık eki şablonları | Nadirlik |
 | `talismans.json` | 3 tılsım (etki sayıları, renk) | Rezonans ve Esnek Slot |
-| `enemies.json` | 17 düşman, rol, bağışıklık, XP | Düşmanlar |
-| `bosses.json` | 4 boss, fazlar, saldırılar | Boss'lar |
+| `enemies.json` | 17 düşman (rol, yapay zekâ, statlar, saldırı, yetenek, ölüm etkisi), malzemeler (Taş, Hayalet, Alevli, Zehirli), 21 varyant, kat ölçeklemesi, elit ve 4 aura, boss yardımcıları | Düşmanlar, Uygulamada Verilen Kararlar |
+| `bosses.json` | 4 boss: can, hasar, saldırı sayıları ve uyarı süreleri, mekanikler, 2. fazlar; boss testi ayarları | Boss'lar, Uygulamada Verilen Kararlar |
 | `rewards.json` | Level ve boss ödül havuzları, özel etkilerin sayıları, ödül zamanlaması | Run İçi Ödüller, Uygulamada Verilen Kararlar |
 | `progression.json` | XP eğrisi, düşman XP'leri, ustalık eğrisi ve başlangıç leveli, derinlik çarpanları, stat tavanları (Space tavanı dahil) | Level, Ustalık, Denge |
-| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu, placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
+| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu (enemy_pool: elitler), dalga havuzu (spawn_pool: düşman ve varyant ağırlıkları), placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
 | `economy.json` | Çanta boyu (0: yalnızca 4 slot), başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si (geçici kat level kuralı Aşama 6'da silindi) | Ekonomi, Uygulamada Verilen Kararlar |
-| `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, prototip düşmanlar, yer tutucu elit/boss, gizli duvar | Zindan, Uygulamada Verilen Kararlar |
+| `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, duvara gömülü boss yerleşimi, gizli duvar (prototip düşmanlar ve yer tutucu elit/boss Aşama 7'de kaldırıldı) | Zindan, Uygulamada Verilen Kararlar |
 
 **Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular; ödül havuzundaki statları ve özel etkileri de denetler), `GameState` (aktif run: level ve XP — `add_xp` —, envanter — `Inventory`: 4 slot, altın, iksir —, ödül buff'ları ve özel etkiler, bekleyen ödül ekranları, kesilen boss'lar, silah tipine göre hasar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`; bozuk kayda dayanıklı).
 

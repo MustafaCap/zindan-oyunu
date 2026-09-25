@@ -26,6 +26,8 @@ var show_weapon: bool = true:
 	set(v):
 		show_weapon = v
 		queue_redraw()
+## Yere düşen gölge (Nyx'thar'ın sahte kopyalarında kapalı — Aşama 7).
+var show_shadow: bool = true
 var lean: float = 0.0            # saldırıda öne eğilme (0..1)
 
 var _flash_tween: Tween
@@ -56,7 +58,8 @@ func set_facing(f: Vector2) -> void:
 
 func _draw() -> void:
 	# Gölge
-	_draw_ellipse(Vector2.ZERO, body_width * 0.9, body_width * 0.45, Color(0, 0, 0, 0.35))
+	if show_shadow:
+		_draw_ellipse(Vector2.ZERO, body_width * 0.9, body_width * 0.45, Color(0, 0, 0, 0.35))
 	var dir_screen := Iso.to_screen(facing_cart).normalized()
 	var lean_off := dir_screen * lean * 6.0
 	var w := body_width * 0.5

@@ -26,6 +26,10 @@
 ##   --autoplay'da kalıcı kayıt user://save_autoplay.json'a yazılır (her smoke testinde sıfırdan) — oyuncunun kaydına dokunulmaz.
 ##   --grant-levels=N  Run başında N level'lik XP verir (level ödülü ekranı açılır; ekran görüntüsü/deneme için).
 ##   --end-run=SN      SN saniye sonra oyuncu ölür (run sonu özet ekranını denemek için).
+##   --enemy-hp=X      Tüm düşmanların (boss'lar dahil) can çarpanı (smoke testini kısaltmak için).
+##   --boss-rush       Her katta oyuncu boss odasının kapısında başlar (bot yalnızca boss'a gider).
+##   --boss-test       --boss-rush + katın beklenen level ve silah gücü; her boss süre, saldırılar, 2. faz ve uyarı
+##                     süreleri yönünden denetlenir (make bosses). Sorun varsa çıkış kodu 9.
 ##   --open-bag        Envanter açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
 class_name DungeonRun
 extends Node2D
@@ -65,6 +69,14 @@ var victory: bool = false
 var autoplay: bool = false
 var god: bool = false
 var enemy_mult: float = -1.0
+## Tüm düşmanların (boss'lar dahil) can çarpanı: --enemy-hp=X (smoke testini kısaltmak için). 1 = normal.
+var enemy_hp_mult: float = 1.0
+## --boss-rush: oyuncu her katta doğrudan boss odasının kapısında başlar (boss testi ve hata ayıklama).
+var boss_rush: bool = false
+## --boss-test (make bosses): boss_rush + her katta beklenen level/silah; boss'lar süre, saldırı ve uyarı yönünden denetlenir.
+var boss_test: bool = false
+var boss_test_failed: bool = false
+var _boss_start_t: float = 0.0
 var start_floor: int = 1
 var fixed_seed: int = -1
 var _dg: Dictionary
@@ -115,6 +127,14 @@ func _ready() -> void:
 			start_floor = clampi(int(arg.get_slice("=", 1)), 1, 4)
 		elif arg.begins_with("--enemy-mult="):
 			enemy_mult = float(arg.get_slice("=", 1))
+		elif arg.begins_with("--enemy-hp="):
+			enemy_hp_mult = float(arg.get_slice("=", 1))
+		elif arg == "--boss-rush":
+			boss_rush = true
+		elif arg == "--boss-test":
+			boss_rush = true
+			boss_test = true
+			EnemyHazard.log_enabled = true
 		elif arg.begins_with("--race="):
 			config["race"] = arg.get_slice("=", 1)
 		elif arg.begins_with("--level="):
@@ -175,7 +195,7 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
-	hud.stage_text = "Aşama 6 · ilerleme"
+	hud.stage_text = "Aşama 7 · düşmanlar ve boss'lar"
 	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
@@ -327,6 +347,10 @@ func enter_floor(index: int) -> void:
 	nav = DungeonNav.new(layout, false)
 	_walk_cache = layout.walkable(false)
 	player.global_position = cell_to_world(layout.rooms[layout.start_id].center())
+	if boss_rush:
+		teleport_to_boss()
+	if boss_test:
+		_apply_boss_test_loadout(index)
 	camera.global_position = player.global_position
 	camera.reset_smoothing()
 	minimap.layout = layout
@@ -341,6 +365,28 @@ func enter_floor(index: int) -> void:
 			hud.show_message(""))
 	if _autopilot:
 		_autopilot.on_floor_entered()
+
+
+## Oyuncuyu boss odasının kapısının hemen dışına ışınlar (--boss-rush ve hata ayıklama menüsü). Savaşta çalışmaz.
+func teleport_to_boss() -> bool:
+	if GameState.in_combat or layout == null:
+		return false
+	var r := layout.rooms[layout.boss_id]
+	if r.doors.is_empty():
+		return false
+	var nid: Variant = r.doors.keys()[0]
+	var mouth: Array = r.doors[nid]
+	var inner: Vector2i = r.door_inner[nid]
+	var out_cell: Vector2i = mouth[mouth.size() / 2]
+	# Kapı ağzından bir karo daha dışarı (koridor)
+	var step := out_cell - inner
+	step = Vector2i(signi(step.x), signi(step.y))
+	var c := out_cell + step
+	player.global_position = cell_to_world(c if _walk_cache.has(c) else out_cell)
+	camera.global_position = player.global_position
+	camera.reset_smoothing()
+	visited[int(nid)] = true
+	return true
 
 
 func _clear_floor() -> void:
@@ -360,7 +406,7 @@ func _clear_floor() -> void:
 		n.queue_free()
 	if world:
 		for n: Node in world.get_children():
-			if n is Projectile or n is GroundEffect or n is EnemyMelee or n is ChestTrap:
+			if n is Projectile or n is GroundEffect or n is Enemy or n is ChestTrap:
 				n.queue_free()
 	# Eski karolar hemen kalksın: yeni katın ilk fizik adımında eski duvarlar oyuncuyu itmesin
 	for layer: TileMapLayer in [floor_layer, wall_layer]:
@@ -418,33 +464,103 @@ func set_room_locked(room_id: int, locked: bool) -> void:
 
 
 func spawn_enemy(spec: Dictionary, cell: Vector2i) -> Node2D:
-	var e := EnemyMelee.new()
-	e.enemy_id = str(spec["id"])
-	e.material_id = str(spec.get("material", ""))
-	e.rng.seed = hash([layout.seed_value, cell, Time.get_ticks_usec()]) if not autoplay else hash([layout.seed_value, cell])
-	if bool(spec.get("elite", false)):
-		var pe: Dictionary = _dg["placeholder_elite"]
-		e.is_elite = true
-		e.hp_mult = float(pe["hp_mult"])
-		e.damage_mult = float(pe["damage_mult"])
-		e.body_scale = float(pe["scale"])
+	var e: Enemy
 	if bool(spec.get("boss", false)):
-		var pb: Dictionary = _dg["placeholder_boss"]
-		e.is_boss = true
-		e.hp_mult = float(pb["hp_mult"])
-		e.damage_mult = float(pb["damage_mult"])
-		e.body_scale = float(pb["scale"])
-		var bdata: Dictionary = DataDB.table("bosses")["bosses"][str(spec["boss_id"])]
-		e.name_override = "%s (yer tutucu)" % bdata["name"]
-		e.boss_id = str(spec["boss_id"])
-	e.navigator = nav_dir
+		var b := Boss.create(str(spec["boss_id"]))
+		b.arena = BossArena.from_room(layout.rooms[layout.boss_id], cell_to_world, world_to_cell, has_line_of_sight)
+		e = b
+	else:
+		e = Enemy.new()
+		e.enemy_id = str(spec["id"])
+		e.material_id = str(spec.get("material", ""))
+		e.is_elite = bool(spec.get("elite", false))
+		e.elite_aura = str(spec.get("aura", ""))
+	e.floor_index = GameState.floor_index
+	e.hp_mult = enemy_hp_mult
+	e.rng.seed = hash([layout.seed_value, cell, Time.get_ticks_usec()]) if not autoplay else hash([layout.seed_value, cell])
+	_wire_enemy(e)
 	world.add_child(e)
 	e.global_position = cell_to_world(cell)
-	_attach_xray(e, Color(1.0, 0.45, 0.4))
-	if e.is_boss:
+	if e is Boss:
+		var bo := e as Boss
+		# Duvara gömülü boss (Morvath) arenanın kapının karşısındaki tarafında durur
+		if bool(bo.bdata.get("stationary", false)):
+			bo.global_position = bo.arena.clamp_inside(bo.arena.point(-bo.arena.door_dir * bo.arena.radius * float(_dg["boss_back_offset"])))
 		_boss_node = e
 		hud.boss = e
+		_boss_start_t = _elapsed
+		EnemyHazard.telegraph_log.clear()
+	elif str(e.ai) == "wall":
+		e.global_position = cell_to_world(_wall_cell_near(cell))
+	_attach_xray(e, Color(1.0, 0.45, 0.4))
 	return e
+
+
+## Düşmana zindanın yol bulma, görüş, durulabilir nokta ve çağırma fonksiyonlarını bağlar.
+func _wire_enemy(e: Enemy) -> void:
+	e.navigator = nav_dir
+	e.los = has_line_of_sight
+	e.can_stand = is_walkable_world
+	e.spawner = spawn_add
+
+
+## Çağrılan düşman / boss yardımcısı: ödülsüz, çağıranı ölünce dağılır; etkin odanın canlılarına eklenir
+## (oda o ölmeden temizlenmez).
+func spawn_add(id: String, pos: Vector2, owner: Node2D) -> Node2D:
+	var e := Enemy.new()
+	e.enemy_id = id
+	e.floor_index = GameState.floor_index
+	e.no_reward = true
+	e.summoner = owner
+	e.hp_mult = enemy_hp_mult
+	e.rng.seed = hash([layout.seed_value, pos, _elapsed])
+	_wire_enemy(e)
+	world.add_child(e)
+	e.global_position = pos
+	if str(e.ai) == "wall":
+		e.global_position = cell_to_world(_wall_cell_near(world_to_cell(pos)))
+	_attach_xray(e, Color(1.0, 0.45, 0.4))
+	var rid := layout.room_at(world_to_cell(owner.global_position)) if is_instance_valid(owner) else _active_room
+	if rid >= 0:
+		rooms[rid].register(e)
+	return e
+
+
+## Dünya noktası yürünebilir bir karoda mı (Gölge'nin ışınlanması, çağırma noktaları)?
+func is_walkable_world(pos: Vector2) -> bool:
+	return _walk_cache.has(world_to_cell(pos))
+
+
+## Duvara yapışık düşman için: verilen karonun odasında duvara bitişik, kapıdan uzak en yakın karo.
+func _wall_cell_near(cell: Vector2i) -> Vector2i:
+	var rid := layout.room_at(cell)
+	if rid < 0:
+		return cell
+	var r := layout.rooms[rid]
+	var zone: Dictionary = _entry_zones.get(rid, {})
+	var best := cell
+	var best_d := 1 << 30
+	for c: Vector2i in r.free_cells():
+		if zone.has(c):
+			continue
+		var touches := false
+		for d: Vector2i in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if not r.cells.has(c + d) and not _walk_cache.has(c + d):
+				touches = true
+		if not touches:
+			continue
+		var near_door := false
+		for z: Vector2i in zone.keys():
+			if (z - c).length_squared() < 9:
+				near_door = true
+				break
+		if near_door:
+			continue
+		var dd := (c - cell).length_squared()
+		if dd < best_d:
+			best_d = dd
+			best = c
+	return best
 
 
 func on_wave_started(room_id: int, index: int, total: int) -> void:
@@ -614,7 +730,48 @@ func _on_room_cleared(room_id: int) -> void:
 				hud.show_message(""))
 
 
+## Boss testi: katın beklenen oyuncu leveli ve iki aktif silahın nadirliği/leveli (bosses.json > boss_test).
+func _apply_boss_test_loadout(index: int) -> void:
+	var c: Dictionary = DataDB.table("bosses")["boss_test"]["floors"][str(index)]
+	var before := GameState.level
+	GameState.level = int(c["level"])
+	GameState.xp = 0.0
+	for w: Weapon in GameState.inventory.active_weapons():
+		w.rarity_id = str(c["rarity"])
+		w.level = int(c["weapon_level"])
+	set_player_level(GameState.level, before)
+	_on_inventory_changed()
+	player.restore(player.max_hp)
+
+
+## Boss testi denetimi: süre, her saldırının kullanılması, 2. faz ve uyarı süreleri.
+func _check_boss_test(boss: Boss) -> void:
+	var bt: Dictionary = DataDB.table("bosses")["boss_test"]
+	var t := _elapsed - _boss_start_t
+	var problems: PackedStringArray = []
+	if t > float(bt["max_seconds"]):
+		problems.append("süre %.0f sn > %d" % [t, int(bt["max_seconds"])])
+	for id: String in boss.attack_log.keys():
+		var u: Array = boss.attack_log[id]
+		if int(u[0]) + int(u[1]) == 0:
+			problems.append("'%s' hiç kullanılmadı" % id)
+	if boss.phase < 2:
+		problems.append("2. faza girmedi")
+	var min_warn := float(DataDB.get_value("bosses", "min_warn_sec"))
+	var shortest := INF
+	for e: Dictionary in EnemyHazard.telegraph_log:
+		if float(e["warn"]) < min_warn and str(e["mode"]) != "visual":
+			problems.append("'%s' uyarısı %.2f sn" % [e["label"], float(e["warn"])])
+		shortest = minf(shortest, float(e["warn"]))
+	print("[BossTest] %s: %.1f sn, saldırılar %s, %d işaret (en kısa %.2f sn) — %s" % [boss.boss_id, t, boss.attack_log,
+		EnemyHazard.telegraph_log.size(), shortest, "TAMAM" if problems.is_empty() else "SORUN: " + ", ".join(problems)])
+	if not problems.is_empty():
+		boss_test_failed = true
+
+
 func _on_boss_killed(room_id: int, enemy: Node2D) -> void:
+	if boss_test and enemy is Boss:
+		_check_boss_test(enemy as Boss)
 	hud.boss = null
 	_boss_node = null
 	# GDD: kat boss'u kesilince can tamamen dolar (Ghost dahil)
@@ -641,7 +798,8 @@ func _on_boss_killed(room_id: int, enemy: Node2D) -> void:
 		print("[Zindan] ZAFER (%.1f sn)" % _elapsed)
 		_end_run(true)
 		if autoplay:
-			get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(0 if bool(last_summary.get("saved", false)) else 8))
+			get_tree().create_timer(1.0).timeout.connect(func() -> void:
+				get_tree().quit(9 if boss_test_failed else (0 if bool(last_summary.get("saved", false)) else 8)))
 		return
 	GameState.pending_rewards.append("boss:%d" % GameState.floor_index)
 	hud.show_message("Boss yenildi!\nCanın doldu · Merdiven açıldı")
@@ -772,6 +930,8 @@ func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 	if layout == null or enemy == null or not is_instance_valid(enemy) or not (enemy as Node2D).is_inside_tree():
 		return
 	if enemy.get_parent() != world:
+		return
+	if enemy.get("no_reward") == true:
 		return
 	var kind := "boss" if is_boss else ("elite" if is_elite else "normal")
 	var pos := (enemy as Node2D).global_position
@@ -1169,6 +1329,11 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 			hud.flash_note("Level %d (XP ile; ödüller savaş dışında açılır)" % GameState.level)
 		"boss_reward":
 			GameState.pending_rewards.append("boss:%d" % GameState.floor_index)
+		"boss_teleport":
+			if teleport_to_boss():
+				hud.flash_note("Boss odasının kapısına ışınlandın")
+			else:
+				hud.flash_note("Savaş sürerken ışınlanılamaz")
 		"mastery_reset":
 			SaveManager.wipe()
 			player.refresh_bonuses()

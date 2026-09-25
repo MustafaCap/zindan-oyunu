@@ -44,6 +44,12 @@ func alive_count() -> int:
 	return n
 
 
+## Savaş sırasında sonradan gelen düşman (çağrılan Gölge, boss yardımcıları): oda o ölmeden temizlenmez.
+func register(e: Node2D) -> void:
+	if state == State.ACTIVE and not e in alive:
+		alive.append(e)
+
+
 ## Oyuncu odanın iç kısmına girdi.
 func enter() -> void:
 	if state != State.IDLE:

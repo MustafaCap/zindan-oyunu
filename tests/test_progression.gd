@@ -441,7 +441,7 @@ func test_boss_kill_first_kill_reward_and_run_end_save() -> void:
 	run.fixed_seed = 99
 	tree.root.add_child(run)
 	run.enter_floor(2)
-	var boss := EnemyMelee.new()
+	var boss := Enemy.new()
 	boss.boss_id = "mycela"
 	run._on_boss_killed(run.layout.boss_id, boss)
 	assert_true("mycela" in SaveManager.boss_first_kills, "ilk kesiş kaydedildi")
