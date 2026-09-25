@@ -22,7 +22,10 @@ kaldığımız yer README'nin **Durum** bölümünde ve GDD'nin **Proje Durumu v
 
 ## Git
 - Her aşama kendi dalında: bir önceki aşamanın dalından `asama-N` aç (ör. `git switch -c asama-6 asama-5`).
-- Commit mesajları Türkçe ve anlamlı. Push ve PR'dan önce kullanıcıya sor.
+- Commit mesajları Türkçe ve anlamlı.
+- **Push'u kendin yap** (kullanıcının bilgisayarındaki git hesabıyla): aşama bitince `git push -u origin asama-N`, sonra
+  `git ls-remote origin` ile GitHub'a ulaştığını kontrol et. Push edemezsen (izin/erişim hatası) kullanıcıya Git Bash komutunu ver.
+- `main`'e birleştirme (Pull Request) kullanıcı aşamayı test edip onaylayınca yapılır; önce sor.
 - Kullanıcı **Git Bash** kullanıyor: ona vereceğin komutlarda yol ayıracı `/` olsun (`\` değil).
 
 ## Test ve derleme (Windows)

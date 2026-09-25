@@ -19,7 +19,7 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 5 (sürüm 0.5.0) kodlandı; `asama-5` dalı `asama-4`'ün üstünde. Kullanıcı onaylayınca Aşama 6'ya (ilerleme)
+**Kalınan yer:** Aşama 5 (sürüm 0.5.0) kodlandı; `asama-5` dalı `asama-4`'ün üstünde ve GitHub'a push edildi. Kullanıcı onaylayınca Aşama 6'ya (ilerleme)
 geçilecek.
 - `LootGenerator`: katın nadirlik tablosu, gizli oda üst nadirlik ×2, efsanevi 3. kattan,
   12 tip, element ve özellik sayısı nadirliğe göre, kat silah leveli (1 / 10 / 25-40 / 50). 10.000 düşüşlük testte oranlar ±%1.
@@ -141,3 +141,6 @@ söyleyen bir hata verir (oyun ekranında da kırmızıyla görünür). `_` ile 
 ## Git akışı
 
 Her aşama kendi branch'inde yapılır (`asama-0`, `asama-1`, …), bitince bir Pull Request ile `main`'e birleştirilir (merge).
+Commit ve push'u Claude kendisi yapar (kullanıcının git hesabıyla ya da GitHub bağlantısıyla) ve GitHub'a ulaştığını kontrol eder;
+yapamazsa kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`). Kullanıcı aşamayı test edip onaylayınca PR ile
+`main`'e birleştirilir.
