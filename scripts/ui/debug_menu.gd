@@ -5,6 +5,8 @@
 ## test odası ↔ zindan arasında geçer.
 ## Aşama 5: zindanda "Uygula" yalnızca ırk ve leveli değiştirir (silahlar envanterdedir); "Loot (test)" satırı:
 ## menüdeki iki silahı boş slotlara ekle, loot yağdır, +500 altın, slottaki silahlara +1000 XP.
+## Aşama 6: "İlerleme (test)" satırı: +1 / +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve
+## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
 ## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
 class_name DebugMenu
 extends CanvasLayer
@@ -184,6 +186,19 @@ func _build() -> void:
 			action.emit(act, config.duplicate(true)))
 		lt_row.add_child(lb)
 
+	# İlerleme testi (yalnızca zindan)
+	var pr_row := _row(box, "İlerleme (test)")
+	pr_row.visible = context == "dungeon"
+	for pair2: Array in [["xp_1", "+1 level (XP)"], ["xp_5", "+5 level (XP)"], ["boss_reward", "Boss ödülü aç"], ["mastery_reset", "Ustalıkları sıfırla"]]:
+		var pb := Button.new()
+		pb.text = str(pair2[1])
+		pb.custom_minimum_size = Vector2(0, 38)
+		var act2 := str(pair2[0])
+		pb.pressed.connect(func() -> void:
+			close()
+			action.emit(act2, config.duplicate(true)))
+		pr_row.add_child(pb)
+
 	# Düşmanlar (yalnızca test odası)
 	var en_row := _row(box, "Düşmanlar")
 	_enemy_row = en_row
@@ -257,6 +272,14 @@ func _refresh_info() -> void:
 		res_txt += " %d" % int(res["max"])
 	lines.append("%s — Q: %s · E: %s · Kaynak: %s · Pasif: %s" % [race["name"], race["abilities"]["q"]["name"],
 		race["abilities"]["e"]["name"], res_txt, race["passive"]["description"]])
+	if context == "dungeon":
+		var ml: PackedStringArray = []
+		for t: String in _type_ids:
+			var lv := Mastery.level_of(t)
+			if lv > Mastery.start_level() or SaveManager.mastery.has(t):
+				ml.append("%s %d" % [DataDB.table("weapon_types")[t]["name"], lv])
+		lines.append("Ustalık (kalıcı): %s · Boss ilk kesişi: %d (+%%%s hasar)" % [", ".join(ml) if not ml.is_empty() else "hepsi level %d" % Mastery.start_level(),
+			SaveManager.boss_first_kills.size(), Rewards._pct(RunBonuses.first_kill_bonus())])
 	var kit := RaceKit.new(rid, lvl)
 	for slot: int in 2:
 		var wc: Dictionary = config["weapons"][slot]

@@ -284,7 +284,8 @@ func _item_id(it: Variant) -> String:
 
 
 ## Geçici kural: 2. kata inince level en az 15 olur (Aşama 6'ya kadar); kilidi açılan silahlar bildirilir.
-func test_interim_floor_min_level_and_unlock() -> void:
+## Aşama 6: geçici "kata inince level alt sınıra çıkar" kuralı kalktı; level yalnızca XP ile artar ve kilit açılır.
+func test_no_interim_level_xp_unlocks() -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	var run := DungeonRun.new()
 	run.fixed_seed = 12
@@ -293,9 +294,13 @@ func test_interim_floor_min_level_and_unlock() -> void:
 	run.set_player_level(1)
 	assert_eq(run.player.level, 1)
 	run.enter_floor(2)
-	assert_eq(GameState.level, 15, "2. katta en az level 15")
-	assert_eq(run.player.level, 15)
+	assert_eq(GameState.level, 1, "kata inmek leveli değiştirmez")
+	assert_true((GameState.inventory.slots["resonance"] as Weapon).is_locked(GameState.level), "hâlâ kilitli")
+	run.grant_xp(Leveling.xp_between(1, 12))
+	assert_eq(GameState.level, 12, "XP ile level 12")
+	assert_eq(run.player.level, 12)
 	assert_true(not (GameState.inventory.slots["resonance"] as Weapon).is_locked(GameState.level), "kilidi açıldı")
+	assert_eq(GameState.pending_rewards, ["level:5", "level:10"] as Array[String], "5 ve 10'da level ödülü sırada")
 	run.free()
 	for n: Node in tree.get_nodes_in_group("enemies"):
 		n.free()

@@ -23,7 +23,7 @@ var speed_tiles: float = 12.0
 var max_range: float = 8.0
 var radius_tiles: float = 0.25
 var pierce: int = 0            ## kaç düşmanı deler; -1 = hepsini
-var kind: String = "arrow"     ## çizim: arrow, bolt, page, orb, axe, spear, big_orb
+var kind: String = "arrow"     ## çizim: arrow, bolt, page, orb, axe, spear, big_orb, wave (Ek mermi: kılıç dalgası)
 var color: Color = Color.WHITE
 
 var homing_range: float = 0.0  ## > 0 ise en yakın düşmana döner
@@ -45,6 +45,10 @@ var _home_target: Node2D
 func _ready() -> void:
 	z_index = 3
 	dir_cart = dir_cart.normalized()
+	# Boss özel etkisi Delici: delmeyen mermiler 1 düşman deler (patlayan küre ve saplanan mızrak hariç)
+	var pd := GameState.special("piercing")
+	if not pd.is_empty() and pierce >= 0 and explode_radius <= 0.0 and not stick:
+		pierce += int(pd["pierce"])
 
 
 func _physics_process(delta: float) -> void:
@@ -222,6 +226,14 @@ func _draw() -> void:
 			draw_circle(up, rad * 1.8, Color(color, 0.25))
 			draw_circle(up, rad, color.lightened(0.2))
 			draw_circle(up - Vector2(rad * 0.3, rad * 0.3), rad * 0.4, Color(1, 1, 1, 0.8))
+		"wave":
+			# Kılıç dalgası: ilerleme yönüne dik, hilal biçiminde
+			var pts := PackedVector2Array()
+			for i: int in 9:
+				var k := -1.0 + 2.0 * i / 8.0
+				pts.append(up + n * k * 16.0 - d * (k * k) * 8.0)
+			draw_polyline(pts, Color(color, 0.35), 9.0)
+			draw_polyline(pts, color.lightened(0.45), 3.0)
 		"axe":
 			var a := _t * 22.0
 			for i: int in 2:

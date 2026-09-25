@@ -1,6 +1,8 @@
 ## WeaponInfo — eşya tooltip'i ve stat karşılaştırması (GDD: Görsel Stil > Arayüz: stat karşılaştırmalı tooltip).
 ## Saf hesaptır: silahın oyuncunun ırkı ve leveliyle vuruş hasarı, saldırı hızı, DPS ve menzili; karşılaştırılan silaha
 ## (aktif silah) göre farklar. Metin RichTextLabel için BBCode'dur.
+## Aşama 6: statlara run ödülleri, silah tipinin ustalığı (hasar U terimi dahil) ve boss ilk kesiş bonusu da girer;
+## tooltip'te tipin ustalık leveli ve bonusları yazar.
 class_name WeaponInfo
 extends RefCounted
 
@@ -10,11 +12,11 @@ const BAD := "#ff7a6e"
 const DIM := "#a8a8b4"
 
 
-## Silahın bu ırk ve levelle statları (ustalık ve ödüller hariç; onlar Aşama 6'da).
+## Silahın bu ırk ve levelle statları: run ödülleri, tipinin ustalığı ve ilk kesiş bonusu dahil (RunBonuses).
 static func stats(w: Weapon, race_id: String, player_level: int) -> Dictionary:
-	var s := RaceStats.compute(race_id, player_level, w.family())
+	var s := RaceStats.compute(race_id, player_level, w.family(), RunBonuses.for_weapon(w.type_id))
 	var caps: Dictionary = DataDB.get_value("progression", "stat_caps")
-	var hit := w.hit_damage() * (1.0 + s.damage_buffs)
+	var hit := w.hit_damage() * (1.0 + DamageCalc.mastery_bonus(Mastery.level_of(w.type_id))) * (1.0 + s.damage_buffs)
 	if w.is_elemental():
 		var el: Dictionary = DataDB.table("elements")["elements"][w.element]
 		hit *= (1.0 + s.element_bonus) * float(el.get("damage_mult", 1.0))
@@ -85,6 +87,7 @@ static func tooltip(item: Variant, race_id: String, player_level: int, compare: 
 	lines.append("Vuruş hasarı [b]%d[/b] · Saldırı/sn [b]%s[/b] · DPS [b]%d[/b] · Menzil [b]%s[/b] karo" % [
 		roundi(st["hit"]), _num(snappedf(float(st["aps"]), 0.01)), roundi(st["dps"]), _num(snappedf(float(st["range"]), 0.1))])
 	lines.append("Sağ tık: %s · Irk etkisi: %s" % [w.type_data()["heavy"]["name"], RaceStats.matrix_text(race_id, w.family())])
+	lines.append(mastery_line(w.type_id))
 	var combat: Dictionary = DataDB.get_value("progression", "combat")
 	var rpct := float(combat["resonance_locked_pct"] if w.is_locked(player_level) else combat["resonance_unlocked_pct"])
 	lines.append("[color=%s]Rezonans'ta: her vuruşa +%d %s hasarı (%%%d) · Esnek'te: özellikler ve pasif %%%d[/color]" % [
@@ -96,6 +99,19 @@ static func tooltip(item: Variant, race_id: String, player_level: int, compare: 
 	if price_line != "":
 		lines.append(price_line)
 	return "\n".join(lines)
+
+
+## "Ustalık (Kılıç): Level 3 — hasar +%15, hız +%10, menzil +%5, element +%7,5" (kalıcı, silah tipine bağlı).
+static func mastery_line(type_id: String) -> String:
+	var lv := Mastery.level_of(type_id)
+	var b := Mastery.stat_bonuses(lv)
+	var need := Mastery.xp_to_next(lv)
+	var e: Dictionary = SaveManager.mastery.get(type_id, {})
+	var prog := "maks" if need <= 0.0 else "XP %d / %d" % [floori(float(e.get("xp", 0.0))), roundi(need)]
+	return "[color=#d9c38a]Ustalık (%s): Level %d — hasar +%%%s, hız +%%%s, menzil +%%%s, element +%%%s (%s)[/color]" % [
+		DataDB.table("weapon_types")[type_id]["name"], lv, _num(Mastery.bonus(lv, "damage") * 100.0),
+		_num(snappedf(float(b["attack_speed"]) * 100.0, 0.01)), _num(snappedf(float(b["attack_range"]) * 100.0, 0.01)),
+		_num(snappedf(float(b["element_damage"]) * 100.0, 0.01)), prog]
 
 
 ## "Aktif silahla kıyas (Kılıç): DPS +%12 · Vuruş −%5 · Menzil +0,5"

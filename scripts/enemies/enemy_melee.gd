@@ -24,6 +24,8 @@ var hp_mult: float = 1.0
 var damage_mult: float = 1.0
 var body_scale: float = 1.0
 var name_override: String = ""
+## Boss'un kaydı (bosses.json id'si; ilk kesiş bonusu için). Boss değilse boş.
+var boss_id: String = ""
 ## Zindanda engellerin etrafından dolaşma: (kendi konumu, hedef konumu) -> düz uzayda birim yön (DungeonNav).
 var navigator: Callable
 

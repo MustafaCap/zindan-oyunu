@@ -148,7 +148,7 @@ func test_legendary_death_burst_and_frenzy() -> void:
 	var p2 := _player("ghost", fw)
 	var before := p2.attack_interval()
 	p2.effects.on_kill(null, false)
-	assert_almost(p2.attack_interval(), 1.0 / (0.9 * 1.25), 0.0001, "öldürme sonrası +%25 saldırı hızı")
+	assert_almost(p2.attack_interval(), 1.0 / (0.9 * (1.25 + Mastery.bonus(1, "attack_speed"))), 0.0001, "öldürme sonrası +%25 saldırı hızı")
 	assert_true(p2.attack_interval() < before)
 	p2.effects.tick(4.1)
 	assert_almost(p2.attack_interval(), before, 0.0001)

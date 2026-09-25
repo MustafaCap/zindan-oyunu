@@ -4,6 +4,12 @@
 extends Node
 
 const DATA_DIR := "res://data"
+## Ödül havuzlarında kullanılabilen statlar (Player/RaceStats bunları işler) ve boss özel etkileri (Aşama 6).
+const REWARD_STATS := ["attack_speed", "damage", "element_damage", "skill_damage", "max_hp", "crit_chance", "crit_damage",
+	"attack_range", "move_speed", "cooldown_reduction", "dash_cooldown_reduction", "damage_reduction", "lifesteal",
+	"xp_gain", "gold_find"]
+const SPECIAL_EFFECTS := ["double_hit", "extra_projectile", "piercing", "element_trail", "combo_master", "crit_chain",
+	"resonance_boost", "wrath", "executioner", "spare_potion", "second_chance"]
 
 ## Her dosyanın beklenen yapısı.
 ## - "string" / "number" / "bool" / "array" / "dict": alanın tipi
@@ -70,6 +76,8 @@ const SCHEMA := {
 	"rewards": {
 		"choices_per_offer": "number",
 		"level_reward_every": "number",
+		"reward_after_combat": "bool",
+		"boss_reward_on_final_floor": "bool",
 		"level_pool": {"_each": {"name": "string", "value": "number"}},
 		"boss_major_pool": {"_each": {"name": "string", "value": "number"}},
 		"boss_special_pool": {"_each": {"name": "string", "description": "string"}},
@@ -78,7 +86,7 @@ const SCHEMA := {
 		"player": {"max_level": "number", "xp_base": "number", "xp_per_level": "number"},
 		"enemy_xp": {"_each": {"normal": "number", "elite": "number", "boss": "number"}},
 		"weapon": {"max_level": "number", "bonus_step_levels": "number", "bonus_per_step": "number", "catch_up_xp_mult": "number"},
-		"mastery": {"max_level": "number", "reference_match_xp": "number", "xp_to_next": "array", "bonus_at_max": "dict", "depth_multipliers": "dict"},
+		"mastery": {"max_level": "number", "start_level": "number", "reference_match_xp": "number", "xp_to_next": "array", "bonus_at_max": "dict", "depth_multipliers": "dict"},
 		"stat_caps": "dict",
 		"combat": {
 			"base_crit_chance": "number", "base_crit_mult": "number", "dash_cooldown": "number", "dash_iframes": "number",
@@ -118,7 +126,6 @@ const SCHEMA := {
 		"blacksmith": {"level_up_cost_per_level": "number", "reroll_element_cost": "number", "reroll_trait_cost": "number",
 			"reroll_cost_growth": "number"},
 		"weapon_xp": {"xp_slots": "array", "locked_gains_xp": "bool"},
-		"interim_floor_min_level": "bool",
 	},
 	"dungeon": {
 		"grid_cell_tiles": "number", "corridor_width": "number", "main_path_ratio": "number", "min_combat_rooms": "number",
@@ -464,6 +471,20 @@ func _cross_check() -> void:
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
 		errors.append("progression.mastery.xp_to_next: %d eleman olmalı (max_level - 1)" % (int(mastery["max_level"]) - 1))
+	for dk: String in ["death_floor_1", "death_floor_2", "clear_floor_2", "death_floor_3", "death_floor_4", "victory"]:
+		if not (mastery["depth_multipliers"] as Dictionary).has(dk):
+			errors.append("progression.mastery.depth_multipliers: eksik alan '%s'" % dk)
+	for mk: String in ["damage", "attack_speed", "attack_range", "element_damage"]:
+		if not (mastery["bonus_at_max"] as Dictionary).has(mk):
+			errors.append("progression.mastery.bonus_at_max: eksik alan '%s'" % mk)
+	# Ödül havuzlarındaki statlar oyunun tanıdığı statlar olmalı (RaceStats.REWARD_STATS)
+	for pool: String in ["level_pool", "boss_major_pool"]:
+		for sid: String in _records(tables["rewards"][pool]):
+			if not sid in REWARD_STATS:
+				errors.append("rewards.%s: bilinmeyen stat '%s'" % [pool, sid])
+	for sp: String in _records(tables["rewards"]["boss_special_pool"]):
+		if not sp in SPECIAL_EFFECTS:
+			errors.append("rewards.boss_special_pool: bilinmeyen özel etki '%s'" % sp)
 
 
 ## Irkın kaynak, harcama, bekleme ve yetenek sayılarını denetler.

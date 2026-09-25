@@ -4,6 +4,7 @@
 ##   Magical: Mana 120 + level × 4, saniyede maks mananın %3'ü. Sol tık, sağ tık, Q, E mana harcar.
 ##   Archer / Ghost: kaynak yok; sağ tık, Q ve E bekleme sürelidir.
 ## Magical dışındaki ırk büyü silahı (kitap, asa, rün) kullanırsa sağ tık bekleme süresi ×1,5 olur ve sol tık bedavadır.
+## Aşama 6: cooldown_reduction (ödüller, tavan %40) başlayan beklemeleri kısaltır; reduce() Kritik zinciri için.
 class_name RaceKit
 extends RefCounted
 
@@ -15,6 +16,7 @@ var resource: float = 0.0
 var resource_max: float = 0.0
 var cooldowns: Dictionary = {"heavy": 0.0, "q": 0.0, "e": 0.0}      ## kalan süre
 var cooldown_totals: Dictionary = {"heavy": 1.0, "q": 1.0, "e": 1.0} ## son başlatılan toplam süre (gösterge için)
+var cooldown_reduction: float = 0.0   ## Player statlardan verir (tavan uygulanmış)
 
 var _race: Dictionary
 var _res: Dictionary
@@ -78,7 +80,7 @@ func cooldown_for(slot: String, weapon_family: String) -> float:
 	# Magical dışı ırkların hepsinin sağ tık beklemesi vardır (DataDB denetler).
 	if slot == "heavy" and is_foreign_spell_weapon(weapon_family):
 		base *= float(DataDB.get_value("progression", "combat.non_magical_spell_cooldown_mult"))
-	return base
+	return base * (1.0 - clampf(cooldown_reduction, 0.0, 1.0))
 
 
 func is_ready(slot: String) -> bool:
@@ -121,3 +123,9 @@ func on_hit_landed(attack_id: int) -> void:
 		return
 	_last_hit_attack_id = attack_id
 	resource = minf(resource + float(_res["gain_on_hit"]), resource_max)
+
+
+## Sağ tık, Q ve E beklemelerini sn kadar kısaltır (boss özel etkisi Kritik zinciri).
+func reduce(seconds: float) -> void:
+	for s: String in SLOTS:
+		cooldowns[s] = maxf(float(cooldowns[s]) - seconds, 0.0)

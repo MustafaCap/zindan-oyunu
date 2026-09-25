@@ -6,6 +6,10 @@
 ## Girdi üç kaynaktan gelir: klavye/fare, autoplay botu (smoke testi) ya da external_intent (matris testi).
 ## Aşama 5: zindanda silahlar, Rezonans/Esnek slot ve iksirler Inventory'den gelir (load_loadout); eşya etkileri
 ## (Rezonans ek hasarı, Esnek slot, tılsımlar, efsanevi pasif ve sağ tık ekleri) ItemEffects'te işlenir.
+## Aşama 6: statlara run ödülleri, silah tipi ustalığı ve boss ilk kesiş bonusu eklenir (RunBonuses → RaceStats); ustalığın
+## hasar bonusu formülün U terimidir. Boss özel etkileri (GameState.special_effects): Çift vuruş, Kritik zinciri, Kombo
+## ustası, Hiddet, Cellat, Element izi, İkinci şans burada; Ek mermi WeaponAttacks'ta, Delici Projectile'da, Rezonans
+## güçlendirme ItemEffects'te, Yedek iksir seçildiği anda (DungeonRun) işler.
 class_name Player
 extends CharacterBody2D
 
@@ -15,6 +19,8 @@ signal health_changed(hp: float, max_hp: float)
 const SlashFx := preload("res://scripts/fx/slash_fx.gd")
 const MASK_WALLS := 1
 const MASK_OBSTACLES := 8
+## Skill hasarı ödülünün işlediği vuruş kaynakları (sağ tık, Q, E).
+const SKILL_SOURCES := ["heavy", "q", "e"]
 
 var race_id: String = "warrior"
 var level: int = 1
@@ -145,12 +151,26 @@ func weapon() -> Weapon:
 	return weapons[active_index]
 
 
-## Silahın ailesine göre ırk statları (önbellekli). Mermiler ateşlendiği silahın statını kullanır.
+## Silahın statları: ırk + ailesine göre ırk-silah matrisi + run ödülleri + tipinin ustalığı + ilk kesiş bonusu
+## (önbellekli, silah tipine göre). Mermiler ateşlendiği silahın statını kullanır.
 func stats_for(w: Weapon) -> RaceStats:
-	var fam := w.family()
-	if not _stats_cache.has(fam):
-		_stats_cache[fam] = RaceStats.compute(race_id, level, fam)
-	return _stats_cache[fam]
+	var key := w.type_id
+	if not _stats_cache.has(key):
+		_stats_cache[key] = RaceStats.compute(race_id, level, w.family(), RunBonuses.for_weapon(w.type_id))
+	return _stats_cache[key]
+
+
+## Ödül seçilince, ilk kesiş bonusu gelince ya da ustalık değişince statlar yeniden hesaplanır (can oranı korunur).
+func refresh_bonuses() -> void:
+	_stats_cache.clear()
+	_apply_stats()
+
+
+## Aktif silahla statların tavansız toplamları (ödül havuzu tavana ulaşan statı çıkarır).
+func stat_totals() -> Dictionary:
+	var t: Dictionary = stats.totals.duplicate()
+	t["dash_cooldown_reduction"] = float(t.get("dash_cooldown_reduction", 0.0)) + effects.dash_cooldown_reduction()
+	return t
 
 
 ## Aktif silah değişince maks can, hız, zırh ve bonuslar yeniden hesaplanır; can oranı korunur.
@@ -161,6 +181,7 @@ func _apply_stats(fill: bool = false) -> void:
 	hp = max_hp if fill else clampf(max_hp * ratio, 0.0, max_hp)
 	move_speed_tiles = float(_combat["base_move_speed"]) * stats.move_speed_mult
 	defense = _make_defense()
+	kit.cooldown_reduction = stats.cooldown_reduction
 	health_changed.emit(hp, max_hp)
 
 
@@ -189,11 +210,11 @@ func attack_range(w: Weapon = null) -> float:
 	return float(ww.type_data()["range"]) * (1.0 + stats_for(ww).attack_range_bonus)
 
 
-## Saldırı hızı bonusu: ırk/matris + eşyaların geçici bonusu (efsanevi pasif), tavana uyar.
+## Saldırı hızı bonusu: ırk/matris, ödüller, ustalık + eşyaların geçici bonusu (efsanevi pasif); toplam tavana uyar.
 func attack_speed_bonus(w: Weapon = null) -> float:
 	var ww := w if w else weapon()
 	var extra := effects.attack_speed_bonus() if effects else 0.0
-	return minf(stats_for(ww).attack_speed_bonus + extra, float(DataDB.get_value("progression", "stat_caps.attack_speed")))
+	return minf(float(stats_for(ww).totals["attack_speed"]) + extra, float(DataDB.get_value("progression", "stat_caps.attack_speed")))
 
 
 func attack_interval(w: Weapon = null) -> float:
@@ -334,14 +355,43 @@ func _empty_intent() -> Dictionary:
 
 func _start_dash(move_cart: Vector2) -> void:
 	var dir := move_cart.normalized() if move_cart.length() > 0.1 else facing_cart
-	dash_cd_max = float(_combat["dash_cooldown"]) * effects.dash_cooldown_mult()
+	dash_cd_max = float(_combat["dash_cooldown"]) * (1.0 - dash_cooldown_reduction())
 	dash_cd = dash_cd_max
 	effects.on_dash()
 	iframes = maxf(iframes, float(_combat["dash_iframes"]))
 	var dur := float(_combat["dash_duration"])
-	move_override(Iso.to_screen(dir * Iso.tiles(float(_combat["dash_distance"])) / dur), dur)
+	var from := global_position
+	var done := Callable()
+	if GameState.has_special("element_trail"):
+		done = func() -> void: _element_trail(from, global_position)
+	move_override(Iso.to_screen(dir * Iso.tiles(float(_combat["dash_distance"])) / dur), dur, done)
 	Events.player_dashed.emit(global_position)
 	afterimage(Color(0.5, 0.8, 1.0, 0.5))
+
+
+## Space bekleme süresi azaltma: ödüller + Rüzgâr Tüyü, toplam tavana uyar (progression.stat_caps).
+func dash_cooldown_reduction() -> float:
+	return minf(float(stats.totals.get("dash_cooldown_reduction", 0.0)) + effects.dash_cooldown_reduction(),
+		float(DataDB.get_value("progression", "stat_caps.dash_cooldown_reduction")))
+
+
+## Boss özel etkisi Element izi: atılma yolunun başında, ortasında ve sonunda aktif silahın elementinde yerde iz.
+func _element_trail(from: Vector2, to: Vector2) -> void:
+	var td := GameState.special("element_trail")
+	if td.is_empty() or dead or not is_inside_tree():
+		return
+	var w := weapon()
+	var n := maxi(int(td["segments"]), 1)
+	for i: int in n:
+		var g := WeaponAttacks.make_ground(self, w, "trail", float(td["damage_pct"]))
+		g.mode = "pulses"
+		g.look = "trail"
+		g.radius = float(td["radius"])
+		g.delay = 0.05
+		g.pulses = int(td["pulses"])
+		g.interval = float(td["interval"])
+		g.color = Weapon.kind_color(w.element)
+		spawn(g, from.lerp(to, float(i) / maxf(n - 1, 1)))
 
 
 ## Bir süre boyunca sabit hızla hareket (atılma, geri sıçrama, saplama). done: bitince çağrılır.
@@ -566,27 +616,58 @@ func target_point(max_range: float) -> Vector2:
 
 ## Bütün oyuncu vuruşları buradan geçer: ırk statları + buff'lar → HitResolver.
 ## source: "light", "heavy", "q", "e" (hasar kaydı). attack_id: Warrior enerjisi saldırı başına bir kez.
+## Aşama 6: ustalık (U), kritik hasarı, skill hasarı (sağ tık, Q, E), ödüllerden can emme ve boss özel etkileri eklenir.
 func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, attack_id: int, opts: Dictionary = {}) -> Dictionary:
 	if target == null or target.get("dead"):
 		return {}
 	var s := stats_for(w)
 	var o := opts.duplicate()
 	var eo := effects.hit_opts()
+	var skill := s.skill_damage if source in SKILL_SOURCES else 0.0
 	o["skill_mult"] = skill_mult
-	o["damage_buffs"] = s.damage_buffs + ability_damage_buff() + float(o.get("damage_buffs", 0.0)) + float(eo["damage_buffs"])
+	o["mastery_level"] = Mastery.level_of(w.type_id)
+	o["damage_buffs"] = s.damage_buffs + skill + ability_damage_buff() + float(o.get("damage_buffs", 0.0)) + float(eo["damage_buffs"])
 	o["element_bonus"] = s.element_bonus + float(o.get("element_bonus", 0.0)) + float(eo["element_bonus"])
+	o["crit_damage_bonus"] = s.crit_damage_bonus + float(o.get("crit_damage_bonus", 0.0))
 	if eo.has("flex_traits"):
 		o["flex_traits"] = eo["flex_traits"]
 		o["flex_scale"] = eo["flex_scale"]
 	o["crit_bonus_chance"] = s.crit_bonus + float(o.get("crit_bonus_chance", 0.0))
+	var cm := GameState.special("combo_master")
+	if not cm.is_empty():
+		o["combo_damage_bonus"] = float(o.get("combo_damage_bonus", 0.0)) + float(cm["combo_damage"])
+	var wr := GameState.special("wrath")
+	if not wr.is_empty():
+		o["fury_max"] = float(wr["fury_max"])
+	var ex := GameState.special("executioner")
+	if not ex.is_empty():
+		o["execute_bonus"] = float(ex["threshold_bonus"])
+		o["execute_boss_bonus"] = float(ex["boss_threshold_bonus"])
 	if not o.has("dir"):
 		var d := Iso.to_cart(target.global_position - global_position)
 		o["dir"] = d.normalized() if d.length() > 0.01 else facing_cart
 	var res := HitResolver.resolve(self, w, target, o, get_tree().get_nodes_in_group("enemies"), rng)
-	damage_by_source[source] = float(damage_by_source.get(source, 0.0)) + float(res.get("damage", 0.0))
-	if float(res.get("damage", 0.0)) > 0.0:
+	var dealt := float(res.get("damage", 0.0))
+	var src_key := "light" if source == "light_extra" else source
+	damage_by_source[src_key] = float(damage_by_source.get(src_key, 0.0)) + dealt
+	if dealt > 0.0:
 		kit.on_hit_landed(attack_id)
+		# Ödüllerden can emme (Ghost'ta öldürme başına iyileşmeye dönüşür: heal() Ghost'ta çalışmaz)
+		if s.lifesteal > 0.0:
+			heal(dealt * s.lifesteal)
 	effects.after_hit(target, w, res, attack_id, o)
+	# Kritik zinciri: kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır
+	var cc := GameState.special("crit_chain")
+	if bool(res.get("crit", false)) and not cc.is_empty() and rng.randf() < float(cc["chance"]):
+		kit.reduce(float(cc["seconds"]))
+	# Çift vuruş: normal saldırı %25 ihtimalle aynı hedefe bir kez daha vurur
+	var dh := GameState.special("double_hit")
+	if source == "light" and not bool(opts.get("repeat", false)) and not dh.is_empty() \
+			and is_instance_valid(target) and not target.get("dead") and rng.randf() < float(dh["chance"]):
+		Events.floating_text.emit(target.global_position + Vector2(0, -80), "ÇİFT", Color(1.0, 0.85, 0.5), 16)
+		var o2 := opts.duplicate()
+		o2["repeat"] = true
+		deal_hit(target, w, source, skill_mult, attack_id, o2)
 	return res
 
 
@@ -647,6 +728,8 @@ func _on_enemy_killed(enemy: Node, is_elite: bool, _is_boss: bool) -> void:
 		# Can Emme: aktif silahta tam, Esnek slottaki silahta %9 (GDD: Ghost'ta öldürme başına iyileşmeye dönüşür)
 		var ls := HitResolver.trait_scale(weapon(), "lifesteal", effects.hit_opts())
 		pct += float(Traits.data("lifesteal")["pct"]) * ls
+		# Ödüllerden can emme de öldürme başına aynı yüzde kadar maks can iyileşmesine dönüşür
+		pct += stats.lifesteal
 	if enemy == null:
 		return
 	restore(max_hp * pct)
@@ -673,8 +756,23 @@ func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCa
 	Events.player_damaged.emit(dmg)
 	Events.damage_number.emit(global_position + Vector2(0, -40), dmg, false, true, kind)
 	health_changed.emit(hp, max_hp)
-	if hp <= 0.0:
+	if hp <= 0.0 and not _try_second_chance():
 		_die()
+
+
+## Boss özel etkisi İkinci şans: ölünce bir kez %30 canla dirilir (kısa dokunulmazlıkla).
+func _try_second_chance() -> bool:
+	var sc := GameState.special("second_chance")
+	if sc.is_empty() or GameState.second_chance_used:
+		return false
+	GameState.second_chance_used = true
+	hp = max_hp * float(sc["revive_hp"])
+	iframes = float(sc["iframes"])
+	visual.flash(0.3, Color(1.0, 0.9, 0.5))
+	Events.floating_text.emit(global_position + Vector2(0, -90), "İKİNCİ ŞANS!", Color(1.0, 0.85, 0.4), 28)
+	Events.area_pulse.emit(global_position, 2.0, Color(1.0, 0.85, 0.4))
+	health_changed.emit(hp, max_hp)
+	return true
 
 
 func _die() -> void:

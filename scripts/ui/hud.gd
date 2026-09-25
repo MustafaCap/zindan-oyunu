@@ -3,6 +3,7 @@
 ## Aşama 3: ırk ve level, Enerji/Mana barı, yetenek adları ve bedelleri, iksir sayısı.
 ## Aşama 4: kat/oda bilgisi, etkileşim ipucu ("F: ..."), boss can barı; tuş ipuçları sahneye göre değişir.
 ## Aşama 5: altın, iksir (x / maks), silah levelleri (kilitliyse işaret), Rezonans ve Esnek slot kutuları.
+## Aşama 6: XP barı (level, XP / sonraki level), alınan run ödülleri satırı, bekleyen ödül uyarısı.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu yalnızca test için.
 class_name Hud
 extends CanvasLayer
@@ -38,7 +39,7 @@ func _ready() -> void:
 	_center.position.y -= 160
 
 	_info = _make_label(22, Color(0.85, 0.85, 0.9))
-	_info.position = Vector2(32, 104)
+	_info.position = Vector2(32, 112)
 
 	_hint_lines = PackedStringArray([
 		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · R yeniden başla · Esc çık",
@@ -113,6 +114,23 @@ func _draw_panel() -> void:
 		_panel.draw_rect(Rect2(rp, rs), kit.resource_color().darkened(0.7))
 		_panel.draw_rect(Rect2(rp, Vector2(rs.x * kit.resource / maxf(kit.resource_max, 1.0), rs.y)), kit.resource_color())
 		_text(rp + Vector2(8, 12), "%s %d / %d" % [kit.resource_name(), floori(kit.resource), roundi(kit.resource_max)], 13, Color.WHITE)
+	# XP barı (zindanda: oyuncu leveli ve XP)
+	if show_economy:
+		var xp_pos := pos + Vector2(0, 56)
+		var xs := Vector2(size.x, 8)
+		var need := Leveling.xp_to_next(GameState.level)
+		var maxed := GameState.level >= Leveling.max_level()
+		var k := 1.0 if maxed else clampf(GameState.xp / maxf(need, 1.0), 0.0, 1.0)
+		_panel.draw_rect(Rect2(xp_pos - Vector2(2, 2), xs + Vector2(4, 4)), Color(0, 0, 0, 0.75))
+		_panel.draw_rect(Rect2(xp_pos, xs), Color(0.15, 0.13, 0.05))
+		_panel.draw_rect(Rect2(xp_pos, Vector2(xs.x * k, xs.y)), Color(0.95, 0.8, 0.25))
+		var xp_txt := "Level %d · XP %s" % [GameState.level, "MAKS" if maxed else "%d / %d" % [floori(GameState.xp), roundi(need)]]
+		if not GameState.pending_rewards.is_empty():
+			xp_txt += " · Ödül bekliyor (oda temizlenince)"
+		_text(xp_pos + Vector2(xs.x + 12, 9), xp_txt, 15, Color(1.0, 0.9, 0.55))
+		var bt := rewards_text()
+		if bt != "":
+			_text(Vector2(32, vp_bonus_y()), bt, 15, Color(0.75, 0.85, 1.0))
 	# Yetenek göstergeleri (alt orta): Sağ tık, Q, E, Space
 	var vp := _panel.size
 	var w := player.weapon()
@@ -196,7 +214,8 @@ func _mini_slot(p: Vector2, title: String, it: Variant) -> void:
 		border = w.rarity_color()
 		line1 = "%s: %s · Lv %d" % [title, w.display_name(), w.level]
 		if title == "Rezonans":
-			line2 = "+%d %s/vuruş (%s)" % [roundi(w.hit_damage() * player.effects.resonance_pct()), Weapon.kind_name(w.element), "kilitli %10" if w.is_locked(player.level) else "açık %7"]
+			var rp := player.effects.resonance_pct()
+			line2 = "+%d %s/vuruş (%s %%%d)" % [roundi(w.hit_damage() * rp), Weapon.kind_name(w.element), "kilitli" if w.is_locked(player.level) else "açık", roundi(rp * 100.0)]
 		else:
 			line2 = "özellik/pasif %%9: %s" % (", ".join(w.traits.map(func(t: String) -> String: return str(Traits.data(t)["name"]))) if not w.traits.is_empty() else "özelliği yok")
 	elif it is Talisman:
@@ -227,6 +246,26 @@ func _cooldown_box(p: Vector2, key: String, label: String, cd: float, cd_max: fl
 	_panel.draw_rect(Rect2(p, s), Color(0.9, 0.8, 0.5) if ready else Color(0.4, 0.4, 0.45), false, 2.0)
 	_panel.draw_string_outline(font, p + Vector2(-8, s.y + 18), label, HORIZONTAL_ALIGNMENT_CENTER, s.x + 16, 12, 4, Color.BLACK)
 	_panel.draw_string(font, p + Vector2(-8, s.y + 18), label, HORIZONTAL_ALIGNMENT_CENTER, s.x + 16, 12, Color(0.8, 0.8, 0.85))
+
+
+## Alınan run ödülleri: "Ödüller: Hasar +%10 · Kritik şansı +%3 · Çift vuruş" (boşsa "").
+func rewards_text() -> String:
+	var parts: PackedStringArray = []
+	var pool: Dictionary = DataDB.table("rewards")["level_pool"]
+	for k: Variant in GameState.buffs.keys():
+		var v := float(GameState.buffs[k])
+		if v > 0.0 and pool.has(str(k)):
+			parts.append("%s %s" % [pool[str(k)]["name"], Rewards.stat_text(str(k), v)])
+	for sp: String in GameState.special_effects:
+		parts.append(str(Rewards.special_data(sp)["name"]))
+	if parts.is_empty():
+		return ""
+	return "Ödüller: " + " · ".join(parts)
+
+
+## Ödül satırının yeri: kat/oda bilgisinin altında.
+func vp_bonus_y() -> float:
+	return 192.0
 
 
 func _text(p: Vector2, text: String, size: int, color: Color) -> void:
