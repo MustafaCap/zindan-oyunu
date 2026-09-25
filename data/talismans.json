@@ -1,5 +1,5 @@
 {
-  "blood_stone":   { "name": "Kan Taşı",      "description": "Her öldürme 10 sn boyunca +%2 hasar verir, maks 5 yığın", "damage_per_stack": 0.02, "duration": 10.0, "max_stacks": 5 },
-  "wind_feather":  { "name": "Rüzgâr Tüyü",   "description": "Space bekleme süresi %30 azalır; atılmadan sonra 2 sn +%15 hareket hızı", "dash_cooldown_reduction": 0.30, "move_speed_bonus": 0.15, "duration": 2.0 },
-  "element_heart": { "name": "Element Kalbi", "description": "Bir kombo tetiklenince 3 sn boyunca +%20 element hasarı", "element_damage_bonus": 0.20, "duration": 3.0 }
+  "blood_stone":   { "name": "Kan Taşı",      "color": "#d9263a",      "description": "Her öldürme 10 sn boyunca +%2 hasar verir, maks 5 yığın", "damage_per_stack": 0.02, "duration": 10.0, "max_stacks": 5 },
+  "wind_feather":  { "name": "Rüzgâr Tüyü",   "color": "#8ce6d9",   "description": "Space bekleme süresi %30 azalır; atılmadan sonra 2 sn +%15 hareket hızı", "dash_cooldown_reduction": 0.30, "move_speed_bonus": 0.15, "duration": 2.0 },
+  "element_heart": { "name": "Element Kalbi", "color": "#f2b233", "description": "Bir kombo tetiklenince 3 sn boyunca +%20 element hasarı", "element_damage_bonus": 0.20, "duration": 3.0 }
 }

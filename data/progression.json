@@ -35,6 +35,9 @@
   },
   "mastery": {
     "max_level": 12,
+    "start_level": 1,
+    "_default_start_level": "Her silah tipinin ustalığı level 1'den başlar (XP tablosu 1 → 2 ile başlıyor). Bonus = level × level başına bonus, yani level 1 de +%5 hasar, +%3,33 saldırı hızı, +%1,67 menzil, +%2,5 element verir (level 6'da +%30, 12'de +%60 — GDD tablosu).",
+    "_default_distribution": "Run bitince (ölüm ya da zafer) ustalık XP'si = reference_match_xp × derinlik çarpanı; run boyunca silah tiplerine göre verilen toplam hasarın (Rezonans ve efsanevi patlamalar dahil) yüzdesiyle bölünür. Hiç hasar verilmediyse XP işlenmez. Hata ayıklama menüsünden yeni harita açmak ya da oyunu kapatmak run'ı işlemez. 'clear_floor_2': 2. kat boss'u kesilip 3. kata inilmeden ölünce. Maks levelde XP birikmez.",
     "reference_match_xp": 100,
     "xp_to_next": [
       300,
@@ -69,7 +72,10 @@
     "attack_range": 0.5,
     "crit_chance": 0.6,
     "damage_reduction": 0.75,
-    "cooldown_reduction": 0.4
+    "cooldown_reduction": 0.4,
+    "dash_cooldown_reduction": 0.5,
+    "_default_dash_cooldown_reduction": "GDD'de Space bekleme süresi azaltmanın tavanı yok; sonsuz atılmayı önlemek için ödüller + Rüzgâr Tüyü toplamı %50 ile sınırlandı (en kısa bekleme 0,5 sn).",
+    "_default": "Her statın tavanı tüm kaynakların toplamına uygulanır: ırk pasifi, ırk-silah matrisi, level/boss ödülleri, aktif silahın ustalığı ve efsanevi pasifler. Kritik şansı tavanı temel %5 dahil toplam şanstır. Hasar azaltma tavanı ırk zırhı ve ödüllerin toplamına uygulanır."
   },
   "combat": {
     "base_crit_chance": 0.05,

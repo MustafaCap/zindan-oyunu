@@ -72,7 +72,8 @@ func test_sword_arc_hits_front_only() -> void:
 	assert_eq(front.hits.size(), 1, "öndeki vurulur")
 	assert_eq(back.hits.size(), 0, "arkadaki vurulmaz")
 	assert_eq(far.hits.size(), 0, "menzil dışı vurulmaz")
-	assert_almost(p.attack_cd, 1.0 / 1.4, 0.0001, "saldırı hızı 1,4/sn")
+	# Ustalık level 1 saldırı hızına +%3,33 ekler (Aşama 6)
+	assert_almost(p.attack_cd, 1.0 / (1.4 * (1.0 + Mastery.bonus(1, "attack_speed"))), 0.0001, "saldırı hızı 1,4/sn")
 
 
 func test_spear_thrust_is_narrow_and_long() -> void:
@@ -109,7 +110,7 @@ func test_bow_charge_shot_pierces_and_scales() -> void:
 	_step(1.0)
 	assert_eq(a.hits.size(), 1)
 	assert_eq(b.hits.size(), 1, "Güçlü atış deler")
-	assert_almost(float(a.hits[0]["amount"]), 100.0 * 0.9 * 3.0, 0.001, "tam dolumda ×3")
+	assert_almost(float(a.hits[0]["amount"]), 100.0 * 0.9 * 3.0 * (1.0 + Mastery.bonus(1, "damage")), 0.001, "tam dolumda ×3")
 
 
 func test_crossbow_scatter_five_bolts() -> void:

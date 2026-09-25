@@ -3,6 +3,10 @@
 ## Aşama 4: zindanda da açılır — "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında değil: GDD slot
 ## değişimi yalnızca oda dışında), "Bu kattan yeni harita" seçilen kattan yeni seed'le run başlatır, bir düğme de
 ## test odası ↔ zindan arasında geçer.
+## Aşama 5: zindanda "Uygula" yalnızca ırk ve leveli değiştirir (silahlar envanterdedir); "Loot (test)" satırı:
+## menüdeki iki silahı boş slotlara ekle, loot yağdır, +500 altın, slottaki silahlara +1000 XP.
+## Aşama 6: "İlerleme (test)" satırı: +1 / +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve
+## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
 ## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
 class_name DebugMenu
 extends CanvasLayer
@@ -94,7 +98,7 @@ func _build() -> void:
 
 	var title := _label("Hata Ayıklama Menüsü", 28, Color(1, 0.9, 0.6))
 	box.add_child(title)
-	var sub := "Irk, level ve iki aktif silahı seç; 'Uygula' yeni ayarı yerinde uygular (savaş dışında). (M / Esc: kapat)" \
+	var sub := "Irk ve level seç; 'Uygula' yerinde uygular (savaş dışında). Silahlar envanterde: 'Silahları boş slotlara ekle'. (M / Esc: kapat)" \
 		if context == "dungeon" else "Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (M / Esc: kapat)"
 	box.add_child(_label(sub, 15, Color(0.7, 0.7, 0.75)))
 
@@ -169,6 +173,32 @@ func _build() -> void:
 	_god.toggled.connect(func(on: bool) -> void: config["god"] = on)
 	dn_row.add_child(_god)
 
+	# Loot testi (yalnızca zindan)
+	var lt_row := _row(box, "Loot (test)")
+	lt_row.visible = context == "dungeon"
+	for pair: Array in [["add_weapons", "Silahları boş slotlara ekle"], ["loot_rain", "Loot yağdır"], ["gold", "+500 altın"], ["weapon_xp", "Silahlara +1000 XP"]]:
+		var lb := Button.new()
+		lb.text = str(pair[1])
+		lb.custom_minimum_size = Vector2(0, 38)
+		var act := str(pair[0])
+		lb.pressed.connect(func() -> void:
+			close()
+			action.emit(act, config.duplicate(true)))
+		lt_row.add_child(lb)
+
+	# İlerleme testi (yalnızca zindan)
+	var pr_row := _row(box, "İlerleme (test)")
+	pr_row.visible = context == "dungeon"
+	for pair2: Array in [["xp_1", "+1 level (XP)"], ["xp_5", "+5 level (XP)"], ["boss_reward", "Boss ödülü aç"], ["mastery_reset", "Ustalıkları sıfırla"]]:
+		var pb := Button.new()
+		pb.text = str(pair2[1])
+		pb.custom_minimum_size = Vector2(0, 38)
+		var act2 := str(pair2[0])
+		pb.pressed.connect(func() -> void:
+			close()
+			action.emit(act2, config.duplicate(true)))
+		pr_row.add_child(pb)
+
 	# Düşmanlar (yalnızca test odası)
 	var en_row := _row(box, "Düşmanlar")
 	_enemy_row = en_row
@@ -242,6 +272,14 @@ func _refresh_info() -> void:
 		res_txt += " %d" % int(res["max"])
 	lines.append("%s — Q: %s · E: %s · Kaynak: %s · Pasif: %s" % [race["name"], race["abilities"]["q"]["name"],
 		race["abilities"]["e"]["name"], res_txt, race["passive"]["description"]])
+	if context == "dungeon":
+		var ml: PackedStringArray = []
+		for t: String in _type_ids:
+			var lv := Mastery.level_of(t)
+			if lv > Mastery.start_level() or SaveManager.mastery.has(t):
+				ml.append("%s %d" % [DataDB.table("weapon_types")[t]["name"], lv])
+		lines.append("Ustalık (kalıcı): %s · Boss ilk kesişi: %d (+%%%s hasar)" % [", ".join(ml) if not ml.is_empty() else "hepsi level %d" % Mastery.start_level(),
+			SaveManager.boss_first_kills.size(), Rewards._pct(RunBonuses.first_kill_bonus())])
 	var kit := RaceKit.new(rid, lvl)
 	for slot: int in 2:
 		var wc: Dictionary = config["weapons"][slot]

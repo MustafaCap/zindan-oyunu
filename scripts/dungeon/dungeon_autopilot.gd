@@ -2,6 +2,8 @@
 ## Her katta odaları girişten derinlik öncelikli sırayla gezer (boss en sona), çatlak duvarı kırıp gizli odaya girer,
 ## sandık/tüccar/demirciyle etkileşir, savaş odalarında Player'ın savaş botu dövüşür. Boss kesilince merdivene yürür,
 ## bir alt kata iner. Yol bulma AStarGrid2D ile karo ızgarasında (engeller ve kapalı çatlak duvar geçilmez).
+## Aşama 5: savaş dışında yerdeki silah ve tılsımları toplar (uygun boş slot varsa; yer yoksa değiştirmez), tüccarda satar/alır, demircide
+## aktif silahı geliştirir (DungeonRun.bot_merchant / bot_blacksmith). Kat özetinde loot sayıları yazılır.
 ## Takılırsa (uzun süre ilerleyemezse) çıkış kodu 6, kat süresi dolarsa 3.
 class_name DungeonAutopilot
 extends Node
@@ -24,6 +26,7 @@ var _combat_t: float = 0.0
 var _status_t: float = 0.0
 var _break_t: float = 0.0
 var _combat_reported: bool = false
+var _ignored_drops: Dictionary = {}
 
 
 func _ready() -> void:
@@ -143,6 +146,10 @@ func _process(delta: float) -> void:
 ## Sıradaki hedef: {"cell", "kind": room/break/interact/stairs, "arrive"}
 func _current_goal() -> Dictionary:
 	var L := run.layout
+	# Yerde silah/tılsım varsa (gezilen odalarda, boş slot varken) önce onları topla
+	var drop := _nearest_item_drop()
+	if drop != null:
+		return {"cell": run.world_to_cell(drop.global_position), "kind": "pickup", "drop": drop, "arrive": 0.8}
 	# Boss kesildiyse merdiven
 	for pr: RoomProp in run.props:
 		if is_instance_valid(pr) and pr.kind == "stairs":
@@ -187,6 +194,10 @@ func _on_arrived(goal: Dictionary) -> void:
 		"stairs":
 			_report()
 			run.try_interact()
+		"pickup":
+			var d: LootDrop = goal["drop"]
+			if is_instance_valid(d) and not d.picked and not run.pick_up(d, false):
+				_ignored_drops[d.get_instance_id()] = true
 		_:
 			pass
 
@@ -219,10 +230,34 @@ func _report() -> void:
 	var secret := "yok" if L.secret_id < 0 else ("bulundu" if run.secrets_open else "BULUNAMADI")
 	print("[Otopilot] %d. kat bitti (%.1f sn): %d/%d oda gezildi, gizli oda %s, etkileşim %s" % [GameState.floor_index,
 		run._floor_elapsed, total - missed.size(), total, secret, _log])
+	var inv := GameState.inventory
+	var filled := inv.slots.values().filter(func(it: Variant) -> bool: return it != null).size()
+	print("[Otopilot] loot (run toplamı): %s · altın %d · iksir %d · slot %d/4 dolu · aktif %s" % [run.loot_stats, inv.gold,
+		inv.potions, filled, inv.active_weapons().map(func(w: Weapon) -> String: return "%s Lv %d" % [w.display_name(), w.level])])
 	_log.clear()
 	if not missed.is_empty():
 		print("[Otopilot] GEZİLEMEYEN ODALAR: %s" % [missed])
 		get_tree().quit(7)
+
+
+## En yakın toplanacak eşya (gezilmiş odada ya da koridorda, uygun boş slot varsa). Yer yoksa bot değiştirmez, atlar.
+func _nearest_item_drop() -> LootDrop:
+	var p := run.player
+	var best: LootDrop = null
+	var best_d := INF
+	for d: LootDrop in run.drops:
+		if not is_instance_valid(d) or d.picked or not d.is_item() or _ignored_drops.has(d.get_instance_id()):
+			continue
+		if GameState.inventory.free_slot_for(d.item, GameState.level) == "":
+			continue
+		var rid := run.layout.room_at(run.world_to_cell(d.global_position))
+		if rid >= 0 and not run.visited.has(rid):
+			continue
+		var dist := Iso.tile_distance(p.global_position, d.global_position)
+		if dist < best_d:
+			best_d = dist
+			best = d
+	return best
 
 
 func _find_path(from: Vector2i, to: Vector2i) -> void:

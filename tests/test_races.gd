@@ -218,37 +218,68 @@ func test_swap_recomputes_stats_keeping_hp_ratio() -> void:
 	assert_almost(p.hp, 45.0, 0.001)
 
 
+## Aşama 6'dan beri her silah tipinin ustalığı level 1'dir ve level 1 de bonus verir (hız +%3,33, menzil +%1,67 …).
 func test_attack_speed_and_range_from_matrix() -> void:
+	var m_spd := Mastery.bonus(1, "attack_speed")
+	var m_rng := Mastery.bonus(1, "attack_range")
 	var p := _player("magical", [Weapon.make("sword", "common"), Weapon.make("staff", "common")] as Array[Weapon])
-	assert_almost(p.attack_interval(), 1.0 / (1.4 * 0.85), 0.0001, "Magical + Warrior silahı −%15 saldırı hızı")
+	assert_almost(p.attack_interval(), 1.0 / (1.4 * (0.85 + m_spd)), 0.0001, "Magical + Warrior silahı −%15 saldırı hızı")
 	var a := _player("archer", [Weapon.make("bow", "common")] as Array[Weapon])
-	assert_almost(a.attack_range(), 9.0 * 1.1, 0.0001, "Archer pasifi +%10 menzil")
+	assert_almost(a.attack_range(), 9.0 * (1.1 + m_rng), 0.0001, "Archer pasifi +%10 menzil")
 
 
 func test_deal_hit_applies_matrix_and_passive() -> void:
 	var t := _target()
 	var archer := _player("archer", [Weapon.make("sword", "common")] as Array[Weapon])
+	# Ustalık level 1: hasar ×1,05 (U), element +%2,5
+	var mu := 1.0 + Mastery.bonus(1, "damage")
+	var me := Mastery.bonus(1, "element_damage")
 	var r := archer.deal_hit(t, archer.weapon(), "light", 1.0, 1, NO_CRIT)
-	assert_almost(float(r["damage"]), 85.0, 0.001, "Archer kılıçla −%15 hasar")
+	assert_almost(float(r["damage"]), 100.0 * mu * 0.85, 0.001, "Archer kılıçla −%15 hasar")
 	var mage := _player("magical", [Weapon.make("staff", "rare", "fire")] as Array[Weapon])
 	var t2 := _target(Vector2(0, 3))
 	r = mage.deal_hit(t2, mage.weapon(), "light", 1.0, 1, NO_CRIT)
-	assert_almost(float(r["damage"]), 125.0 * 1.15, 0.001, "Magical element +%15")
+	assert_almost(float(r["damage"]), 125.0 * mu * (1.15 + me), 0.001, "Magical element +%15")
 	var war := _player("warrior", [Weapon.make("staff", "rare", "fire")] as Array[Weapon])
 	var t3 := _target(Vector2(0, -3))
 	r = war.deal_hit(t3, war.weapon(), "light", 1.0, 1, NO_CRIT)
-	assert_almost(float(r["damage"]), 125.0 * 0.9, 0.001, "Warrior + büyü silahı −%10 element")
-	assert_eq(war.damage_by_source["light"], 112.5, "hasar kaynağa göre kaydedilir")
+	assert_almost(float(r["damage"]), 125.0 * mu * (0.9 + me), 0.001, "Warrior + büyü silahı −%10 element")
+	assert_almost(war.damage_by_source["light"], 125.0 * mu * (0.9 + me), 0.001, "hasar kaynağa göre kaydedilir")
 
 
-func test_warrior_armor_ability() -> void:
+## Kullanıcı kararı (Aşama 6): Warrior Q artık Kalkan Hücumu — ileri atılır, yoldaki düşmanlara ×1,5 vurur, iter ve sersemletir.
+func test_warrior_shield_charge() -> void:
 	var p := _player("warrior", [Weapon.make("sword", "common")] as Array[Weapon])
+	p.aim_point = Iso.to_screen(Vector2(6, 0) * Iso.KARO)
+	p.facing_cart = Vector2.RIGHT
+	var on_path := _target(Vector2(2, 0))
+	on_path.add_to_group("enemies")
+	var far := _target(Vector2(2, 3))
+	far.add_to_group("enemies")
+	var boss: Node2D = FakeTarget.new()
+	boss.setup(100000.0, true)
+	_world.add_child(boss)
+	boss.add_to_group("enemies")
+	boss.global_position = Iso.to_screen(Vector2(3.5, 0) * Iso.KARO)
 	assert_true(RaceAbilities.use(p, "q"))
-	assert_eq(p.kit.resource, 60.0, "Zırh 40 enerji")
-	assert_almost(p.current_armor(), 0.35, 0.0001, "zırh %15 + %20")
-	assert_eq(p.ability_damage_buff(), 0.03, "+%3 hasar")
-	p.take_damage(100.0, Vector2.LEFT)
-	assert_almost(p.hp, 150.0 - 65.0, 0.001, "zırhla 100 hasar 65'e düşer")
+	assert_eq(p.kit.resource, 60.0, "Kalkan Hücumu 40 enerji")
+	assert_true(p.iframes > 0.2, "hücum sırasında dokunulmaz")
+	# Hücum hızı × süre = 4 karo, farenin yönünde (testte fizik adımı elle sürüldüğü için konum yerine hız ölçülür)
+	var travel := p._move_override_vel * 0.25
+	assert_almost(Iso.tile_distance(Vector2.ZERO, travel), 4.0, 0.01, "4 karo ileri atılır")
+	assert_true(Iso.to_cart(travel).x > 0.0, "farenin yönünde")
+	for i: int in 30:
+		p._physics_process(1.0 / 60.0)
+	assert_eq(p.rush_t, 0.0, "hücum biter")
+	var hits: Array = on_path.get("hits")
+	assert_eq(hits.size(), 1, "yoldaki düşmana bir kez vurur")
+	assert_almost(float(hits[0]["amount"]), 100.0 * 1.5 * (1.0 + Mastery.bonus(1, "damage")), 0.01, "aktif silahın ×1,5'i")
+	assert_true(bool(hits[0]["heavy"]), "güçlü vuruş (savrulur)")
+	assert_true((on_path.get("status") as StatusEffects).stun_t > 0.0, "sersemletir")
+	assert_true((boss.get("status") as StatusEffects).stun_t <= 0.0, "boss sersemlemez")
+	assert_eq((far.get("hits") as Array).size(), 0, "yol dışındaki vurulmaz")
+	assert_true(p.damage_by_source["q"] > 0.0, "Q hasarı kaydedilir")
+	assert_eq(p.current_armor(), 0.15, "artık zırh buff'ı yok")
 
 
 func test_ghost_phase_and_magical_flight() -> void:
