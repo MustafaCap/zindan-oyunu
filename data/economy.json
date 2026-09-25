@@ -15,11 +15,11 @@
   "drops": {
     "boss_weapons": 1,
     "chest_weapons": 1,
-    "normal_potion_chance": 0.015,
-    "elite_potion_chance": 0.25,
+    "normal_potion_chance": 0.01,
+    "elite_potion_chance": 0.10,
     "boss_potion_chance": 0.0,
     "chest_talisman_chance": 0.2,
-    "_default": "Kullanıcı kararı (Aşama 5): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir: normal düşman %1,5, elit %25. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
+    "_default": "Kullanıcı kararı (Aşama 5): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir (kullanıcı kararı, Aşama 6): normal düşman %1, elit %10 (önceden %1,5 / %25); kat başına ortalama ~0,8 iksir. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
   },
   "pickup": {
     "gold_magnet_tiles": 1.6,

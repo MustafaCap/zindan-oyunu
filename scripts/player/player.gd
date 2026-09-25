@@ -69,7 +69,8 @@ var bot_los: Callable
 var external_intent: Dictionary = {}
 
 # Yetenek durumları
-var armor_buff_t: float = 0.0
+var rush_t: float = 0.0                   ## Warrior Kalkan Hücumu sürüyor (kalan süre)
+var _rush: Dictionary = {}                ## hücumun verisi, silahı, saldırı id'si ve vurulanlar
 var phase_t: float = 0.0
 var flight_t: float = 0.0
 var charging: bool = false                ## Yay: Güçlü atış dolduruluyor
@@ -196,12 +197,9 @@ func _make_defense() -> DamageCalc.Defense:
 	return d
 
 
-## Zırh = ırk zırhı + Warrior Q (Zırh) aktifken ek hasar azaltma. Tavanı DamageCalc uygular.
+## Zırh = ırk zırhı + hasar azaltma ödülleri. Tavanı DamageCalc uygular.
 func current_armor() -> float:
-	var a := stats.armor if stats else 0.0
-	if armor_buff_t > 0.0:
-		a += float(_race["abilities"]["q"].get("armor_bonus", 0.0))
-	return a
+	return stats.armor if stats else 0.0
 
 
 ## Silahın saldırı menzili (ırk menzil bonusu dahil).
@@ -303,13 +301,10 @@ func _physics_process(delta: float) -> void:
 		elif intent["light"] and attack_cd <= 0.0 and busy_t <= 0.0 and not charging:
 			WeaponAttacks.light(self)
 	move_and_slide()
+	_rush_step(delta)
 
 
 func _tick_buffs(delta: float) -> void:
-	if armor_buff_t > 0.0:
-		armor_buff_t = maxf(armor_buff_t - delta, 0.0)
-		if armor_buff_t <= 0.0:
-			defense.armor = current_armor()
 	if phase_t > 0.0:
 		phase_t = maxf(phase_t - delta, 0.0)
 		if phase_t <= 0.0:
@@ -480,16 +475,40 @@ func end_flight() -> void:
 	tw.tween_property(visual, "position:y", 0.0, 0.12).set_ease(Tween.EASE_IN)
 
 
-func start_armor_buff(duration: float) -> void:
-	armor_buff_t = duration
-	defense.armor = current_armor()
+## Warrior Q Kalkan Hücumu: farenin yönünde atılır (dokunulmaz); yoldaki düşmanlara _rush_step vurur.
+func start_rush(ab: Dictionary, w: Weapon, attack_id: int) -> void:
+	end_phase()
+	var dur := float(ab["duration"])
+	var dir := facing_cart
+	rush_t = dur
+	_rush = {"ab": ab, "weapon": w, "id": attack_id, "dir": dir, "hit": {}}
+	iframes = maxf(iframes, dur + 0.05)
+	busy_t = maxf(busy_t, dur)
+	move_override(Iso.to_screen(dir * Iso.tiles(float(ab["distance"]))) / dur, dur, func() -> void:
+		rush_t = 0.0
+		Events.area_pulse.emit(global_position, float(ab["hit_radius"]) * 1.4, Color(0.95, 0.8, 0.45)))
+	afterimage(Color(1.0, 0.85, 0.4, 0.55))
+	slash_fx(float(ab["hit_radius"]) + 0.4, 120.0, true, dir, Color(0.95, 0.8, 0.45))
 
 
-## Warrior Q (Zırh) aktifken +%3 hasar.
-func ability_damage_buff() -> float:
-	if armor_buff_t > 0.0:
-		return float(_race["abilities"]["q"].get("damage_bonus", 0.0))
-	return 0.0
+## Hücum sürerken yakına gelen her düşmana bir kez: ×1,5 güçlü vuruş (savrulur) + sersemletme (boss'ta yavaşlatma).
+func _rush_step(delta: float) -> void:
+	if rush_t <= 0.0 or _rush.is_empty():
+		return
+	rush_t = maxf(rush_t - delta, 0.0)
+	var ab: Dictionary = _rush["ab"]
+	var hit: Dictionary = _rush["hit"]
+	for e: Node2D in enemies_in_circle(global_position, float(ab["hit_radius"])):
+		var key := e.get_instance_id()
+		if hit.has(key):
+			continue
+		hit[key] = true
+		deal_hit(e, _rush["weapon"], "q", float(ab["skill_mult"]), int(_rush["id"]), {"heavy": true, "dir": _rush["dir"]})
+		if is_instance_valid(e) and not e.get("dead"):
+			(e.get("status") as StatusEffects).stun(float(ab["stun_duration"]), float(ab["boss_slow_duration"]), float(ab["boss_slow"]))
+			Events.floating_text.emit(e.global_position + Vector2(0, -70), "YAVAŞ" if bool(e.get("is_boss")) else "SERSEM", Color(1.0, 0.95, 0.5), 20)
+	if rush_t <= 0.0:
+		_rush = {}
 
 
 # --- silahlar ---
@@ -626,7 +645,7 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 	var skill := s.skill_damage if source in SKILL_SOURCES else 0.0
 	o["skill_mult"] = skill_mult
 	o["mastery_level"] = Mastery.level_of(w.type_id)
-	o["damage_buffs"] = s.damage_buffs + skill + ability_damage_buff() + float(o.get("damage_buffs", 0.0)) + float(eo["damage_buffs"])
+	o["damage_buffs"] = s.damage_buffs + skill + float(o.get("damage_buffs", 0.0)) + float(eo["damage_buffs"])
 	o["element_bonus"] = s.element_bonus + float(o.get("element_bonus", 0.0)) + float(eo["element_bonus"])
 	o["crit_damage_bonus"] = s.crit_damage_bonus + float(o.get("crit_damage_bonus", 0.0))
 	if eo.has("flex_traits"):
@@ -787,8 +806,8 @@ func _die() -> void:
 
 
 func _draw() -> void:
-	# Warrior Zırh: gövdenin etrafında altın halka
-	if armor_buff_t > 0.0:
+	# Warrior Kalkan Hücumu: önde altın kalkan yayı
+	if rush_t > 0.0:
 		var ring := Shapes.iso_ellipse(radius_tiles * 1.7, 20)
 		ring.append(ring[0])
 		draw_polyline(ring, Color(1.0, 0.8, 0.3, 0.8), 3.0)

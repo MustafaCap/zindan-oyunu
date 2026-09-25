@@ -9,7 +9,7 @@ extends Node
 
 const CASE_TIME := 5.4
 const LEVEL := 80   ## Mana/enerji senaryonun tamamına yetsin diye (Magical'ın manası level ile artar)
-const DAMAGE_ABILITIES := ["ground_slam", "back_leap", "arrow_rain", "element_storm"]
+const DAMAGE_ABILITIES := ["shield_charge", "ground_slam", "back_leap", "arrow_rain", "element_storm"]
 const ELEMENTS := ["fire", "water", "lightning", "poison", "ice", "dark", "physical"]
 
 var room: Node   ## TestRoom

@@ -88,7 +88,7 @@ Her etabın 5 boss'luk bir havuzu vardır ve her run'da bu havuzdan rastgele bir
 
 | Irk | Silah ailesi | Q | E | Kaynak | Pasif |
 | --- | --- | --- | --- | --- | --- |
-| Warrior | Kılıç, balta, demir yumruk | Zırh: kısa süreli, az hasar emen zırh ve +%3 hasar | Yer sarsıntısı: önündeki alana büyük hasar | Enerji | Yüksek can ve zırh |
+| Warrior | Kılıç, balta, demir yumruk | Kalkan Hücumu: ileri atılır, yolundaki düşmanlara vurur, iter ve sersemletir (Aşama 6'da Zırh'ın yerine, kullanıcı kararı) | Yer sarsıntısı: önündeki alana büyük hasar | Enerji | Yüksek can ve zırh |
 | Ghost | Tırpan, hançer, gürz | Faz: maks 1 sn dokunulmaz ve düşmanlara görünmez | Gölge adımı: hedef düşmanın arkasına ışınlanır | Yok (bekleme süresi) | Fiziksele dirençli, ateşe zayıf; özel iyileşme kuralı |
 | Archer | Yay, arbalet, mızrak | Geri sıçrama: geriye atılırken önüne 3 ok atar | Ok yağmuru: seçilen alana çoklu ok | Yok (bekleme süresi) | Menzil ve kritik bonusu |
 | Magical | Kitap, asa, rün | Uçuş: kısa süre engel ve tuzakların üstünden uçar | Element fırtınası: aktif silahın elementinde alan hasarı | Mana | Element hasarı yüksek, can düşük |
@@ -565,6 +565,8 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 5 | Düşmanlar (elit dahil) silah düşürmez, yalnızca altın; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar ("direkt çok iyi" olmasın; ör. efsanevi %5). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kuralları kaldırıldı. |
 | 5 | Loot ve envanter bu iki değişiklikle onaylandı (Aşama 6 başında) |
 | 6 | Aşama 5'teki GEÇİCİ "kata inince level katın alt sınırına çıkar" kuralı, gerçek XP gelince kaldırıldı (kullanıcının isteği) |
+| 6 | Warrior'ın Q yeteneği Zırh (oynarken kullanma gereği duyulmadı) kaldırıldı, yerine **Kalkan Hücumu** geldi: ileri 4 karo atılıp yolundaki düşmanlara ×1,5 vurur, iter ve 0,6 sn sersemletir (boss'ta yavaşlatır); 40 enerji |
+| 6 | İksir düşme oranı azaltıldı: normal düşman %1,5 → %1, elit %25 → %10 (kat başına ortalama ~1,4 yerine ~0,8 iksir); tüccar aynı |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -601,7 +603,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 
 - **Irk pasifleri:** Archer +%10 saldırı menzili ve +%5 kritik şansı; Magical +%15 element hasarı (her silahta geçerli). Warrior ve Ghost'un pasifi başlangıç statları ve dirençleridir.
 - **Yetenek hasarı:** Hasar veren Q/E yetenekleri aktif silahın vuruşunun katıdır (skill çarpanı) ve onun elementini taşır; Q/E ile de kombo yapılır.
-- **Warrior** Q Zırh: 3 sn, +%20 hasar azaltma ve +%3 hasar. E Yer sarsıntısı: önde 3 karo, 100° yay, aktif silahın ×2,5'i.
+- **Warrior** Q ~~Zırh: 3 sn, +%20 hasar azaltma ve +%3 hasar~~ → **Kalkan Hücumu** (Aşama 6, kullanıcı kararı; oynarken Zırh'ı kullanma gereği duyulmadı): farenin yönünde 0,25 sn'de 4 karo atılır; atılırken dokunulmazdır, düşmanların içinden geçer, duvarda durur, başka saldırı yapılamaz. Yoluna 0,9 karo yaklaşan her düşmana bir kez aktif silahın vuruşunun ×1,5'i (güçlü vuruş: savrulur; elementi, kombosu, özellikleri ve skill hasarı ödülü işler) ve 0,6 sn sersemletme (boss'ta 1 sn %30 yavaşlatma). Bedeli yine 40 enerji. E Yer sarsıntısı: önde 3 karo, 100° yay, aktif silahın ×2,5'i.
 - **Warrior enerjisi:** isabet eden her saldırı başına bir kez +2 (vurulan düşman sayısından bağımsız). Sağ tık bekleme süresi 5-7 sn aralığının ortası: 6 sn.
 - **Ghost** Q Faz: 1 sn; saldırınca erken biter, faz sırasında düşmanların içinden geçilir. E Gölge adımı: farenin en yakınındaki düşmanın (oyuncuya en fazla 7 karo) 0,9 karo arkasına ışınlanır, 0,25 sn dokunulmazlık; menzilde hedef yoksa yetenek kullanılmaz ve bekleme başlamaz.
 - **Ghost iyileşmesi:** Can Emme özellikli silah aktifken öldürme başına ek %3 maks can iyileşmesi.
@@ -675,8 +677,8 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 
 | Kaynak | Altın | Silah | İksir | Diğer |
 | --- | --- | --- | --- | --- |
-| Normal düşman | 2-5 | — | %1,5 | — |
-| Elit | 25-35 | — | %25 | — |
+| Normal düşman | 2-5 | — | %1 (Aşama 6'dan önce %1,5) | — |
+| Elit | 25-35 | — | %10 (Aşama 6'dan önce %25) | — |
 | Boss | 90-110 | 1 (katın normal oranlarıyla) | — | — |
 | Sandık | 30-50 | 1 | — | %20 ihtimalle silah yerine sahip olunmayan bir tılsım; %25 tuzaklı |
 | Gizli oda sandığı | 60-90 | 1 (üst nadirlik ×2) | — | tuzaksız |
@@ -967,7 +969,7 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | Ç | Silah tipi hasar çarpanı |
 | L | Silah level oranı (her 5 levelde yenilenir: 0,05 … 0,80) |
 | U | Ustalık hasar bonusu (level × 0,05; ustalık level 1'den başlar, yani en az 0,05) |
-| B | Toplam hasar buff'ları, kendi aralarında toplanarak: level ve boss ödülleri (skill hasarı yalnızca sağ tık/Q/E'de), ilk kesiş bonusu, Öfke, ırk-silah cezası, Warrior Zırh'ı, Kan Taşı |
+| B | Toplam hasar buff'ları, kendi aralarında toplanarak: level ve boss ödülleri (skill hasarı yalnızca sağ tık/Q/E'de), ilk kesiş bonusu, Öfke, ırk-silah cezası, Kan Taşı |
 | E | Element çarpanı = durum çarpanı × (1 + element hasarı bonusları) |
 | K | Kritikse 1,5 + kritik hasarı bonusları, değilse 1 |
 | A | Karanlık silahla arkadan vuruşta 1,1, diğer durumlarda 1 |
