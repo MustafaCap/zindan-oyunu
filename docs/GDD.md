@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 24 Eyl 2026 (Aşama 4)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 25 Eyl 2026 (Aşama 5)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -57,6 +57,7 @@ WASD ile yürünür, saldırılar farenin gösterdiği yöne gider. Oyuncunun 4 
 | Tab | İki aktif silah arasında anında geçiş |
 | 1 | İksir |
 | F | Etkileşim (loot, kapı, tüccar) |
+| I | Çanta ve slotlar (Aşama 5; açıkken oyun durur) |
 
 | Slot | Ne konur | Etkisi |
 | --- | --- | --- |
@@ -525,6 +526,7 @@ Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
 - [ ] Kalan 16 boss (kat başına 4)
 - [ ] Hikâye ve lore
 - [ ] Ayrıntılı arayüz tasarımı
+- [ ] Efsanevi silah listesi: Aşama 5'te 12 efsanevi önerildi (her tipten bir; ad, element, pasif, sağ tık eki — Uygulamada Verilen Kararlar > Loot ve envanter). Kullanıcı ad ve pasifleri değiştirebilir; liste zamanla genişletilir.
 - [x] Ghost iksir kullanamaz (Aşama 3'te onaylandı)
 - [x] Magical mana bedelleri düşürüldü: sol tık 1, sağ tık 55, Q 65, E 90 (Aşama 3 testinden sonra)
 - [x] Kontroller: WASD, fare nişan, sol/sağ tık silah, Q/E ırk, Space atılma
@@ -554,6 +556,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 2 | Kombolar ve element sistemi olduğu gibi onaylandı |
 | 3 | Ghost iksir kullanamaz (açık karar kapandı) |
 | 3 | Magical mana bedelleri düşürüldü: sol tık 2 → 1, sağ tık 70 → 55, Q 80 → 65, E 110 → 90 |
+| 4 | Zindan üretimi olduğu gibi onaylandı |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -598,7 +601,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 - **Magical** Q Uçuş: 2,5 sn, sütun ve engellerin üstünden geçer (dış duvarlardan geçemez), +%20 hareket hızı; uçuş bir engelin üstünde biterse oyuncu engelden çıkana kadar uçmaya devam eder. E Element fırtınası: farenin gösterdiği yerde (en fazla 6 karo) 2,6 karo alana 0,4 sn arayla 5 vuruş (her biri ×0,7).
 - **Magical** her silahta mana harcar (yakın silahta da). Magical dışı ırk büyü silahında (kitap, asa, rün) sol tık bedavadır, sağ tık = ırkın sağ tık beklemesi × 1,5 (Warrior 9 sn, Ghost 7,5 sn, Archer 9 sn).
 - **Irk-silah matrisi** aktif silaha göre işler. Tab ile farklı ailedeki silaha geçince maks can değişir, can oranı korunur. Uçan mermiler atıldıkları silahın statlarını kullanır.
-- **İksir** (1 tuşu) Aşama 3'ten itibaren çalışır: run 2 iksirle başlar, maks canın %40'ı; can doluyken içilmez. Tüccar ve iksir düşmesi Aşama 5'te.
+- **İksir** (1 tuşu) Aşama 3'ten itibaren çalışır: run 2 iksirle başlar, maks canın %40'ı; can doluyken içilmez. Tüccar ve iksir düşmesi Aşama 5'te geldi.
 - **Çarpışma katmanları:** duvarlar 1, oyuncu 2, düşmanlar 4, sütun ve engeller 8 (Uçuş 8'i yok sayar). Mermiler duvar ve sütunlarda durur.
 - **Silah saldırıları** (sol tık ve sağ tık):
 
@@ -637,7 +640,7 @@ Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
 - **Yer tutucu boss:** Katın boss havuzundan seçilen boss'un adını taşıyan dev bir Damar Kütlesi; ×6 can, ×1,6 hasar, ×2,1 boy (çarpışma gövdesi en fazla ×1,5), kırmızı halka ve ekranın üstünde can barı. Gerçek boss'lar Aşama 7'de.
 - **Boss sonrası:** Kat boss'u kesilince can tamamen dolar (Ghost dahil), boss odasının ortasında merdiven belirir; F ile bir alt kata inilir. 4. kat boss'u kesilince "KAZANDIN!" yazısı çıkar. Ölünce ya da kazanınca R yeni run başlatır (yeni seed, 1. kat).
 - **Gizli oda:** Bir odanın boş ızgara komşusuna konur; aradaki geçit 3 karoluk **çatlak duvarla** kapalıdır (açık renkli, kırık çizgili duvar). Yakın saldırıyla (menzil + 1,2 karo içinde ve duvara dönükken) ya da duvara 1,2 karodan fazla yaklaşan bir mermiyle vurulur; 3 vuruşta kırılır. Gizli oda ve koridoru duvar kırılana kadar çizilmez ve haritada görünmez. İçinde bir sandık vardır.
-- **Etkileşim (F):** Sandık, tüccar ve demirci şimdilik yer tutucudur (sandık açılır, tüccar/demirci konuşur); loot ve arayüzleri Aşama 5'te. Etkileşim menzili 1,6 karo; yakındaki nesnenin ipucu ekranın ortasında "F: …" olarak görünür.
+- **Etkileşim (F):** Sandık, tüccar ve demirci (loot ve arayüzleri Aşama 5'te geldi; bkz. Loot ve envanter); yerdeki silah ve tılsım da F ile alınır. Etkileşim menzili 1,6 karo; yakındaki nesnenin ipucu ekranın ortasında "F: …" olarak görünür.
 - **Slot değişimi kuralı:** Kilitli bir odada savaş sürerken `GameState.in_combat` açıktır ve ırk/silah değişikliği yapılamaz; koridorda, temizlenmiş ya da düşmansız odada serbesttir. Tab (iki aktif silah arası) her zaman serbesttir. Aşama 5'teki çanta ve slotlar bu kuralı kullanır.
 - **Kat paletleri (zemin / duvar / engel):** 1. kat #5a3a44 / #2e1d26 / #7a3448 · 2. kat #3d5a3a / #1f2e22 / #6b4a7a · 3. kat #5a3a24 / #2a2320 / #a0521e · 4. kat #2a2440 / #121020 / #4a3f7a. Gerçek karo setleri Aşama 8'de.
 - **Minimap:** Sağ üstte, dünyayla aynı izometrik yönde. Girilen odalar tip rengi ve harfiyle (G giriş, E elit, T tüccar, D demirci, S sandık, B boss, ? gizli oda), girilen odaların komşuları gri "?" olarak görünür; temizlenmemiş düşmanlı odada kırmızı nokta vardır. Gizli oda bulunana kadar görünmez.
@@ -646,6 +649,104 @@ Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
 - **Güvenlik ağları:** Kilitli odanın dışına düşen oyuncu (örn. Gölge adımı kapının ötesine ışınlarsa) ve duvarın ötesine itilen düşman odanın içindeki son konumuna geri alınır.
 - **Hata ayıklama menüsü (zindanda):** "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında kapalı). "Zindan" satırı: kat seçimi + "Bu kattan yeni harita", "Test odasına git" ve "Ölümsüz (test)" kutusu (hasar alınmaz; katları hızlı gezmek için).
 - **Zorluk notu:** Aşama 6'ya (XP ve level) kadar oyuncu level atlamaz ve düşmanlar katla güçlenmez; level 1'de 60 düşmanlı 1. katı bitirmek zordur. Test için menüden level seçilebilir ya da "Ölümsüz" açılabilir.
+
+### Loot ve envanter (Aşama 5)
+
+Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.json` ve `data/loot_tables.json` içindedir.
+
+**Loot üretimi (`LootGenerator`)**
+
+- Silah tipi 12 tipten eşit olasılıkla seçilir (oyuncunun ailesine ağırlık verilmez). Element (Ender ve üstü) 6 elementten eşit olasılıkla; özellikler farklı olmak üzere nadirliğin aralığından (Destansı 1, Efsanevi 1-2).
+- Silah leveli katın aralığından eşit olasılıkla: 1. kat 1, 2. kat 10, 3. kat 25-40, 4. kat 50.
+- Elit düşman ve gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan düşülür; **Yaygın yetmezse kalan Ender'den** düşülür (yalnızca 4. katta olur: Yaygın %0, Ender %16, Destansı %64, Efsanevi %20). Sandık ve tüccar normal tabloyu kullanır.
+- 3. ve 4. kat boss'ları en az Destansı: Destansı altı sıfırlanır, kalanlar oranları korunarak yeniden ölçeklenir (3. kat: Destansı %81,5, Efsanevi %18,5).
+- Efsanevi seçilince 12 efsanevi kayıttan biri eşit olasılıkla gelir (tip ve element kayıttan).
+- Aynı seed aynı loot'u verir: kat loot'u `hash(kat seed'i, "loot")`, sandık ve tüccar `hash(kat seed'i, oda, "chest"/"merchant")` ile.
+
+**Düşmeler** (altın miktarları × katın altın çarpanı: 1. kat ×1, 2. kat ×2, 3. kat ×3, 4. kat ×4)
+
+| Kaynak | Altın | Silah | İksir | Diğer |
+| --- | --- | --- | --- | --- |
+| Normal düşman | 2-5 | %8 | %1,5 | — |
+| Elit | 25-35 | 1 (üst nadirlik ×2) | %25 | — |
+| Boss | 90-110 | 2 (3-4. katta en az Destansı) | — | — |
+| Sandık | 30-50 | 1 | — | %20 ihtimalle silah yerine sahip olunmayan bir tılsım; %25 tuzaklı |
+| Gizli oda sandığı | 60-90 | 1 (üst nadirlik ×2) | — | tuzaksız |
+
+- Loot düştüğü yerin çevresine (0,7 karo) yürünebilir bir karoya saçılır. Altın 1,6 karo içine girince kendiliğinden toplanır; iksir üstünden geçince (1 karo, taşıma sınırı dolmadıysa; Ghost almaz). Silah ve tılsım F ile alınır; ad etiketi oyuncuya en yakın eşyada (4 karo içinde) görünür.
+- Alınan silah, savaş dışındaysa ve açıksa boş bir aktif slota takılır; yoksa çantaya. Çanta doluysa yerde kalır ("Çanta dolu").
+- Loot ışık sütunu yüksekliği: Yaygın 46, Ender 80, Destansı 120, Efsanevi 175 piksel (efsanevi nabız gibi atar); tılsım Destansı yüksekliğinde, kendi renginde.
+- **Tuzaklı sandık:** açılınca 2 karoluk kırmızı işaret belirir, 1 sn'de dolar ve patlar; içindeki oyuncuya maks canının %20'si (zırhtan önce) hasar.
+
+**Çanta ve slotlar (`Inventory`, `InventoryUI`)**
+
+- Run ırkın kendi ailesinden Yaygın, level 1 bir silahla Aktif 1'de başlar (Warrior kılıç, Ghost hançer, Archer yay, Magical asa); çanta boş.
+- Çanta 12 göz (6 × 2). Envanter I ile açılır; açıkken oyun durur.
+- Kurallar: aktif slotlara yalnızca açık silah; Rezonans'a kilitli ya da açık silah; Esnek'e silah ya da tılsım. En az bir aktif silah kalır. Dolu yere bırakılan eşya yer değiştirir (karşı taraf da kurala uymalı). Savaş sürerken slotlara dokunulamaz; çanta içinde düzenleme, yerden alma ve yere bırakma serbesttir.
+- Arayüz: sürükle-bırak (taşı / yer değiştir; "Yere bırak" alanı), sağ tık ya da çift tık (çantadaki silahı boş aktif slota, yoksa kullanılan aktif silahla yer değiştirerek tak; kilitli silah Rezonans'a, tılsım Esnek'e; slottakini çantaya çıkar), sol tık seçer (tüccar ve demirci için).
+- Tooltip: ad, nadirlik, tip ve aile, level, kilit, element, özellikler, efsanevi pasif ve sağ tık eki, vuruş hasarı / saldırı/sn / DPS / menzil (oyuncunun ırkı ve leveliyle; ustalık ve ödüller Aşama 6'da), ırk etkisi, Rezonans'taki ek hasarı, XP; kullanılan aktif silahla kıyas (DPS, vuruş, menzil, maks can farkı yeşil/kırmızı); tüccarda fiyat.
+- HUD: altın, iksir (x / 3), silah levelleri, Rezonans ve Esnek slot kutuları.
+
+**Silah leveli ve XP**
+
+- Silah XP eğrisi oyuncununkiyle aynı: sonraki levele 100 + 20 × level.
+- XP'yi yalnızca 4 slottaki silahlar alır (çantadakiler almaz). Kilitli silah XP almaz, oyuncunun levelini bekler.
+- Oyuncunun levelinin altındaki silah 1,5 kat XP alır; yakalayınca normal hıza döner ama oyuncunun levelini geçemez (çubuk dolu bekler, oyuncu level atlayınca gelir).
+- Oyuncu XP'si Aşama 6'da gelir; şimdilik hata ayıklama menüsündeki "Silahlara +1000 XP" ile denenir.
+- **GEÇİCİ (Aşama 6'da kalkar):** bir kata inince oyuncu leveli katın hedef aralığının altındaysa alt sınıra çıkar (2. kat 15, 3. kat 35, 4. kat 55); böylece bulunan silahlar kilitli kalmaz. Kilidi açılan silahlar ekranda bildirilir.
+
+**Rezonans ve Esnek slot etkileri (`ItemEffects`)**
+
+- Rezonans ek hasarı her birincil vuruşta (sol tık, sağ tık, Q, E; her hedefe) verilir; ikincil vuruştur: element durumu bırakmaz, kombo/zincir/özellik tetiklemez; kritik yok; bağışıklık geçerli. Hasarı ustalık için Rezonans silahının tipine yazılır.
+- Esnek slottaki silahın özellikleri %9 güçle işler: Öfke bonusu ve tavanı, İnfaz eşiği, Can Emme yüzdesi, Sekme ve Sersemletme şansları %9 ile çarpılır (Sekme hasarı ve sersemletme süresi değişmez). Aktif silahta aynı özellik varsa güçler toplanır (1,09). Ghost'ta Esnek'teki Can Emme öldürme başına %3 × 0,09 ek iyileşmeye dönüşür.
+- Esnek slottaki efsanevinin pasifi, pasifin `flex_field` sayısı %9 ile çarpılarak işler; sağ tık eki yalnızca aktif silahta.
+- Tılsımlar yalnızca Esnek slotta, tam etkiyle. Kan Taşı yığınları tek sayaçla 10 sn'de söner (her öldürme yeniler).
+
+**Efsanevi silahlar (ilk sürüm, 12)** — her birinin elle seçilmiş adı, elementi, pasifi ve sağ tık eki (skill) var; özellik sayısı 1-2 rastgele.
+
+| Silah | Tip | Element | Pasif | Sağ tık eki |
+| --- | --- | --- | --- | --- |
+| Gökyarığı | Kılıç | Yıldırım | Gökten yıldırım | Element dalgası |
+| Kül Yiyen | Balta | Ateş | Ölüm patlaması | Element darbeleri |
+| Buzul Yumruğu | Demir yumruk | Buz | Kritik patlaması | Element dalgası |
+| Ruh Hasatçısı | Tırpan | Karanlık | Öldürme coşkusu | Element parçaları |
+| Engerek Dişi | Hançer | Zehir | Ölüm patlaması | Element parçaları |
+| Dalga Kıran | Gürz | Su | Kombo yenilemesi | Element dalgası |
+| Fırtına Teli | Yay | Yıldırım | Kritik patlaması | Element darbeleri |
+| Kor Tetik | Arbalet | Ateş | Öldürme coşkusu | Element darbeleri |
+| Buz Sivrisi | Mızrak | Buz | Gökten element (buz) | Element parçaları |
+| Kara Kehanet | Kitap | Karanlık | Kombo yenilemesi | Element parçaları |
+| Derinlerin Asası | Asa | Su | Ölüm patlaması | Element darbeleri |
+| Veba Mührü | Rün | Zehir | Öldürme coşkusu | Element dalgası |
+
+| Pasif | Etkisi |
+| --- | --- |
+| Gökten element (`sky_lightning`) | Her 5. saldırıda (aynı saldırının birden çok isabeti bir sayılır) hedefe gökten silahın elementi iner: 1,2 karo alana vuruşun %80'i |
+| Ölüm patlaması (`death_burst`) | Öldürülen düşman silahın elementinde patlar: 2 karo alana vuruşun %50'si |
+| Kombo yenilemesi (`combo_reset`) | Kombo tetiklenince sağ tık, Q ve E beklemeleri sıfırlanır |
+| Öldürme coşkusu (`kill_frenzy`) | Her öldürme 4 sn +%25 saldırı hızı (yenilenir, yığılmaz; saldırı hızı tavanına uyar) |
+| Kritik patlaması (`crit_nova`) | Kritik vuruş hedefin etrafında 1,5 karo alana vuruşun %40'ı |
+
+| Sağ tık eki | Etkisi |
+| --- | --- |
+| Element dalgası (`heavy_nova`) | Sağ tıktan 0,25 sn sonra oyuncunun etrafında 2,5 karo patlama (×0,6) |
+| Element darbeleri (`heavy_strikes`) | Farenin gösterdiği yere (en fazla 7 karo) 0,15 sn arayla 3 darbe (1,2 karo, her biri ×0,5) |
+| Element parçaları (`heavy_shards`) | Hedef arayan 3 mermi (her biri ×0,4, 7 karodaki hedefi arar) |
+
+- Pasif patlamaları ikincil vuruştur (element bırakır, kritik ve yeni kombo yok); sağ tık ekleri normal vuruştur (kombo yapar).
+
+**Tüccar ve demirci (`Shop`)** — fiyatlar × katın altın çarpanı
+
+- Tüccarın tezgâhı kat başına bir kez üretilir: katın loot tablosundan 3 silah + sahip olunmayan 1 tılsım; iksir sınırsız (taşıma sınırına kadar, Ghost'a satılmaz). Satın alınan eşya çantaya gider (çanta doluysa alınamaz).
+- Fiyatlar: silah Yaygın 40, Ender 80, Destansı 160, Efsanevi 400; tılsım 150; iksir 50. Satış alış fiyatının %30'u; slottaki eşya da satılabilir (son aktif silah hariç).
+- Demirci: **Level atlat** silahı bir sonraki 5'in katına çıkarır (stat artışı her 5 levelde), en fazla oyuncunun leveline; bedeli kazanılan level × 8. **Elementi yeniden çek** (Ender ve üstü; efsanevide element sabit) 60; **özellikleri yeniden çek** (Destansı ve üstü; aynı sayıda, öncekinden farklı set) 90. Aynı silahta her yeniden çekme sonrakini ×1,5 pahalılaştırır.
+- Silah örse sürüklenerek ya da çantada/slotta tıklanarak seçilir.
+
+**Hata ayıklama (geçici)**
+
+- Zindanda "Uygula" yalnızca ırk ve leveli değiştirir (silahlar envanterde kalır). "Loot (test)" satırı: menüdeki iki silahı oyuncunun levelinde çantaya ekle, loot yağdır (katın loot'undan 8 silah + altın + iksir + tılsım), +500 altın, slottaki silahlara +1000 XP.
+- Geliştirme bayrakları: `--loot-rain`, `--fill-bag`, `--open-bag`, `--open-ui=merchant|blacksmith`; `--weapons=` verilirse aktif slotlara o silahlar konur.
+- Zindan smoke testinde bot yerdeki eşyaları toplar, tüccarda çantayı satıp iksir ve bir eşya alır, demircide aktif silahını geliştirir; kat özetinde loot sayıları yazılır.
 
 ## Uygulama Rehberi
 
@@ -676,13 +777,14 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | 1 — Vuruş hissi prototipi | ✅ Bitti, onaylandı |
 | 2 — Savaş çekirdeği | ✅ Bitti, onaylandı (`asama-2` dalı) |
 | 3 — Irklar ve silahlar | ✅ Bitti, onaylandı (`asama-3` dalı, sürüm 0.3.1) |
-| 4 — Zindan üretimi | ✅ Bitti (`asama-4` dalı, sürüm 0.4.0); kullanıcı testinde |
-| 5-10 | Sırada: Aşama 5 — Loot ve envanter |
+| 4 — Zindan üretimi | ✅ Bitti, onaylandı (`asama-4` dalı, sürüm 0.4.0) |
+| 5 — Loot ve envanter | ✅ Bitti (`asama-5` dalı, sürüm 0.5.0); kullanıcı testinde |
+| 6-10 | Sırada: Aşama 6 — İlerleme |
 
-- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-2`, `asama-3` ve `asama-4` dalları push edildi, henüz main'e birleştirilmedi; her dal bir öncekinin üstüne kurulu olduğu için `asama-4`'ü birleştirmek öncekileri de getirir.
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5). `asama-5` dalı `asama-4`'ün üstüne kurulu; onaylanınca aynı şekilde PR ile birleştirilir.
 - **Teslim:** Claude'un GitHub bağlantısı yalnızca okuyabilir. Kod `git bundle` olarak kullanıcının bilgisayarındaki `C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakılır (önceki aşamanın dalına göre artımlı); push'u kullanıcı yapar. Kullanıcının yerel klonu `ZindanOyunu-Derlemeler\zindan-oyunu` klasöründedir. Kullanıcı **Git Bash** kullanır: verilen git komutlarında yol ayıracı `/` olmalıdır. Push komutları (klon klasöründe): `git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`.
 - **.exe teslimi:** Zip 30 MB'tan büyük olduğu için 19 MB'lık parçalara bölünür ve `ZindanOyunu-Derlemeler\asama-N\` klasörüne, parçaları birleştirip açan `birlestir-ve-ac.bat` ile birlikte konur.
-- **Test:** `make test` dört adımı çalıştırır: birim testleri (121 test), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, boss'ları keser, merdivenle iner).
+- **Test:** `make test` dört adımı çalıştırır: birim testleri (164 test; loot oranları 10.000 düşüşlük simülasyonla), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, boss'ları keser, merdivenle iner).
 - **Bilinen:** `bpy` paket deposunda bulunamadı (Aşama 8'de yeniden denenecek). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
 
 **Kaldığın yerden devam mesajı:** "GDD ekte, repo: https://github.com/MustafaCap/zindan-oyunu. Aşama N'den devam et. README'deki Durum bölümüne bak. Kodu git bundle olarak Git_Dosyaları\ZindanOyunu-Derlemeler klasörüne bırak, push'u ben yaparım; .exe'yi parçalayıp aynı klasöre birlestir-ve-ac.bat ile koy. Git Bash kullanıyorum: git komutlarında / kullan. Aşama sonunda GDD'yi de güncelle."
@@ -716,7 +818,8 @@ zindan-oyunu/
     combat/               # DamageCalc, StatusEffects, Combos
     player/  enemies/  bosses/
     dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
-    loot/                 # LootGenerator, Inventory
+    loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
+    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons
     progression/          # Leveling, Mastery, Rewards
   assets/                 # sprites, normals, audio/sfx, audio/music, fonts, shaders
   tools/
@@ -730,7 +833,7 @@ zindan-oyunu/
 | Make hedefi | Ne yapar |
 | --- | --- |
 | `make test` | Birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke testi |
-| `make dungeon` | Zindan smoke testi: bot 4 katı baştan sona yürür (Aşama 4 kabulü) |
+| `make dungeon` | Zindan smoke testi: bot 4 katı baştan sona yürür, loot toplar, tüccar/demirci kullanır (Aşama 4-5 kabulü) |
 | `make sprites` | Blender script'iyle tüm sprite ve normal map'leri yeniden üretir |
 | `make sfx` | Ses efektlerini sentezleyip `assets/audio/sfx` içine yazar |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
@@ -749,16 +852,17 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `loot_tables.json` | Kat bazında nadirlik oranları ve silah levelleri | Nadirlik, Zindan |
 | `elements.json` | 6 element, durum etkileri, 7 kombo | Elementler |
 | `traits.json` | 5 özellik | Elementler |
-| `legendaries.json` | Efsanevi silahlar ve pasifleri | Nadirlik |
-| `talismans.json` | 3 tılsım | Rezonans ve Esnek Slot |
+| `legendaries.json` | 12 efsanevi silah; pasif ve sağ tık eki şablonları | Nadirlik |
+| `talismans.json` | 3 tılsım (etki sayıları, renk) | Rezonans ve Esnek Slot |
 | `enemies.json` | 17 düşman, rol, bağışıklık, XP | Düşmanlar |
 | `bosses.json` | 4 boss, fazlar, saldırılar | Boss'lar |
 | `rewards.json` | Level ve boss ödül havuzları | Run İçi Ödüller |
 | `progression.json` | XP eğrisi, ustalık eğrisi, derinlik çarpanları, stat tavanları | Level, Ustalık, Denge |
 | `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu, placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
+| `economy.json` | Çanta boyu, başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si | Ekonomi, Uygulamada Verilen Kararlar |
 | `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, prototip düşmanlar, yer tutucu elit/boss, gizli duvar | Zindan, Uygulamada Verilen Kararlar |
 
-**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular), `GameState` (aktif run: level, çanta, slotlar, buff'lar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`).
+**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular), `GameState` (aktif run: level, envanter — `Inventory`: çanta, 4 slot, altın, iksir —, buff'lar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`).
 
 **Hasar formülü:** Tüm hasar tek bir `DamageCalc` fonksiyonundan geçer ve birim testleriyle korunur.
 

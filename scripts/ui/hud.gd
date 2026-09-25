@@ -2,6 +2,7 @@
 ## Aşama 2: iki aktif silah paneli (element ikonu, ad, nadirlik rengi; aktif olan vurgulu) ve hata ayıklama notları.
 ## Aşama 3: ırk ve level, Enerji/Mana barı, yetenek adları ve bedelleri, iksir sayısı.
 ## Aşama 4: kat/oda bilgisi, etkileşim ipucu ("F: ..."), boss can barı; tuş ipuçları sahneye göre değişir.
+## Aşama 5: altın, iksir (x / maks), silah levelleri (kilitliyse işaret), Rezonans ve Esnek slot kutuları.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu yalnızca test için.
 class_name Hud
 extends CanvasLayer
@@ -11,6 +12,7 @@ var wave_text: String = ""
 var prompt_text: String = ""          ## etkileşim ipucu (ekranın ortasının altında)
 var boss: Node2D                      ## doluysa üstte boss can barı
 var stage_text: String = "Aşama 3 · ırklar ve silahlar"
+var show_economy: bool = false        ## zindanda: altın, iksir sınırı, Rezonans ve Esnek slot
 var _panel: Control
 var _center: Label
 var _info: Label
@@ -98,7 +100,10 @@ func _draw_panel() -> void:
 	var font := ThemeDB.fallback_font
 	_text(pos + Vector2(10, 20), "%d / %d" % [ceili(player.hp), roundi(player.max_hp)], 18, Color.WHITE)
 	var race: Dictionary = DataDB.table("races")[player.race_id]
-	_text(pos + Vector2(size.x + 16, 20), "%s · Level %d · İksir %d" % [race["name"], player.level, player.potions], 18, Color(0.9, 0.9, 0.95))
+	var eco := ""
+	if show_economy and player.inventory:
+		eco = " / %d · Altın %d" % [player.inventory.potion_max, player.inventory.gold]
+	_text(pos + Vector2(size.x + 16, 20), "%s · Level %d · İksir %d%s" % [race["name"], player.level, player.potions, eco], 18, Color(0.9, 0.9, 0.95))
 	# Kaynak barı (Enerji / Mana)
 	var kit := player.kit
 	if kit.uses_resource():
@@ -131,6 +136,10 @@ func _draw_panel() -> void:
 		_weapon_box(Vector2(32, wy + i * 52.0), player.weapons[i], i == player.active_index, i + 1)
 	_panel.draw_string_outline(ThemeDB.fallback_font, Vector2(32, wy - 12), "Tab: silah değiştir", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 4, Color.BLACK)
 	_panel.draw_string(ThemeDB.fallback_font, Vector2(32, wy - 12), "Tab: silah değiştir", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.8, 0.8, 0.85))
+	# Rezonans ve Esnek slot (zindanda)
+	if show_economy and player.effects:
+		_mini_slot(Vector2(32, wy - 84.0), "Rezonans", player.effects.resonance)
+		_mini_slot(Vector2(32 + 278.0, wy - 84.0), "Esnek", player.effects.flex)
 	# Alt satırlar: tuş ipuçları
 	for i: int in _hint_lines.size():
 		var hp := Vector2(32, vp.y - 44 + i * 24)
@@ -167,11 +176,37 @@ func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int) -> void:
 	ElementIcons.draw_badge(_panel, w.element, p + Vector2(24, 22), 14.0)
 	var font := ThemeDB.fallback_font
 	var name_col := w.rarity_color().lightened(0.25) if active else Color(0.6, 0.6, 0.65)
-	_panel.draw_string(font, p + Vector2(48, 20), "%d. %s" % [slot, w.display_name()], HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 19, name_col)
+	_panel.draw_string(font, p + Vector2(48, 20), "%d. %s · Lv %d" % [slot, w.display_name(), w.level], HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 19, name_col)
 	var sub := "%s · %s · %s" % [w.rarity_name(), Weapon.kind_name(w.element), RaceStats.matrix_text(player.race_id, w.family())]
 	if not w.traits.is_empty():
 		sub += " · " + str(Traits.data(w.traits[0])["name"])
 	_panel.draw_string(font, p + Vector2(48, 38), sub, HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 14, Color(0.7, 0.7, 0.75))
+
+
+## Rezonans / Esnek slot kutusu: eşyanın adı ve etkisi.
+func _mini_slot(p: Vector2, title: String, it: Variant) -> void:
+	var s := Vector2(262, 44)
+	var font := ThemeDB.fallback_font
+	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.6))
+	var border := Color(0.35, 0.35, 0.4)
+	var line1 := "%s: boş" % title
+	var line2 := "I: çantayı aç"
+	if it is Weapon:
+		var w := it as Weapon
+		border = w.rarity_color()
+		line1 = "%s: %s · Lv %d" % [title, w.display_name(), w.level]
+		if title == "Rezonans":
+			line2 = "+%d %s/vuruş (%s)" % [roundi(w.hit_damage() * player.effects.resonance_pct()), Weapon.kind_name(w.element), "kilitli %10" if w.is_locked(player.level) else "açık %7"]
+		else:
+			line2 = "özellik/pasif %%9: %s" % (", ".join(w.traits.map(func(t: String) -> String: return str(Traits.data(t)["name"]))) if not w.traits.is_empty() else "özelliği yok")
+	elif it is Talisman:
+		var t := it as Talisman
+		border = t.color()
+		line1 = "%s: %s" % [title, t.display_name()]
+		line2 = t.description()
+	_panel.draw_rect(Rect2(p, s), border, false, 1.5)
+	_panel.draw_string(font, p + Vector2(10, 19), line1, HORIZONTAL_ALIGNMENT_LEFT, s.x - 16, 15, border.lightened(0.3))
+	_panel.draw_string(font, p + Vector2(10, 37), line2, HORIZONTAL_ALIGNMENT_LEFT, s.x - 16, 12, Color(0.7, 0.7, 0.75))
 
 
 ## Yetenek kutusu: tuş, kalan bekleme süresi ya da kaynak bedeli; altında yeteneğin adı.

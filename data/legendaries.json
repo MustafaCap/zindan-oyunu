@@ -1,9 +1,29 @@
 {
-  "_note": "Her efsanevi silahın adı ve pasifi elle tasarlanır (GDD). Pasif şablonları GDD'deki örneklerdir; silah listesi Aşama 5'te kullanıcıyla birlikte doldurulacak.",
+  "_note": "Efsanevi silahlar (GDD: Nadirlik ve Efsanevi Silahlar). Her birinin adı, elementi, pasifi ve sağ tık eki (kendine özel skill) elle seçildi; özellik sayısı 1 veya 2 (rastgele). İlk sürümde her silah tipinden bir efsanevi var (Aşama 5 önerisi, kullanıcı değiştirebilir). Pasif ve skill sayıları '_default': oyun testinde ayarlanır. flex_field: silah Esnek slottayken %9 ile çarpılan sayı (GDD: pasifinin %9'u).",
   "passive_templates": {
-    "sky_lightning":  { "description": "Her 5. vuruş gökten yıldırım indirir", "every_n_hits": 5, "element": "lightning" },
-    "death_burst":    { "description": "Öldürülen düşman silahın elementinde patlar" },
-    "combo_reset":    { "description": "Bir kombo tetiklenince sağ tık, Q ve E bekleme süreleri sıfırlanır" }
+    "sky_lightning": { "description": "Her {every_n_hits}. vuruş hedefe gökten {element_name} indirir (vuruşun %{damage_pct}'i, {radius} karo alan)", "every_n_hits": 5, "damage_pct": 0.8, "radius": 1.2, "flex_field": "damage_pct" },
+    "death_burst":   { "description": "Öldürülen düşman silahın elementinde patlar (vuruşun %{damage_pct}'i, {radius} karo alan)", "damage_pct": 0.5, "radius": 2.0, "flex_field": "damage_pct" },
+    "combo_reset":   { "description": "Bir kombo tetiklenince sağ tık, Q ve E bekleme süreleri sıfırlanır", "chance": 1.0, "flex_field": "chance" },
+    "kill_frenzy":   { "description": "Her öldürme {duration} sn boyunca +%{attack_speed} saldırı hızı verir", "attack_speed": 0.25, "duration": 4.0, "flex_field": "attack_speed" },
+    "crit_nova":     { "description": "Kritik vuruş hedefin etrafında patlar (vuruşun %{damage_pct}'i, {radius} karo alan)", "damage_pct": 0.4, "radius": 1.5, "flex_field": "damage_pct" }
   },
-  "weapons": []
+  "skill_templates": {
+    "heavy_nova":    { "description": "Sağ tıktan sonra etrafında element dalgası patlar ({radius} karo, vuruşun ×{skill_mult}'i)", "radius": 2.5, "skill_mult": 0.6, "delay": 0.25 },
+    "heavy_strikes": { "description": "Sağ tıktan sonra farenin gösterdiği yere {count} element darbesi iner (her biri ×{skill_mult})", "count": 3, "skill_mult": 0.5, "radius": 1.2, "spread": 1.5, "delay": 0.3, "interval": 0.15, "max_range": 7.0 },
+    "heavy_shards":  { "description": "Sağ tıkla birlikte hedef arayan {count} element parçası fırlar (her biri ×{skill_mult})", "count": 3, "skill_mult": 0.4, "speed": 12.0, "seek_range": 7.0, "range": 9.0, "radius": 0.25, "turn_rate": 7.0 }
+  },
+  "weapons": [
+    { "id": "sky_rift",      "name": "Gökyarığı",        "type": "sword",    "element": "lightning", "passive": "sky_lightning", "skill": "heavy_nova" },
+    { "id": "ash_eater",     "name": "Kül Yiyen",        "type": "axe",      "element": "fire",      "passive": "death_burst",   "skill": "heavy_strikes" },
+    { "id": "glacier_fist",  "name": "Buzul Yumruğu",    "type": "fist",     "element": "ice",       "passive": "crit_nova",     "skill": "heavy_nova" },
+    { "id": "soul_reaper",   "name": "Ruh Hasatçısı",    "type": "scythe",   "element": "dark",      "passive": "kill_frenzy",   "skill": "heavy_shards" },
+    { "id": "viper_fang",    "name": "Engerek Dişi",     "type": "dagger",   "element": "poison",    "passive": "death_burst",   "skill": "heavy_shards" },
+    { "id": "wave_breaker",  "name": "Dalga Kıran",      "type": "mace",     "element": "water",     "passive": "combo_reset",   "skill": "heavy_nova" },
+    { "id": "storm_string",  "name": "Fırtına Teli",     "type": "bow",      "element": "lightning", "passive": "crit_nova",     "skill": "heavy_strikes" },
+    { "id": "ember_trigger", "name": "Kor Tetik",        "type": "crossbow", "element": "fire",      "passive": "kill_frenzy",   "skill": "heavy_strikes" },
+    { "id": "frost_spike",   "name": "Buz Sivrisi",      "type": "spear",    "element": "ice",       "passive": "sky_lightning", "skill": "heavy_shards" },
+    { "id": "dark_omen",     "name": "Kara Kehanet",     "type": "tome",     "element": "dark",      "passive": "combo_reset",   "skill": "heavy_shards" },
+    { "id": "deep_staff",    "name": "Derinlerin Asası", "type": "staff",    "element": "water",     "passive": "death_burst",   "skill": "heavy_strikes" },
+    { "id": "plague_seal",   "name": "Veba Mührü",       "type": "rune",     "element": "poison",    "passive": "kill_frenzy",   "skill": "heavy_nova" }
+  ]
 }

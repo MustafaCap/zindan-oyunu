@@ -1,6 +1,7 @@
 ## RoomProp — odalardaki etkileşimli nesneler (yer tutucu çizimler): sandık, tüccar, demirci, aşağı inen merdiven.
-## F (etkileşim) ile kullanılır. Sandık loot'u, tüccar ve demircinin arayüzü Aşama 5'te gelir; şimdilik yalnızca
-## açılır / konuşur ve bunu söyler. Merdiven kat boss'u kesilince boss odasının ortasında belirir.
+## F (etkileşim) ile kullanılır. Aşama 5: sandık açılınca loot saçar (DungeonRun; bazen tuzaklı, gizli oda sandığı
+## tuzaksız ve üst nadirlik ×2), tüccar ve demirci envanter arayüzünü kendi panelleriyle açar. Tüccarın tezgâhı
+## (stock) kat başına bir kez üretilir. Merdiven kat boss'u kesilince boss odasının ortasında belirir.
 class_name RoomProp
 extends Node2D
 
@@ -9,6 +10,9 @@ signal used(prop: RoomProp)
 var kind: String = "chest"     ## chest, merchant, blacksmith, stairs
 var room_id: int = -1
 var opened: bool = false
+var secret: bool = false        ## gizli odanın sandığı
+var stock: Array = []           ## tüccarın tezgâhı (Weapon / Talisman)
+var stock_ready: bool = false
 var _t: float = 0.0
 
 
@@ -18,9 +22,9 @@ func prompt() -> String:
 		"chest":
 			return "" if opened else "F: Sandığı aç"
 		"merchant":
-			return "F: Tüccar"
+			return "F: Tüccar (al / sat)"
 		"blacksmith":
-			return "F: Demirci"
+			return "F: Demirci (level atlat / yeniden çek)"
 		"stairs":
 			return "F: Aşağı in" if GameState.floor_index < 4 else "F: Zindandan çık"
 	return ""
@@ -34,12 +38,7 @@ func use() -> String:
 			if opened:
 				return ""
 			opened = true
-			msg = "Sandık açıldı — loot Aşama 5'te gelecek"
-		"merchant":
-			msg = "Tüccar: \"Tezgâhım Aşama 5'te açılıyor!\""
-		"blacksmith":
-			msg = "Demirci: \"Örsüm Aşama 5'te kızacak!\""
-		"stairs":
+		_:
 			msg = ""
 	queue_redraw()
 	used.emit(self)

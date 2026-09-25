@@ -74,6 +74,7 @@ static func heavy_pressed(p: Player) -> bool:
 	p.end_phase()
 	p.uses["heavy"] = int(p.uses["heavy"]) + 1
 	_do_heavy(p, w, hd, style)
+	p.effects.on_heavy(w)
 	return true
 
 
@@ -101,6 +102,7 @@ static func heavy_released(p: Player) -> void:
 	p.charge_t = 0.0
 	if k >= 1.0:
 		Events.floating_text.emit(p.global_position + Vector2(0, -80), "TAM GÜÇ", Color(1.0, 0.9, 0.4), 18)
+	p.effects.on_heavy(w)
 
 
 static func _do_heavy(p: Player, w: Weapon, hd: Dictionary, style: String) -> void:

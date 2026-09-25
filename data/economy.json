@@ -1,0 +1,62 @@
+{
+  "_note": "Aşama 5: loot düşmeleri, altın, çanta, tüccar, demirci ve sandık sayıları. GDD'de sayısı olmayan her şey burada; hepsi '_default' sayılır ve oyun testinde ayarlanır. Altın ve fiyatlar katın altın çarpanıyla (floor_gold_mult) çarpılır.",
+  "bag_size": 12,
+  "start_weapons": { "warrior": "sword", "ghost": "dagger", "archer": "bow", "magical": "staff" },
+  "_default_start_weapons": "Her run ırkın kendi ailesinden Yaygın (elementsiz) level 1 bir silahla Aktif 1'de başlar; çanta boş.",
+  "floor_gold_mult": { "1": 1, "2": 2, "3": 3, "4": 4 },
+  "gold": {
+    "normal": [2, 5],
+    "elite": [25, 35],
+    "boss": [90, 110],
+    "chest": [30, 50],
+    "secret_chest": [60, 90]
+  },
+  "drops": {
+    "normal_weapon_chance": 0.08,
+    "elite_weapons": 1,
+    "boss_weapons": 2,
+    "chest_weapons": 1,
+    "normal_potion_chance": 0.015,
+    "elite_potion_chance": 0.25,
+    "boss_potion_chance": 0.0,
+    "chest_talisman_chance": 0.2,
+    "_default": "Normal düşman %8 silah, %1,5 iksir; elit 1 silah (üst nadirlik ×2) + %25 iksir; boss 2 silah; sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
+  },
+  "pickup": {
+    "gold_magnet_tiles": 1.6,
+    "potion_pickup_tiles": 1.0,
+    "scatter_tiles": 0.7,
+    "auto_equip_empty_active": true,
+    "_default": "Altın yaklaşınca kendiliğinden toplanır; iksir üstünden geçince (taşıma sınırı dolmadıysa, Ghost almaz). Silah ve tılsım F ile alınır; boş bir aktif slot varsa ve silah açıksa (savaş dışında) oraya takılır, yoksa çantaya."
+  },
+  "chest": {
+    "trap_chance": 0.25,
+    "trap_warning_sec": 1.0,
+    "trap_radius": 2.0,
+    "trap_damage_pct": 0.2,
+    "_default": "Sandık %25 ihtimalle tuzaklı: açılınca yerde 2 karoluk kırmızı işaret belirir, 1 sn sonra patlar ve içindeki oyuncuya maks canının %20'si kadar (zırhtan önce) hasar verir. Gizli oda sandığı tuzaklı olmaz."
+  },
+  "merchant": {
+    "weapons": 3,
+    "talismans": 1,
+    "weapon_prices": { "common": 40, "rare": 80, "epic": 160, "legendary": 400 },
+    "talisman_price": 150,
+    "potion_price": 50,
+    "sell_pct": 0.3,
+    "_default": "Tüccarın tezgâhı kat başına bir kez üretilir: katın loot tablosundan 3 silah, sahip olunmayan 1 tılsım ve iksir (taşıma sınırına kadar; Ghost'a satılmaz). Satış fiyatı alış fiyatının %30'u."
+  },
+  "blacksmith": {
+    "level_up_cost_per_level": 8,
+    "reroll_element_cost": 60,
+    "reroll_trait_cost": 90,
+    "reroll_cost_growth": 1.5,
+    "_default": "Level atlatma silahı bir sonraki 5'in katına çıkarır (stat artışı her 5 levelde), en fazla oyuncunun leveline; bedeli kazanılan level × 8 × kat çarpanı. Element yeniden çekme Ender ve üstü (efsanevide element sabit), özellik yeniden çekme Destansı ve üstü; sonuç her zaman öncekinden farklı. Aynı silahta her yeniden çekme bir sonrakini ×1,5 pahalılaştırır."
+  },
+  "weapon_xp": {
+    "xp_slots": ["active_1", "active_2", "resonance", "flex"],
+    "locked_gains_xp": false,
+    "_default": "Silah XP eğrisi oyuncununkiyle aynıdır (progression.player: 100 + 20 × level). XP'yi yalnızca 4 slottaki silahlar alır (çantadakiler almaz); kilitli silah XP almaz, oyuncunun levelini bekler."
+  },
+  "interim_floor_min_level": true,
+  "_default_interim_floor_min_level": "GEÇİCİ (Aşama 6'da gerçek XP gelince kalkar): bir kata inince oyuncu leveli o katın hedef aralığının altındaysa alt sınıra çıkar (2. kat 15, 3. kat 35, 4. kat 55); böylece bulunan silahlar test edilebilir."
+}
