@@ -31,6 +31,10 @@ kaldığımız yer README'nin **Durum** bölümünde ve GDD'nin **Proje Durumu v
 ## Test ve derleme (Windows)
 - Godot 4.7.2 ve aynı sürümün export şablonları gerekir. `godot` komutu yoksa kullanıcıya kurulumu adım adım anlat
   (Godot'yu GitHub releases'tan indir, PATH'e ekle ya da `GODOT=/c/.../Godot_v4.7.2-stable_win64_console.exe` kullan).
+  **Bu bilgisayarda kurulu (Aşama 6):** `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`;
+  şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\`; `make` ve `python3` `C:\msys64\ucrt64\bin` içinde; `zip` yok
+  (`make export-windows` PowerShell `Compress-Archive` kullanır).
+- Testler ve zindan botu oyuncunun kayıt dosyasına (`user://save.json`) dokunmaz; ayrı dosyalar kullanır.
 - `make test` tüm testleri çalıştırır (birim, test odası smoke, ırk×silah matrisi, zindan smoke). `make` kurulu değilse
   Makefile'daki komutları doğrudan çalıştır, ör.:
   - `godot --headless --path . --import`

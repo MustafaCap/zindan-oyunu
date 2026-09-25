@@ -54,7 +54,5 @@
     "xp_slots": ["active_1", "active_2", "resonance", "flex"],
     "locked_gains_xp": false,
     "_default": "Silah XP eğrisi oyuncununkiyle aynıdır (progression.player: 100 + 20 × level). XP'yi yalnızca 4 slottaki silahlar alır (çantadakiler almaz); kilitli silah XP almaz, oyuncunun levelini bekler."
-  },
-  "interim_floor_min_level": true,
-  "_default_interim_floor_min_level": "GEÇİCİ (Aşama 6'da gerçek XP gelince kalkar): bir kata inince oyuncu leveli o katın hedef aralığının altındaysa alt sınıra çıkar (2. kat 15, 3. kat 35, 4. kat 55); böylece bulunan silahlar test edilebilir."
+  }
 }

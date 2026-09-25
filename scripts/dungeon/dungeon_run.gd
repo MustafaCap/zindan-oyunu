@@ -8,6 +8,10 @@
 ## Aşama 5: run ırkın başlangıç silahıyla başlar; düşmanlar, sandıklar ve boss'lar loot düşürür (LootGenerator →
 ## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: 4 slotluk envanter
 ## (InventoryUI; sürükle-bırak), F: tüccar ve demirci panelleri. Silahlar, Rezonans ve Esnek slot GameState.inventory'den.
+## Aşama 6 (ilerleme): düşmanlar XP verir (GameState.add_xp; kat ve türe göre), level atlanınca statlar yenilenir ve silahlar
+## da XP alır. Her 5 levelde level ödülü, her boss'ta boss ödülü (1 büyük stat + 1 özel etki) RewardUI ile seçilir; ödül
+## ekranı savaş bitince açılır. Boss ilk kesişi hemen kaydedilir (kalıcı +%0,3 hasar). Ölünce ya da kazanınca ustalık XP'si
+## hasar payına göre silah tiplerine işlenir, kaydedilir (SaveManager) ve RunSummary özet ekranı açılır.
 ## Komut satırı ("--" sonrasına):
 ##   --autoplay        Bot oynar: her odayı gezer, gizli duvarı kırar, boss'ları keser, 4 katı bitirir (çıkış 0).
 ##                     Ölürse 2, süre dolarsa 3, takılırsa 6, gezilemeyen oda kalırsa 7.
@@ -19,6 +23,9 @@
 ##   --loot-rain       Run başında oyuncunun çevresine test için loot saçar.
 ##   --fill-bag        Run başında boş slotları katın loot'uyla doldurur (arayüz testi).
 ##   --hover-bag=N     (Ekran görüntüsü için) N. slotun (0 Aktif 1 … 3 Esnek) tooltip'ini gösterir.
+##   --autoplay'da kalıcı kayıt user://save_autoplay.json'a yazılır (her smoke testinde sıfırdan) — oyuncunun kaydına dokunulmaz.
+##   --grant-levels=N  Run başında N level'lik XP verir (level ödülü ekranı açılır; ekran görüntüsü/deneme için).
+##   --end-run=SN      SN saniye sonra oyuncu ölür (run sonu özet ekranını denemek için).
 ##   --open-bag        Envanter açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
 class_name DungeonRun
 extends Node2D
@@ -37,6 +44,12 @@ var hud: Hud
 var menu: DebugMenu
 var minimap: Minimap
 var bag_ui: InventoryUI
+var reward_ui: RewardUI
+var summary: RunSummary
+var reward_rng := RandomNumberGenerator.new()
+var run_time: float = 0.0
+var last_summary: Dictionary = {}     ## son run sonu bilgisi (testler için)
+var _run_first_kills: Array[String] = []
 var loot_rng := RandomNumberGenerator.new()
 var drops: Array[LootDrop] = []
 var loot_stats := {"weapons": 0, "talismans": 0, "gold": 0, "potions": 0, "sold": 0, "bought": 0, "smith": 0, "chests": 0, "traps": 0}
@@ -76,6 +89,8 @@ var _open_bag: bool = false
 var _open_ui: String = ""
 var _fill_bag: bool = false
 var _hover_bag: int = -1
+var _grant_levels: int = 0
+var _end_run_at: float = -1.0
 
 
 func _ready() -> void:
@@ -112,6 +127,10 @@ func _ready() -> void:
 			_fill_bag = true
 		elif arg.begins_with("--hover-bag="):
 			_hover_bag = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--grant-levels="):
+			_grant_levels = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--end-run="):
+			_end_run_at = float(arg.get_slice("=", 1))
 		elif arg.begins_with("--open-ui="):
 			_open_ui = arg.get_slice("=", 1)
 		elif arg.begins_with("--weapons="):
@@ -131,6 +150,10 @@ func _ready() -> void:
 		_show_data_error()
 		return
 	_dg = DataDB.table("dungeon")
+	if autoplay:
+		# Smoke testi oyuncunun gerçek kaydına dokunmaz: ayrı dosya, her seferinde sıfırdan
+		SaveManager.save_path = "user://save_autoplay.json"
+		SaveManager.wipe()
 	var cfg_error := TestRoom.validate_config(config)
 	if cfg_error != "":
 		push_error("[Zindan] " + cfg_error)
@@ -152,7 +175,7 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
-	hud.stage_text = "Aşama 5 · loot ve envanter"
+	hud.stage_text = "Aşama 6 · ilerleme"
 	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
@@ -181,6 +204,12 @@ func _ready() -> void:
 	bag_ui.changed.connect(_on_inventory_changed)
 	bag_ui.drop_requested.connect(func(it: Variant) -> void:
 		_spawn_drop({"kind": "talisman" if it is Talisman else "weapon", "item": it}, player.global_position, 0.4))
+	reward_ui = RewardUI.new()
+	add_child(reward_ui)
+	reward_ui.chosen.connect(apply_reward)
+	summary = RunSummary.new()
+	add_child(summary)
+	summary.new_run_requested.connect(func() -> void: new_run(1))
 	Events.enemy_killed.connect(_on_enemy_killed_loot)
 	Events.xp_gained.connect(_on_xp_gained)
 
@@ -226,6 +255,14 @@ func new_run(from_floor: int = 1) -> void:
 	GameState.start_run(str(TestRoom.config["race"]))
 	GameState.run_seed = seed_value
 	GameState.level = maxi(int(TestRoom.config.get("level", 1)), 1)
+	reward_rng.seed = hash([seed_value, "rewards"])
+	run_time = 0.0
+	last_summary = {}
+	_run_first_kills.clear()
+	if summary:
+		summary.hide_summary()
+	if reward_ui and reward_ui.visible:
+		reward_ui.close()
 	# --weapons verildiyse aktif slotlara o silahlar (oyuncunun levelinde); yoksa ırkın başlangıç silahı
 	if _custom_weapons:
 		for i: int in mini((TestRoom.config["weapons"] as Array).size(), 2):
@@ -243,6 +280,15 @@ func new_run(from_floor: int = 1) -> void:
 		for i: int in 3:
 			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "normal", loot_rng), GameState.level)
 		_on_inventory_changed()
+	if _grant_levels > 0:
+		grant_xp(Leveling.xp_between(GameState.level, mini(GameState.level + _grant_levels, Leveling.max_level())))
+	if _end_run_at > 0.0:
+		get_tree().create_timer(_end_run_at).timeout.connect(func() -> void:
+			if is_instance_valid(player) and not finished:
+				GameState.record_damage(player.weapon().type_id, 1000.0)
+				player.invulnerable = false
+				player.iframes = 0.0
+				player.take_damage(1.0e9, Vector2.LEFT))
 	print("[Zindan] Yeni run: seed %d, %d. kattan" % [seed_value, from_floor])
 
 
@@ -251,11 +297,6 @@ func enter_floor(index: int) -> void:
 	GameState.floor_index = index
 	GameState.set_in_combat(false)
 	var fl: Dictionary = DataDB.table("floors")["floors"][str(index)]
-	# GEÇİCİ (Aşama 6'ya kadar): kata inince level katın hedef aralığının altındaysa alt sınıra çıkar
-	if bool(DataDB.table("economy")["interim_floor_min_level"]):
-		var min_lvl := int(fl["level_range"][0])
-		if GameState.level < min_lvl:
-			set_player_level(min_lvl)
 	layout = DungeonGenerator.generate(index, GameState.floor_seed(index), enemy_mult)
 	loot_rng.seed = hash([layout.seed_value, "loot"])
 	var ts := IsoTileset.build(Color(str(fl["placeholder_color"])), Color(str(fl["wall_color"])), Color(str(fl["obstacle_color"])))
@@ -395,6 +436,7 @@ func spawn_enemy(spec: Dictionary, cell: Vector2i) -> Node2D:
 		e.body_scale = float(pb["scale"])
 		var bdata: Dictionary = DataDB.table("bosses")["bosses"][str(spec["boss_id"])]
 		e.name_override = "%s (yer tutucu)" % bdata["name"]
+		e.boss_id = str(spec["boss_id"])
 	e.navigator = nav_dir
 	world.add_child(e)
 	e.global_position = cell_to_world(cell)
@@ -489,6 +531,8 @@ func _process(delta: float) -> void:
 		return
 	_elapsed += delta
 	_floor_elapsed += delta
+	if not finished:
+		run_time += delta
 	camera.global_position = player.global_position + Vector2(0, -20)
 	_secret_hit_cd = maxf(_secret_hit_cd - delta, 0.0)
 	_update_xray()
@@ -497,6 +541,7 @@ func _process(delta: float) -> void:
 	_update_drops()
 	_update_prompt()
 	_update_hud()
+	_try_open_reward()
 
 
 func _attach_xray(n: Node2D, color: Color) -> void:
@@ -569,22 +614,36 @@ func _on_room_cleared(room_id: int) -> void:
 				hud.show_message(""))
 
 
-func _on_boss_killed(room_id: int, _enemy: Node2D) -> void:
+func _on_boss_killed(room_id: int, enemy: Node2D) -> void:
 	hud.boss = null
 	_boss_node = null
 	# GDD: kat boss'u kesilince can tamamen dolar (Ghost dahil)
 	player.restore(player.max_hp - player.hp)
 	Events.boss_defeated.emit(GameState.floor_index)
+	# Boss ilk kesişi: kalıcı +%0,3 hasar, hemen kaydedilir
+	var bid := str(enemy.get("boss_id")) if is_instance_valid(enemy) else ""
+	if bid != "":
+		GameState.bosses_killed.append(bid)
+		if SaveManager.record_boss_kill(bid):
+			_run_first_kills.append(bid)
+			player.refresh_bonuses()
+			var bname := str(DataDB.table("bosses")["bosses"][bid]["name"])
+			hud.flash_note("İlk kesiş: %s — kalıcı +%%%s hasar" % [bname, Rewards._pct(float(DataDB.get_value("bosses", "first_kill_damage_bonus")))])
+			print("[Zindan] Boss ilk kesişi: %s (toplam %d)" % [bid, SaveManager.boss_first_kills.size()])
+	if GameState.floor_index == 2:
+		GameState.floor2_cleared = true
 	if GameState.floor_index >= 4:
 		finished = true
 		victory = true
-		hud.show_message("KAZANDIN!\nZindanın dibine ulaştın.\nR: yeni run · M: menü")
+		hud.show_message("")
 		if _autopilot:
 			_autopilot.report_floor()
 		print("[Zindan] ZAFER (%.1f sn)" % _elapsed)
+		_end_run(true)
 		if autoplay:
-			get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(0))
+			get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(0 if bool(last_summary.get("saved", false)) else 8))
 		return
+	GameState.pending_rewards.append("boss:%d" % GameState.floor_index)
 	hud.show_message("Boss yenildi!\nCanın doldu · Merdiven açıldı")
 	get_tree().create_timer(2.0).timeout.connect(func() -> void:
 		if is_instance_valid(hud) and not finished:
@@ -596,10 +655,51 @@ func _on_player_died() -> void:
 	if finished:
 		return
 	finished = true
-	hud.show_message("Öldün\n%d. katta, %d oda gezildi\nR: yeni run · M: menü" % [GameState.floor_index, visited.size()])
+	hud.show_message("")
 	print("[Zindan] OYUNCU ÖLDÜ (%d. kat, %.1f sn)" % [GameState.floor_index, _elapsed])
+	_end_run(false)
 	if autoplay:
 		get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(2))
+
+
+## Run sonu (ölüm ya da zafer): ustalık XP'si hasar payına göre silah tiplerine işlenir ve kaydedilir; özet ekranı açılır.
+## Bekleyen ödüller düşer (ödüller run bitince kaybolur).
+func _end_run(won: bool) -> void:
+	GameState.pending_rewards.clear()
+	if reward_ui.visible:
+		reward_ui.close()
+	if bag_ui.visible:
+		bag_ui.close()
+	var key := Mastery.depth_key(GameState.floor_index, won, GameState.floor2_cleared)
+	var results := Mastery.apply_run(GameState.damage_by_weapon_type, key)
+	var saved := SaveManager.save_game()
+	# Kayıt diske gerçekten yazıldı mı: yeni bir okuyucuyla geri oku ve karşılaştır
+	var check: Node = (SaveManager.get_script() as GDScript).new()
+	check.set("save_path", SaveManager.save_path)
+	check.set("report_errors", false)
+	check.call("load_game")
+	for m: Dictionary in results:
+		var e: Dictionary = (check.get("mastery") as Dictionary).get(str(m["type"]), {})
+		if int(e.get("level", -1)) != int(m["to_level"]):
+			saved = false
+	check.free()
+	var first_names: PackedStringArray = []
+	for bid: String in _run_first_kills:
+		first_names.append(str(DataDB.table("bosses")["bosses"][bid]["name"]))
+	var rw: PackedStringArray = []
+	var hud_txt := hud.rewards_text()
+	if hud_txt != "":
+		rw = hud_txt.trim_prefix("Ödüller: ").split(" · ")
+	last_summary = {"victory": won, "floor": GameState.floor_index, "level": GameState.level, "time": run_time,
+		"kills": GameState.kills, "gold": GameState.inventory.gold, "xp": GameState.xp_earned, "depth_key": key,
+		"mastery": results, "first_kills": Array(first_names), "rewards": Array(rw), "saved": saved}
+	summary.show_summary(last_summary)
+	Events.run_ended.emit(won, GameState.floor_index)
+	var parts: PackedStringArray = []
+	for m2: Dictionary in results:
+		parts.append("%s %%%d +%d XP Lv %d→%d" % [m2["type"], roundi(float(m2["share"]) * 100.0), roundi(float(m2["xp"])), int(m2["from_level"]), int(m2["to_level"])])
+	print("[Zindan] Run sonu: %s, %d. kat, level %d, %s ×%s · ustalık: %s · kayıt %s" % ["zafer" if won else "ölüm",
+		GameState.floor_index, GameState.level, key, str(Mastery.depth_multiplier(key)), ", ".join(parts), "tamam" if saved else "YAZILAMADI"])
 
 
 # --- etkileşim ---
@@ -666,7 +766,8 @@ func try_interact() -> bool:
 
 # --- loot (Aşama 5) ---
 
-## Düşman ölünce loot: altın ve nadiren iksir; silahı yalnızca boss düşürür (1 tane, katın normal oranlarıyla).
+## Düşman ölünce XP (kat ve türe göre) ve loot: altın ve nadiren iksir; silahı yalnızca boss düşürür (1 tane, katın
+## normal oranlarıyla).
 func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 	if layout == null or enemy == null or not is_instance_valid(enemy) or not (enemy as Node2D).is_inside_tree():
 		return
@@ -674,6 +775,9 @@ func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 		return
 	var kind := "boss" if is_boss else ("elite" if is_elite else "normal")
 	var pos := (enemy as Node2D).global_position
+	if not finished:
+		GameState.kills += 1
+		grant_xp(Leveling.enemy_xp(GameState.floor_index, kind))
 	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng):
 		_spawn_drop(d, pos)
 
@@ -745,9 +849,11 @@ func _update_drops() -> void:
 		match d.kind:
 			"gold":
 				if dist <= float(pk["gold_magnet_tiles"]):
-					inv.add_gold(d.amount)
-					loot_stats["gold"] = int(loot_stats["gold"]) + d.amount
-					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+%d altın" % d.amount, LootDrop.GOLD_COLOR, 16)
+					# Altın bulma ödülü toplanan altını çarpar
+					var amount := roundi(d.amount * (1.0 + player.stats.gold_find))
+					inv.add_gold(amount)
+					loot_stats["gold"] = int(loot_stats["gold"]) + amount
+					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+%d altın" % amount, LootDrop.GOLD_COLOR, 16)
 					Events.gold_changed.emit(inv.gold)
 					_remove_drop(d)
 			"potion":
@@ -802,9 +908,11 @@ func _on_inventory_changed() -> void:
 	Events.inventory_changed.emit()
 
 
-## Oyuncunun leveli değişir (hata ayıklama menüsü, geçici kat alt sınırı; Aşama 6'da XP).
-func set_player_level(new_level: int) -> void:
-	var before := GameState.level
+## Oyuncunun leveli değişir (XP ile ya da hata ayıklama menüsünden). before: önceki level (verilmezse GameState'teki).
+## Kilidi açılan silahlar bildirilir.
+func set_player_level(new_level: int, before: int = -1) -> void:
+	if before < 0:
+		before = GameState.level
 	GameState.level = clampi(new_level, 1, int(DataDB.get_value("progression", "player.max_level")))
 	if player and is_instance_valid(player):
 		player.set_level(GameState.level)
@@ -816,7 +924,66 @@ func set_player_level(new_level: int) -> void:
 		hud.flash_note("Kilidi açıldı: %s" % ", ".join(unlocked))
 
 
-## XP (Aşama 6'da düşmanlardan; şimdilik hata ayıklama menüsünden) slottaki silahlara da gider.
+## Oyuncuya XP verir (Deneyim kazanımı dahil): level atlanırsa statlar yenilenir, her 5 levelde ödül sıraya girer.
+## Silahlar aynı XP'yi Events.xp_gained üzerinden alır (_on_xp_gained; yetişme kuralıyla).
+func grant_xp(amount: float) -> void:
+	var before := GameState.level
+	var levels := GameState.add_xp(amount)
+	if levels.is_empty():
+		return
+	set_player_level(GameState.level, before)
+	Events.floating_text.emit(player.global_position + Vector2(0, -110), "LEVEL %d!" % GameState.level, Color(1.0, 0.85, 0.3), 30)
+	Events.area_pulse.emit(player.global_position, 1.6, Color(1.0, 0.85, 0.3))
+	for l: int in levels:
+		if Leveling.is_reward_level(l):
+			GameState.pending_rewards.append("level:%d" % l)
+
+
+## Sıradaki ödül ekranını açar: savaş sürerken beklenir (rewards.reward_after_combat); envanter/menü açıksa beklenir.
+## Bot (autoplay) ilk seçeneği hemen alır.
+func _try_open_reward() -> void:
+	if finished or GameState.pending_rewards.is_empty() or reward_ui.visible or bag_ui.visible or menu.visible:
+		return
+	if GameState.in_combat and bool(DataDB.get_value("rewards", "reward_after_combat")):
+		return
+	var entry: String = GameState.pending_rewards.pop_front()
+	var kind := entry.get_slice(":", 0)
+	var n := int(entry.get_slice(":", 1))
+	var totals := player.stat_totals()
+	var choices: Array
+	var title: String
+	var sub: String
+	if kind == "boss":
+		choices = Rewards.boss_offer(reward_rng, totals, GameState.special_effects, player.race_id)
+		title = "Boss ödülü"
+		sub = "%d. kat boss'u yenildi — güvenli güç mü, build değiştiren etki mi? (ödüller run bitince kaybolur)" % n
+	else:
+		choices = Rewards.level_offer(reward_rng, totals)
+		title = "Level %d ödülü" % n
+		sub = "Birini seç (1 / 2 ya da tıkla) — tavana ulaşan statlar çıkmaz"
+	if choices.is_empty():
+		return
+	if autoplay:
+		# Bot: level ödülünde ilk seçenek, boss ödülünde özel etki (smoke testinde özel etkiler de denensin)
+		apply_reward(choices[choices.size() - 1] if kind == "boss" else choices[0])
+		return
+	reward_ui.open(title, sub, choices, totals)
+
+
+## Seçilen ödülü run'a işler: stat → GameState.buffs, özel etki → special_effects (Yedek iksir hemen: +1 kapasite, iksirler dolar).
+func apply_reward(choice: Dictionary) -> void:
+	Rewards.apply(choice)
+	if str(choice["kind"]) == "special" and str(choice["id"]) == "spare_potion":
+		var inv := GameState.inventory
+		inv.potion_max += int(Rewards.special_data("spare_potion")["capacity"])
+		inv.potions = inv.potion_max
+	if player and is_instance_valid(player):
+		player.refresh_bonuses()
+	hud.flash_note("Ödül: %s — %s" % [choice["name"], choice["text"]])
+	print("[Zindan] Ödül (%s): %s" % [choice["source"], choice["text"]])
+
+
+## XP silahlara da gider (oyuncunun kazandığı XP; hata ayıklama menüsündeki "Silahlara +1000 XP" de bunu kullanır).
 func _on_xp_gained(amount: float) -> void:
 	for r: Dictionary in GameState.inventory.grant_weapon_xp(amount, GameState.level):
 		var w: Weapon = r["weapon"]
@@ -879,6 +1046,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			menu.set_lock_reason("Savaş sürerken ırk ve silahlar değiştirilemez (oda dışında serbest)." if GameState.in_combat else "")
 		elif key == KEY_R and finished:
 			new_run(1)
+			get_viewport().set_input_as_handled()
 		elif key == KEY_ESCAPE:
 			get_tree().quit()
 
@@ -965,6 +1133,7 @@ func _on_menu_applied(c: Dictionary) -> void:
 		return
 	TestRoom.config = c
 	GameState.level = maxi(int(c.get("level", 1)), 1)
+	GameState.xp = 0.0
 	_spawn_player(c)
 	set_player_level(GameState.level)
 	hud.flash_note("Yeni ayar uygulandı")
@@ -994,6 +1163,16 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 		"weapon_xp":
 			Events.xp_gained.emit(1000.0)
 			hud.flash_note("Slottaki silahlara +1000 XP")
+		"xp_1", "xp_5":
+			var target := mini(GameState.level + (1 if action_name == "xp_1" else 5), Leveling.max_level())
+			grant_xp(Leveling.xp_between(GameState.level, target) - GameState.xp)
+			hud.flash_note("Level %d (XP ile; ödüller savaş dışında açılır)" % GameState.level)
+		"boss_reward":
+			GameState.pending_rewards.append("boss:%d" % GameState.floor_index)
+		"mastery_reset":
+			SaveManager.wipe()
+			player.refresh_bonuses()
+			hud.flash_note("Ustalıklar ve boss ilk kesişleri sıfırlandı")
 
 
 func _show_data_error() -> void:

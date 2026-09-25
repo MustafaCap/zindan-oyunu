@@ -58,12 +58,16 @@ func flex_scale() -> float:
 	return float(_combat["flex_weapon_passive_pct"])
 
 
-## Rezonans oranı: kilitliyken %10, açıkken %7 (oyuncunun leveline göre).
+## Rezonans oranı: kilitliyken %10, açıkken %7 (oyuncunun leveline göre). Boss özel etkisi Rezonans güçlendirme:
+## %15 / %10.
 func resonance_pct() -> float:
 	if resonance == null:
 		return 0.0
-	var key := "resonance_locked_pct" if resonance.is_locked(player.level) else "resonance_unlocked_pct"
-	return float(_combat[key])
+	var locked := resonance.is_locked(player.level)
+	var boost := GameState.special("resonance_boost")
+	if not boost.is_empty():
+		return float(boost["locked"] if locked else boost["unlocked"])
+	return float(_combat["resonance_locked_pct" if locked else "resonance_unlocked_pct"])
 
 
 # --- vuruşa eklenen bonuslar ---
@@ -96,9 +100,14 @@ func move_speed_mult() -> float:
 
 ## Space bekleme süresi çarpanı (Rüzgâr Tüyü).
 func dash_cooldown_mult() -> float:
+	return 1.0 - dash_cooldown_reduction()
+
+
+## Rüzgâr Tüyü'nün Space bekleme süresi azaltması (Player ödüllerle toplayıp tavana uydurur).
+func dash_cooldown_reduction() -> float:
 	if has_talisman("wind_feather"):
-		return 1.0 - float(talisman().data()["dash_cooldown_reduction"])
-	return 1.0
+		return float(talisman().data()["dash_cooldown_reduction"])
+	return 0.0
 
 
 # --- efsanevi pasif kaynakları ---
@@ -238,7 +247,8 @@ func _burst(w: Weapon, center: Vector2, radius: float, pct: float, from_sky: boo
 		Events.chain_zap.emit(center + Vector2(0, -220), center + Vector2(0, -12), col, true)
 	var s := player.stats_for(w)
 	var o := {"damage_buffs": s.damage_buffs + float(opts.get("damage_buffs", 0.0)),
-		"element_bonus": s.element_bonus + float(opts.get("element_bonus", 0.0))}
+		"element_bonus": s.element_bonus + float(opts.get("element_bonus", 0.0)),
+		"mastery_level": Mastery.level_of(w.type_id)}
 	for e: Node2D in player.enemies_in_circle(center, radius):
 		if e == skip:
 			continue

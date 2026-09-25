@@ -17,7 +17,8 @@ const P := DamageCalc.PHYSICAL
 ## opts anahtarları (hepsi isteğe bağlı):
 ##   skill_mult (1.0), heavy (false), dir (Vector2, düz uzayda vuruş yönü), crit_bonus_chance (0),
 ##   crit_damage_bonus (0), damage_buffs (0), element_bonus (0), mastery_level (0), combo_damage_bonus (0),
-##   flex_traits (Array: Esnek slottaki silahın özellikleri), flex_scale (0,09: onların gücü)
+##   flex_traits (Array: Esnek slottaki silahın özellikleri), flex_scale (0,09: onların gücü),
+##   fury_max (Öfke tavanı; 0 = veri), execute_bonus / execute_boss_bonus (İnfaz eşiğine eklenen; Aşama 6 özel etkileri)
 ## candidates: yakındaki diğer hedefler (zincir, sekme ve alan kombo'ları için).
 ## Döndürür: {"damage", "crit", "combo", "executed", "immune", "chained": Array, "ricochet": Node}
 static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dictionary,
@@ -48,7 +49,7 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	hit.is_crit = bool(combo.get("guaranteed_crit", false)) or rng.randf() < crit_chance
 	var fury_s := trait_scale(weapon, "fury", opts)
 	if fury_s > 0.0:
-		hit.damage_buffs += Traits.fury_bonus(int(target.get("fury_stacks")), fury_s)
+		hit.damage_buffs += Traits.fury_bonus(int(target.get("fury_stacks")), fury_s, float(opts.get("fury_max", 0.0)))
 		target.set("fury_stacks", int(target.get("fury_stacks")) + 1)
 	hit.backstab = DamageCalc.is_behind(target.global_position, target.get("facing_cart"), attacker.global_position)
 	var dmg := DamageCalc.compute(hit, def)
@@ -85,8 +86,9 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	if ls_s > 0.0 and attacker.has_method("heal"):
 		attacker.call("heal", Traits.lifesteal_amount(total_dealt, ls_s))
 	var ex_s := trait_scale(weapon, "execute", opts)
+	var ex_bonus := float(opts.get("execute_boss_bonus" if bool(target.get("is_boss")) else "execute_bonus", 0.0))
 	if ex_s > 0.0 and not target.get("dead") \
-			and Traits.should_execute(float(target.get("hp")), float(target.get("max_hp")), bool(target.get("is_boss")), ex_s):
+			and Traits.should_execute(float(target.get("hp")), float(target.get("max_hp")), bool(target.get("is_boss")), ex_s, ex_bonus):
 		_text(target, "İNFAZ", Color(1.0, 0.3, 0.25))
 		target.call("execute", dir)
 		res["executed"] = true

@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 25 Eyl 2026 (Aşama 5)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 25 Eyl 2026 (Aşama 6)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -58,6 +58,7 @@ WASD ile yürünür, saldırılar farenin gösterdiği yöne gider. Oyuncunun 4 
 | 1 | İksir |
 | F | Etkileşim (loot, kapı, tüccar) |
 | I | Envanter: 4 slot (Aşama 5; açıkken oyun durur) |
+| 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seçme (Aşama 6; kartlara tıklamak da olur, açıkken oyun durur) |
 
 | Slot | Ne konur | Etkisi |
 | --- | --- | --- |
@@ -562,6 +563,8 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 4 | Zindan üretimi olduğu gibi onaylandı |
 | 5 | Envanterin tamamı 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek); çanta yok. Yer yoksa yerdeki eşya bir slottakiyle değiştirilir, eskisi geride kalır — çok eşya bırakmak zorunlu. |
 | 5 | Düşmanlar (elit dahil) silah düşürmez, yalnızca altın; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar ("direkt çok iyi" olmasın; ör. efsanevi %5). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kuralları kaldırıldı. |
+| 5 | Loot ve envanter bu iki değişiklikle onaylandı (Aşama 6 başında) |
+| 6 | Aşama 5'teki GEÇİCİ "kata inince level katın alt sınırına çıkar" kuralı, gerçek XP gelince kaldırıldı (kullanıcının isteği) |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -653,7 +656,7 @@ Sayıların hepsi `data/dungeon.json` ve `data/floors.json` içindedir.
 - **Yol bulma:** Düşmanlar ve test botu, arada engel varsa oda içinde engelin etrafından dolaşır (mesafe haritası).
 - **Güvenlik ağları:** Kilitli odanın dışına düşen oyuncu (örn. Gölge adımı kapının ötesine ışınlarsa) ve duvarın ötesine itilen düşman odanın içindeki son konumuna geri alınır.
 - **Hata ayıklama menüsü (zindanda):** "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında kapalı). "Zindan" satırı: kat seçimi + "Bu kattan yeni harita", "Test odasına git" ve "Ölümsüz (test)" kutusu (hasar alınmaz; katları hızlı gezmek için).
-- **Zorluk notu:** Aşama 6'ya (XP ve level) kadar oyuncu level atlamaz ve düşmanlar katla güçlenmez; level 1'de 60 düşmanlı 1. katı bitirmek zordur. Test için menüden level seçilebilir ya da "Ölümsüz" açılabilir.
+- **Zorluk notu:** Aşama 6'dan beri oyuncu XP ile level atlar; düşmanlar Aşama 7'ye kadar katla güçlenmez (2-4. katlar görece kolaydır). Test için menüden level seçilebilir, "+1/+5 level (XP)" kullanılabilir ya da "Ölümsüz" açılabilir.
 
 ### Loot ve envanter (Aşama 5)
 
@@ -689,7 +692,7 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 - Run ırkın kendi ailesinden Yaygın, level 1 bir silahla Aktif 1'de başlar (Warrior kılıç, Ghost hançer, Archer yay, Magical asa); diğer 3 slot boş. Envanter I ile açılır; açıkken oyun durur.
 - Kurallar: aktif slotlara yalnızca açık silah; Rezonans'a kilitli ya da açık silah; Esnek'e silah ya da tılsım. En az bir aktif silah kalır. Dolu slota bırakılan eşya yer değiştirir (karşı taraf da kurala uymalı). Savaş sürerken slotlara dokunulamaz ve eşya alınamaz.
 - Arayüz: sürükle-bırak (slotlar arası taşı / yer değiştir; "Yere bırak" alanı), sağ tık ya da çift tık (aktif slottaki silah Rezonans'la yer değiştirir; Rezonans/Esnek'teki açık silah boş aktif slota, yoksa kullanılan aktif silahla yer değiştirir), sol tık seçer (tüccar ve demirci için).
-- Tooltip: ad, nadirlik, tip ve aile, level, kilit, element, özellikler, efsanevi pasif ve sağ tık eki, vuruş hasarı / saldırı/sn / DPS / menzil (oyuncunun ırkı ve leveliyle; ustalık ve ödüller Aşama 6'da), ırk etkisi, Rezonans'taki ek hasarı, XP; kullanılan aktif silahla kıyas (DPS, vuruş, menzil, maks can farkı yeşil/kırmızı); tüccarda fiyat.
+- Tooltip: ad, nadirlik, tip ve aile, level, kilit, element, özellikler, efsanevi pasif ve sağ tık eki, vuruş hasarı / saldırı/sn / DPS / menzil (oyuncunun ırkı, leveli, run ödülleri, silah tipinin ustalığı ve ilk kesiş bonusuyla — Aşama 6), ırk etkisi, silah tipinin ustalık leveli ve bonusları (Aşama 6), Rezonans'taki ek hasarı, XP; kullanılan aktif silahla kıyas (DPS, vuruş, menzil, maks can farkı yeşil/kırmızı); tüccarda fiyat.
 - HUD: altın, iksir (x / 3), silah levelleri, Rezonans ve Esnek slot kutuları.
 
 **Silah leveli ve XP**
@@ -697,8 +700,8 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 - Silah XP eğrisi oyuncununkiyle aynı: sonraki levele 100 + 20 × level.
 - XP'yi 4 slottaki açık silahlar alır. Kilitli silah XP almaz, oyuncunun levelini bekler.
 - Oyuncunun levelinin altındaki silah 1,5 kat XP alır; yakalayınca normal hıza döner ama oyuncunun levelini geçemez (çubuk dolu bekler, oyuncu level atlayınca gelir).
-- Oyuncu XP'si Aşama 6'da gelir; şimdilik hata ayıklama menüsündeki "Silahlara +1000 XP" ile denenir.
-- **GEÇİCİ (Aşama 6'da kalkar):** bir kata inince oyuncu leveli katın hedef aralığının altındaysa alt sınıra çıkar (2. kat 15, 3. kat 35, 4. kat 55); böylece bulunan silahlar kilitli kalmaz. Kilidi açılan silahlar ekranda bildirilir.
+- Oyuncu XP'si Aşama 6'da geldi: silahlar oyuncunun kazandığı XP'yi (Deneyim kazanımı dahil) aynı anda alır; oyuncu önce level atlar, sonra silahlar yeni levele göre ilerler. Hata ayıklama menüsündeki "Silahlara +1000 XP" yalnızca silahlara verir.
+- ~~GEÇİCİ: kata inince oyuncu leveli katın alt sınırına çıkar~~ — **Aşama 6'da kaldırıldı** (`economy.interim_floor_min_level` silindi); level yalnızca XP ile artar. Kilidi açılan silahlar level atlanınca ekranda bildirilir.
 
 **Rezonans ve Esnek slot etkileri (`ItemEffects`)**
 
@@ -753,6 +756,85 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 - Geliştirme bayrakları: `--loot-rain`, `--fill-bag` (boş slotları doldurur), `--open-bag` (envanteri açar), `--open-ui=merchant|blacksmith`; `--weapons=` verilirse aktif slotlara o silahlar konur.
 - Zindan smoke testinde bot yerdeki eşyaları toplar, yalnızca boş slota sığan eşyaları alır (değiştirmez), tüccarda Rezonans/Esnek'tekini satıp iksir ve bir eşya alır, demircide aktif silahını geliştirir; kat özetinde loot sayıları yazılır.
 
+### İlerleme (Aşama 6)
+
+Sayıların hepsi `data/progression.json` ve `data/rewards.json` içindedir (`_default` notlarıyla). Kod: `scripts/progression/` (Leveling, Mastery, Rewards, RunBonuses), `scripts/ui/reward_ui.gd`, `scripts/ui/run_summary.gd`.
+
+**Oyuncu XP'si ve leveli (`Leveling`, `GameState.add_xp`)**
+
+- Sonraki levele gereken XP = 100 + 20 × mevcut level; maks level 80, orada XP birikmez. Bir anda birden çok level atlanabilir (ör. boss XP'si).
+- Düşman XP'si kat ve türe göre (progression.enemy_xp): normal 40 / 120 / 180 / 280, elit 150 / 500 / 900 / 1.800, boss 800 / 2.400 / 3.600 / 7.200. XP yalnızca zindanda, kesilen her düşman için verilir (test odasında XP yok).
+- Kabul testi: üretilen haritaların (4 farklı seed) her katındaki tüm normal düşmanlar, 2 elit ve boss kesilirse oyuncu tam olarak 15 / 35 / 55 / 80'de, artan XP'siz çıkar. Harita üreticisi katın normal düşman sayısını (60 / 70 / 80 / 90) ve 2 eliti birebir üretir.
+- Deneyim kazanımı ödülü düşman XP'sini çarpar (×(1 + toplam)). Level atlayınca statlar yenilenir (can oranı korunur), Magical'ın maks manası artar, kilidi açılan silahlar bildirilir, ekranda "LEVEL N!" yazar.
+- Silahlar oyuncunun aldığı XP'nin aynısını yetişme kuralıyla alır (Loot ve envanter > Silah leveli ve XP).
+
+**Run içi ödüller (`Rewards`, `RewardUI`)**
+
+- Level ödülü her 5 levelde (run başına 16): level havuzundan rastgele 2 farklı stat. Boss ödülü her boss'ta: biri büyük stat havuzundan, diğeri alınmamış bir özel etki; özel etki kalmadıysa iki büyük stat.
+- **Zamanlama:** level hemen atlanır ama ödül ekranı savaşı bölmez; kilitli odada savaş bitince (oda temizlenince) açılır, savaş dışındaysa hemen. Birden çok ödül birikirse sırayla gelir (önce level, sonra boss). Ekran açıkken oyun durur; kartlara tıklanır ya da 1 / 2. Envanter ya da menü açıkken beklenir. HUD'da "Ödül bekliyor" yazar.
+- 4. kat boss'u kesilince run zaferle bittiği için boss ödülü sunulmaz (ödüller run sonunda zaten kaybolur); ilk kesiş bonusu yine kaydedilir. Ölünce ya da kazanınca bekleyen ödüller düşer.
+- **Havuz filtresi:** tavana ulaşan stat (tüm kaynakların toplamı, aktif silahla: ırk, matris, ödüller, ustalık, efsanevi pasif) havuzdan çıkar; 2'den az uygun ödül kalırsa kalanlar sunulur. İksir kullanamayan ırka (Ghost) "Yedek iksir" sunulmaz.
+- Ödüllerin rastgeleliği run seed'inden (aynı seed, aynı seçim sırası aynı seçenekleri verir).
+- **Stat ödüllerinin işleyişi:**
+
+| Stat | Nereye eklenir |
+| --- | --- |
+| Hasar, ilk kesiş bonusu | Hasar formülündeki B (diğer buff'larla toplanır) |
+| Skill hasarı | B'ye, yalnızca sağ tık, Q ve E vuruşlarında (onların mermi ve alanları dahil) |
+| Element hasarı | E terimindeki element bonusu |
+| Kritik şansı / kritik hasarı | Kritik şansına (toplam tavan %60, temel %5 dahil) / K = 1,5 + bonus |
+| Saldırı hızı, menzil | Irk-silah matrisi ve ustalıkla toplanır, tavan +%150 / +%50 |
+| Maks can | Irk-silah matrisiyle toplanarak can çarpanına |
+| Hareket hızı | Irkın hız çarpanına (1 + bonus) |
+| Bekleme süresi azaltma | Sağ tık, Q ve E beklemelerini kısaltır (tavan %40) |
+| Space bekleme süresi azaltma | Atılma beklemesi; ödüller + Rüzgâr Tüyü toplamı en fazla %50 (**yeni tavan**: GDD'de yoktu, sonsuz atılmayı önlemek için) |
+| Hasar azaltma | Irk zırhına eklenir (tavan %75) |
+| Can emme | Verilen ana vuruş hasarının yüzdesi kadar iyileşme; Ghost'ta öldürme başına aynı yüzde kadar maks can iyileşmesi |
+| Deneyim kazanımı / Altın bulma | Düşman XP'sini / toplanan altını çarpar |
+
+- **Özel etkilerin ayrıntıları:**
+
+| Özel etki | Uygulama |
+| --- | --- |
+| Çift vuruş | Normal saldırının her isabeti %25 ihtimalle aynı hedefe bir kez daha tam vuruş yapar ("ÇİFT"); ek vuruş tekrar çift vuruş tetiklemez |
+| Ek mermi | Her sol tıkta %30 hasarlı ek mermi: yakın silahta (yay vuruşu, dürtme) önde 4 karo giden kılıç dalgası, uzak silahta ve ründe nişan yönünden 8° kaymış küçük mermi (silahın menzili kadar). Normal saldırı sayılır, çift vuruş tetiklemez |
+| Delici | Delmeyen her mermiye +1 delme (ok, cıvata, sayfa, küre, kılıç dalgası…); çarpınca patlayan küre, saplanan mızrak ve zaten delenler değişmez |
+| Element izi | Atılma bitince yolun başında, ortasında ve sonunda 0,8 karoluk iz; 3 sn boyunca 0,5 sn arayla içindekilere normal vuruşun %15'i (element durumu ve kombo dahil); elementsiz silahta fiziksel |
+| Kombo ustası | Kombo hasarına +%30 (HitResolver'ın combo_damage_bonus'u) |
+| Kritik zinciri | Her kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır |
+| Rezonans güçlendirme | Rezonans oranı kilitliyken %15, açıkken %10 |
+| Hiddet | Öfke tavanı %6 → %10 |
+| Cellat | İnfaz eşiğine +%2 (boss'ta +%1); yalnızca İnfaz işlerken (aktif silahta ya da Esnek slotta) |
+| Yedek iksir | Seçildiği anda iksir kapasitesi +1 ve tüm iksirler dolar |
+| İkinci şans | Ölümcül hasarda bir kez %30 canla dirilir, 1,5 sn dokunulmaz |
+
+**Silah tipi ustalığı (`Mastery`, kalıcı)**
+
+- Her silah tipinin ustalığı **level 1'den başlar** (XP tablosu 1 → 2 ile başladığı için) ve bonus = level × level başına bonus olduğundan **level 1 de bonus verir**: +%5 hasar, +%3,33 saldırı hızı, +%1,67 menzil, +%2,5 element (level 6'da 30/20/10/15, level 12'de 60/40/20/30 — GDD tablosu). Kullanıcı isterse level 1 bonussuz yapılabilir (o zaman level 12 = +%55).
+- Hasar bonusu formüldeki U terimidir; saldırı hızı, menzil ve element bonusları statlara eklenir (tavanlara uyar). Bonus, o an kullanılan silahın tipine göredir (mermiler atıldıkları silahın tipiyle).
+- **Run sonu:** ustalık XP'si = 100 (referans maç) × derinlik çarpanı; run boyunca verilen hasarın silah tiplerine göre yüzdesiyle bölünür (Rezonans ek hasarı Rezonans silahının tipine, efsanevi patlamalar kendi silahının tipine yazılır). Hiç hasar verilmediyse XP işlenmez. Maks levelde XP birikmez.
+- **Derinlik anahtarı:** zafer ×3,0; ölünen kat ×0,1 / ×0,3 / ×1,5 / ×2,0; "2. katı bitirme" ×1,0 = 2. kat boss'u kesilip 3. kata inilmeden ölüm. Hata ayıklama menüsünden yeni harita açmak ya da oyunu kapatmak run'ı işlemez (ustalık yalnızca ölüm ya da zaferde).
+- Kabul testi: 12. levele 100 XP'lik 114 referans maçla ulaşılır (ara toplamlar 3, 7, 13, 21, 33, 45, 58, 71, 84, 98, 114 maç).
+
+**Boss ilk kesişi ve kayıt (`SaveManager`)**
+
+- Kat boss'u ilk kez kesilince kalıcı +%0,3 hasar (B terimine; 20 boss ile maks +%6); boss kesildiği anda kaydedilir ("İlk kesiş" notu). Bonus hemen etkiye girer.
+- Kayıt `user://save.json` (Windows: `%APPDATA%\Godot\app_userdata\Zindan Oyunu\save.json`): `{"version", "mastery": {tip: {"level", "xp"}}, "boss_first_kills": [...]}`. Önce geçici dosyaya yazılıp yerine taşınır.
+- Dayanıklılık: JSON okunamıyor ya da yapı yanlışsa dosya `.bozuk` uzantısıyla yedeklenir ve temiz kayıtla devam edilir; tek tek bozuk girdiler (yanlış tipte ustalık, sayı olmayan level, tekrar eden ya da yazı olmayan boss) atlanır, level 1-12 aralığına sıkıştırılır, negatif XP sıfırlanır.
+- Run sonunda kayıt yazıldıktan sonra yeni bir okuyucuyla geri okunup doğrulanır; özet ekranında "İlerleme kaydedildi" (ya da uyarı) yazar.
+- Testler (`user://save_unit_tests.json`) ve zindan botu (`user://save_autoplay.json`, her seferinde sıfırdan) oyuncunun kaydına dokunmaz.
+
+**Run sonu özet ekranı (`RunSummary`)**
+
+- Ölünce ya da kazanınca açılır: sonuç, ulaşılan kat, level, süre, öldürme, altın, kazanılan XP, alınan run ödülleri, derinlik çarpanı ve toplam ustalık XP'si, silah tiplerine göre hasar payı / kazanılan XP / level (atlayanlar yeşil) / yeni bonuslar, bu run'daki boss ilk kesişleri. "Yeni run" düğmesi ya da R.
+
+**Arayüz ve hata ayıklama**
+
+- HUD: can ve kaynak barının altında XP barı ("Level N · XP x / y", maks levelde "MAKS"); kat bilgisinin altında alınan ödüller satırı (stat toplamları ve özel etkiler).
+- Hata ayıklama menüsünde "İlerleme (test)" satırı: +1 level ve +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve ilk kesişleri sıfırla (kalıcı kaydı siler). Menünün bilgi kutusunda ustalık levelleri ve ilk kesiş sayısı görünür. Menüdeki level seçimi XP'siz doğrudan level verir, ödül vermez.
+- Test odası run dışıdır: açılınca run durumu sıfırlanır (ödüller taşınmaz); ustalık kalıcı olduğu için orada da geçerlidir.
+- Geliştirme bayrakları: `--grant-levels=N` (run başında N level'lik XP), `--end-run=SN` (SN saniye sonra oyuncu ölür; özet ekranı). Zindan botu level ödülünde ilk seçeneği, boss ödülünde özel etkiyi alır (özel etkiler de smoke testinde denenir).
+
 ## Uygulama Rehberi
 
 Bu bölüm, oyunu sıfırdan yapacak bir Claude oturumu için yazıldı. Oyun 11 aşamada (0-10) yapılır; her aşama oynanabilir ya da test edilebilir bir sonuçla biter ve kullanıcının onayıyla bir sonrakine geçilir. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
@@ -783,15 +865,16 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | 2 — Savaş çekirdeği | ✅ Bitti, onaylandı (`asama-2` dalı) |
 | 3 — Irklar ve silahlar | ✅ Bitti, onaylandı (`asama-3` dalı, sürüm 0.3.1) |
 | 4 — Zindan üretimi | ✅ Bitti, onaylandı (`asama-4` dalı, sürüm 0.4.0) |
-| 5 — Loot ve envanter | ✅ Bitti (`asama-5` dalı GitHub'a push edildi, sürüm 0.5.0); kullanıcı testinde |
-| 6-10 | Sırada: Aşama 6 — İlerleme |
+| 5 — Loot ve envanter | ✅ Bitti, onaylandı (`asama-5` dalı, sürüm 0.5.0) |
+| 6 — İlerleme | ✅ Bitti (`asama-6` dalı GitHub'a push edildi, sürüm 0.6.0); kullanıcı testinde |
+| 7-10 | Sırada: Aşama 7 — Düşmanlar ve boss'lar |
 
-- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5). `asama-5` dalı `asama-4`'ün üstüne kurulu ve GitHub'a push edildi; onaylanınca aynı şekilde PR ile birleştirilir.
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5). `asama-5` onaylandı ama henüz main'e birleştirilmedi; `asama-6` dalı `asama-5`'in üstüne kurulu ve GitHub'a push edildi. Kullanıcı Aşama 6'yı onaylayınca (önce sorulur) PR ile birleştirilir (`asama-6` birleşince `asama-5`'in commit'leri de gelir).
 - **Çalışma düzeni (Aşama 6'dan itibaren): Claude Code.** Kullanıcı devamını kendi bilgisayarında, yerel klonda (`C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler\zindan-oyunu`) Claude Code ile, aşama aşama yapar. Claude Code reponun kökündeki `CLAUDE.md`'yi otomatik okur; kurallar orada da yazılıdır. Her aşama: önceki aşamanın dalından yeni `asama-N` dalı → kod → testler → README Durum + GDD (`docs/GDD.md`) güncellemesi → commit → **push** → kullanıcı onaylayınca PR ile main'e birleştirme. Kullanıcı **Git Bash** kullanır: git komutlarında yol ayıracı `/` olmalıdır.
 - **Push kuralı (kullanıcı kararı, 25 Eyl 2026):** Claude GitHub'a yazabiliyor: bilgisayardaki Claude (Claude Code ya da bilgisayara bağlı Claude) kullanıcının git hesabıyla, bulut oturumu da GitHub bağlantısına yazma izni verildiğinde doğrudan. Bu yüzden **Claude commit ve push'u önce kendisi yapar** ve GitHub'a ulaştığını kontrol eder (`git ls-remote origin`). Kendisi push edemezse (izin/erişim hatası) kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`; bulut oturumundan ise aşağıdaki bundle yoluyla).
-- **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır; Claude Code yoksa kurulumunu kullanıcıya adım adım anlatır. `make` Git Bash'te varsayılan olarak yoktur: kurulmadıysa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
+- **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır; Claude Code yoksa kurulumunu kullanıcıya adım adım anlatır. **Kullanıcının bilgisayarında (Aşama 6'da kuruldu):** Godot `C:\Users\mcap5\Godot\Godot_v4.7.2-stable_win64.exe` (komut satırı için `..._win64_console.exe`; PATH'te değil, `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`), export şablonları `%APPDATA%\Godot\export_templates\4.7.2.stable\`, `make` MSYS2'den (`C:\msys64\ucrt64\bin\make`), Python `C:\msys64\ucrt64\bin\python3`. `zip` yok: `make export-windows` bu durumda PowerShell `Compress-Archive` kullanır. `make` yoksa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
 - **Yedek teslim yolu (Aşama 0-4'te kullanıldı; push edilemezse hâlâ geçerli):** Claude'un GitHub bağlantısı yalnızca okuyabildiğinde kod `git bundle` olarak `ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakıldı (`git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`); 30 MB'tan büyük zip 19 MB'lık parçalara bölünüp `asama-N\` klasörüne `birlestir-ve-ac.bat` ile kondu.
-- **Test:** `make test` dört adımı çalıştırır: birim testleri (166 test; loot oranları 10.000 düşüşlük simülasyonla), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, boss'ları keser, merdivenle iner).
+- **Test:** `make test` dört adımı çalıştırır: birim testleri (193 test; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8).
 - **Bilinen:** `bpy` paket deposunda bulunamadı (Aşama 8'de yeniden denenecek). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
 
 **Kaldığın yerden devam mesajı (Claude Code, repo klasöründe):** "Bu repo zindan oyunum. Önce docs/GDD.md'nin tamamını (özellikle 'Uygulamada Verilen Kararlar' ve 'Proje Durumu ve Çalışma Düzeni'), README'deki Durum bölümünü ve CLAUDE.md'yi oku. Aşama N'den devam et; bu aşamayı bitirince dur ve bana neyi test etmem gerektiğini yaz."
@@ -827,8 +910,8 @@ zindan-oyunu/
     player/  enemies/  bosses/
     dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
-    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons
-    progression/          # Leveling, Mastery, Rewards
+    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, RewardUI, RunSummary
+    progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı)
   assets/                 # sprites, normals, audio/sfx, audio/music, fonts, shaders
   tools/
     blender/render_sprites.py
@@ -864,13 +947,13 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `talismans.json` | 3 tılsım (etki sayıları, renk) | Rezonans ve Esnek Slot |
 | `enemies.json` | 17 düşman, rol, bağışıklık, XP | Düşmanlar |
 | `bosses.json` | 4 boss, fazlar, saldırılar | Boss'lar |
-| `rewards.json` | Level ve boss ödül havuzları | Run İçi Ödüller |
-| `progression.json` | XP eğrisi, ustalık eğrisi, derinlik çarpanları, stat tavanları | Level, Ustalık, Denge |
+| `rewards.json` | Level ve boss ödül havuzları, özel etkilerin sayıları, ödül zamanlaması | Run İçi Ödüller, Uygulamada Verilen Kararlar |
+| `progression.json` | XP eğrisi, düşman XP'leri, ustalık eğrisi ve başlangıç leveli, derinlik çarpanları, stat tavanları (Space tavanı dahil) | Level, Ustalık, Denge |
 | `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu, placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
-| `economy.json` | Çanta boyu (0: yalnızca 4 slot), başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si | Ekonomi, Uygulamada Verilen Kararlar |
+| `economy.json` | Çanta boyu (0: yalnızca 4 slot), başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si (geçici kat level kuralı Aşama 6'da silindi) | Ekonomi, Uygulamada Verilen Kararlar |
 | `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, prototip düşmanlar, yer tutucu elit/boss, gizli duvar | Zindan, Uygulamada Verilen Kararlar |
 
-**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular), `GameState` (aktif run: level, envanter — `Inventory`: 4 slot, altın, iksir —, buff'lar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`).
+**Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular; ödül havuzundaki statları ve özel etkileri de denetler), `GameState` (aktif run: level ve XP — `add_xp` —, envanter — `Inventory`: 4 slot, altın, iksir —, ödül buff'ları ve özel etkiler, bekleyen ödül ekranları, kesilen boss'lar, silah tipine göre hasar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`; bozuk kayda dayanıklı).
 
 **Hasar formülü:** Tüm hasar tek bir `DamageCalc` fonksiyonundan geçer ve birim testleriyle korunur.
 
@@ -883,8 +966,8 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | T | Nadirlik temel hasarı (100 / 125 / 175 / 260) |
 | Ç | Silah tipi hasar çarpanı |
 | L | Silah level oranı (her 5 levelde yenilenir: 0,05 … 0,80) |
-| U | Ustalık hasar bonusu (level × 0,05) |
-| B | Toplam hasar buff'ları, kendi aralarında toplanarak: level ve boss ödülleri, ilk kesiş bonusu, Öfke, ırk-silah cezası |
+| U | Ustalık hasar bonusu (level × 0,05; ustalık level 1'den başlar, yani en az 0,05) |
+| B | Toplam hasar buff'ları, kendi aralarında toplanarak: level ve boss ödülleri (skill hasarı yalnızca sağ tık/Q/E'de), ilk kesiş bonusu, Öfke, ırk-silah cezası, Warrior Zırh'ı, Kan Taşı |
 | E | Element çarpanı = durum çarpanı × (1 + element hasarı bonusları) |
 | K | Kritikse 1,5 + kritik hasarı bonusları, değilse 1 |
 | A | Karanlık silahla arkadan vuruşta 1,1, diğer durumlarda 1 |

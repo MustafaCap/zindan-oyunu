@@ -31,6 +31,12 @@ func _run() -> void:
 		print("• %s (%d test)" % [file, names.size()])
 		for n: String in names:
 			suite.set("current_test", "%s::%s" % [file.get_basename(), n])
+			# Her test temiz başlar: run durumu sıfır, kalıcı kayıt (ustalık, ilk kesiş) boş ve oyuncunun gerçek
+			# kayıt dosyasından ayrı bir dosyada (testler user://save.json'a dokunmaz).
+			var sm := root.get_node("SaveManager")
+			sm.set("save_path", "user://save_unit_tests.json")
+			sm.call("reset")
+			root.get_node("GameState").call("reset_run")
 			var before: int = (suite.get("failures") as PackedStringArray).size()
 			suite.call("before_each")
 			suite.call(n)

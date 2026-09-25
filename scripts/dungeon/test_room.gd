@@ -68,6 +68,8 @@ static func default_config() -> Dictionary:
 
 func _ready() -> void:
 	process_priority = -10  # matris sürücüsü oyuncudan önce çalışsın
+	# Test odası run dışıdır: zindandan gelinse de run ödülleri ve envanter taşınmaz (ustalık kalıcıdır, geçerli)
+	GameState.reset_run()
 	if config.is_empty():
 		config = default_config()
 	var matrix_mode := false

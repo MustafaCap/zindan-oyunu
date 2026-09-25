@@ -12,17 +12,20 @@ static func data(trait_id: String) -> Dictionary:
 ## ikisi de varsa toplanır (1,09). Sayısal değerler bununla çarpılır (şanslar, eşikler, yüzdeler).
 
 ## Öfke: hedefe daha önce vurulan her vuruş için +%1, maks %6 (stacks = önceki vuruş sayısı).
-static func fury_bonus(stacks: int, scale: float = 1.0) -> float:
+## max_override > 0 ise tavan odur (boss özel etkisi Hiddet: %10).
+static func fury_bonus(stacks: int, scale: float = 1.0, max_override: float = 0.0) -> float:
 	var d := data("fury")
-	return minf(float(stacks) * float(d["per_hit"]), float(d["max"])) * scale
+	var cap := max_override if max_override > 0.0 else float(d["max"])
+	return minf(float(stacks) * float(d["per_hit"]), cap) * scale
 
 
 ## İnfaz: vuruştan sonra canı eşiğin altındaysa hedef ölür (boss'ta eşik %3).
-static func should_execute(hp: float, max_hp: float, is_boss: bool, scale: float = 1.0) -> bool:
-	if hp <= 0.0 or max_hp <= 0.0:
+## bonus: eşiğe eklenen (boss özel etkisi Cellat: +%2, boss'ta +%1); yalnızca İnfaz işlerken (scale > 0).
+static func should_execute(hp: float, max_hp: float, is_boss: bool, scale: float = 1.0, bonus: float = 0.0) -> bool:
+	if hp <= 0.0 or max_hp <= 0.0 or scale <= 0.0:
 		return false
 	var d := data("execute")
-	var threshold := float(d["boss_threshold"] if is_boss else d["threshold"]) * scale
+	var threshold := float(d["boss_threshold"] if is_boss else d["threshold"]) * scale + bonus
 	return hp / max_hp < threshold
 
 

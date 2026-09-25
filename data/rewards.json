@@ -1,6 +1,13 @@
 {
+  "_note": "Run içi ödüller (GDD: Run İçi Ödüller). Aşama 6'da oyuna bağlandı. Değerler GDD tablolarından; '_default' notları GDD'de olmayan ayrıntılar için verilen kararlardır ve oyun testinde ayarlanır.",
   "choices_per_offer": 2,
   "level_reward_every": 5,
+  "reward_after_combat": true,
+  "_default_reward_after_combat": "Level ödülü savaşı bölmez: level hemen atlanır (can, statlar), ama ödül ekranı oda temizlenince (savaş bitince) açılır. Savaş dışındaysa hemen açılır. Birden çok ödül birikirse sırayla gelir (önce level, sonra boss). Ekran açıkken oyun durur.",
+  "boss_reward_on_final_floor": false,
+  "_default_boss_reward_on_final_floor": "4. kat boss'u kesilince run zaferle biter; ödüller run sonunda zaten kaybolduğu için boss ödülü ekranı açılmaz. İlk kesiş bonusu yine kaydedilir.",
+  "_default_pool_filter": "Tavana ulaşan stat (tüm kaynakların toplamı: ırk, ırk-silah matrisi, ödüller, aktif silahın ustalığı) havuzdan çıkar. Havuzda 2'den az uygun ödül kalırsa kalanlar sunulur. İksir kullanamayan ırka (Ghost) 'Yedek iksir' sunulmaz.",
+  "_default_boss_offer": "Boss ödülünde 2 seçenek: biri büyük stat havuzundan, diğeri alınmamış bir özel etki. Özel etki kalmadıysa iki büyük stat sunulur.",
   "level_pool": {
     "attack_speed":       { "name": "Saldırı hızı", "value": 0.05 },
     "damage":             { "name": "Hasar", "value": 0.05 },
@@ -32,17 +39,25 @@
     "damage_reduction":   { "name": "Hasar azaltma", "value": 0.08 },
     "lifesteal":          { "name": "Can emme", "value": 0.03 }
   },
+  "_default_stats": "Stat ödüllerinin işleyişi: hasar, skill hasarı ve ilk kesiş bonusu hasar formülündeki B'ye toplanır (skill hasarı yalnızca sağ tık, Q, E ve onların mermi/alanlarında). Element hasarı E'ye, kritik hasarı K'ya (1,5 + bonus), maks can ırk-silah matrisiyle toplanarak can çarpanına, hasar azaltma zırha eklenir. Can emme verilen ana vuruş hasarının yüzdesi kadar iyileştirir; Ghost'ta öldürme başına aynı yüzde kadar maks can iyileşmesine dönüşür. Deneyim kazanımı düşman XP'sini, altın bulma toplanan altını çarpar. Bekleme süresi azaltma sağ tık, Q ve E beklemelerini kısaltır.",
   "boss_special_pool": {
     "double_hit":        { "name": "Çift vuruş", "description": "Normal saldırı %25 ihtimalle iki kez vurur", "chance": 0.25 },
-    "extra_projectile":  { "name": "Ek mermi", "description": "Normal saldırı %30 hasarlı küçük bir mermi daha fırlatır (yakın silahta kılıç dalgası)", "damage_pct": 0.30 },
-    "piercing":          { "name": "Delici", "description": "Mermiler ve dalgalar 1 düşmanı deler", "pierce": 1 },
-    "element_trail":     { "name": "Element izi", "description": "Space sonrası aktif silahın elementinde yerde iz kalır" },
+    "extra_projectile":  { "name": "Ek mermi", "description": "Normal saldırı %30 hasarlı küçük bir mermi daha fırlatır (yakın silahta kılıç dalgası)", "damage_pct": 0.30,
+                           "speed": 12.0, "radius": 0.35, "melee_range": 4.0, "angle_offset_degrees": 8.0,
+                           "_default": "Yakın silahta (yay vuruşu, dürtme) önde 4 karo giden kılıç dalgası; uzak silahta ve ründe nişan yönünde 8° kaymış küçük mermi (silahın menzili kadar). Vuruşu normal saldırı sayılır ama çift vuruş tetiklemez." },
+    "piercing":          { "name": "Delici", "description": "Mermiler ve dalgalar 1 düşmanı deler", "pierce": 1,
+                           "_default": "Delmeyen her mermiye (ok, cıvata, sayfa, küre, ek mermi, kılıç dalgası) +1 delme. Çarpınca patlayan küreler ve zaten delen mermiler değişmez." },
+    "element_trail":     { "name": "Element izi", "description": "Space sonrası aktif silahın elementinde yerde iz kalır",
+                           "segments": 3, "radius": 0.8, "pulses": 6, "interval": 0.5, "damage_pct": 0.15,
+                           "_default": "Atılma yolunun başında, ortasında ve sonunda 0,8 karoluk iz kalır; 3 sn boyunca 0,5 sn arayla içindekilere normal vuruşun %15'i kadar (element durumu ve kombo dahil) vurur. Elementsiz silahta iz fizikseldir." },
     "combo_master":      { "name": "Kombo ustası", "description": "Kombo hasarı +%30", "combo_damage": 0.30 },
     "crit_chain":        { "name": "Kritik zinciri", "description": "Kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır", "chance": 0.20, "seconds": 1.0 },
     "resonance_boost":   { "name": "Rezonans güçlendirme", "description": "Rezonans bonusu kilitliyken %15, açıkken %10 olur", "locked": 0.15, "unlocked": 0.10 },
     "wrath":             { "name": "Hiddet", "description": "Öfke tavanı %6'dan %10'a çıkar", "fury_max": 0.10 },
-    "executioner":       { "name": "Cellat", "description": "İnfaz eşiği +%2 (boss'larda +%1)", "threshold_bonus": 0.02, "boss_threshold_bonus": 0.01 },
-    "spare_potion":      { "name": "Yedek iksir", "description": "İksir kapasitesi +1 ve tüm iksirler dolar", "capacity": 1 },
-    "second_chance":     { "name": "İkinci şans", "description": "Ölünce bir kez %30 canla dirilir", "revive_hp": 0.30 }
+    "executioner":       { "name": "Cellat", "description": "İnfaz eşiği +%2 (boss'larda +%1)", "threshold_bonus": 0.02, "boss_threshold_bonus": 0.01,
+                           "_default": "Yalnızca İnfaz özelliği işlerken (aktif silahta ya da Esnek slotta) eşiğe eklenir." },
+    "spare_potion":      { "name": "Yedek iksir", "description": "İksir kapasitesi +1 ve tüm iksirler dolar", "capacity": 1, "requires_potions": true },
+    "second_chance":     { "name": "İkinci şans", "description": "Ölünce bir kez %30 canla dirilir", "revive_hp": 0.30, "iframes": 1.5,
+                           "_default": "Dirilince 1,5 sn dokunulmazlık." }
   }
 }

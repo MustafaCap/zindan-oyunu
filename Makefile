@@ -49,7 +49,7 @@ matrix: import
 
 # Aşama 4 kabulü: bot 4 katı baştan sona yürür — her odaya girer, gizli duvarı kırar, boss'ları keser, merdivenle iner
 dungeon: import
-	@$(GODOT) --headless --path . --fixed-fps 60 -- $(DUNGEON_ARGS) 2>&1 | tee build/dungeon.log | grep -E "\[Otopilot\] (.*(bitti|TAKILDI|GEZİLEMEYEN|SÜRE)|loot)|\[Zindan\] (ZAFER|Gizli|OYUNCU)|SCRIPT ERROR|ERROR" ; \
+	@$(GODOT) --headless --path . --fixed-fps 60 -- $(DUNGEON_ARGS) 2>&1 | tee build/dungeon.log | grep -E "\[Otopilot\] (.*(bitti|TAKILDI|GEZİLEMEYEN|SÜRE)|loot)|\[Zindan\] (ZAFER|Gizli|OYUNCU|Run sonu)|SCRIPT ERROR|ERROR" ; \
 	code=$${PIPESTATUS[0]}; \
 	if grep -q "SCRIPT ERROR" build/dungeon.log; then echo "DUNGEON: script hatası"; exit 1; fi; \
 	if [ $$code -ne 0 ]; then echo "DUNGEON: başarısız (kod $$code) — ayrıntı: build/dungeon.log"; exit 1; fi; \
@@ -64,7 +64,9 @@ sfx:
 export-windows: import
 	rm -rf $(WIN_DIR) && mkdir -p $(WIN_DIR)
 	$(GODOT) --headless --path . --export-release "Windows Desktop" $(WIN_DIR)/ZindanOyunu.exe
-	cd $(WIN_DIR) && zip -q -r ../$(notdir $(WIN_ZIP)) .
+	@rm -f $(WIN_ZIP)
+	@# zip yoksa (Windows Git Bash) PowerShell'in Compress-Archive'i kullanılır
+	@if command -v zip > /dev/null 2>&1; then cd $(WIN_DIR) && zip -q -r ../$(notdir $(WIN_ZIP)) . ; 	else powershell.exe -NoProfile -Command "Compress-Archive -Path '$(WIN_DIR)/*' -DestinationPath '$(WIN_ZIP)' -Force" ; fi
 	@echo "Hazır: $(WIN_ZIP)"
 
 clean:
