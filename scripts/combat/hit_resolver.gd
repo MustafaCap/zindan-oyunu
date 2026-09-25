@@ -1,7 +1,7 @@
 ## HitResolver — oyuncunun bir silah vuruşunu hedefe işler: hasar (DamageCalc), element durumu (StatusEffects),
 ## kombolar (Combos), Yıldırım zinciri ve 5 özellik (Traits). Efektleri Events sinyalleriyle duyurur.
 ##
-## Hedef arayüzü (EnemyMelee ve testlerdeki sahte hedef bunu sağlar):
+## Hedef arayüzü (Enemy ve testlerdeki sahte hedef bunu sağlar):
 ##   değişkenler: dead, hp, max_hp, is_boss, radius_tiles, facing_cart, defense, status, fury_stacks
 ##   fonksiyonlar: apply_damage(amount: float, info: Dictionary), execute(dir_cart: Vector2)
 ## Saldıran: global_position; varsa heal(amount) (Can Emme için).
@@ -18,13 +18,19 @@ const P := DamageCalc.PHYSICAL
 ##   skill_mult (1.0), heavy (false), dir (Vector2, düz uzayda vuruş yönü), crit_bonus_chance (0),
 ##   crit_damage_bonus (0), damage_buffs (0), element_bonus (0), mastery_level (0), combo_damage_bonus (0),
 ##   flex_traits (Array: Esnek slottaki silahın özellikleri), flex_scale (0,09: onların gücü),
-##   fury_max (Öfke tavanı; 0 = veri), execute_bonus / execute_boss_bonus (İnfaz eşiğine eklenen; Aşama 6 özel etkileri)
+##   fury_max (Öfke tavanı; 0 = veri), execute_bonus / execute_boss_bonus (İnfaz eşiğine eklenen; Aşama 6 özel etkileri),
+##   area (true: yerden/gökten gelen alan vuruşu; kalkan engellemez — Aşama 7)
 ## candidates: yakındaki diğer hedefler (zincir, sekme ve alan kombo'ları için).
 ## Döndürür: {"damage", "crit", "combo", "executed", "immune", "chained": Array, "ricochet": Node}
 static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dictionary,
 		candidates: Array, rng: RandomNumberGenerator) -> Dictionary:
 	var res := {"damage": 0.0, "crit": false, "combo": "", "executed": false, "immune": false, "chained": [], "ricochet": null}
 	if target == null or target.get("dead"):
+		return res
+	# Aşama 7: Demir Muhafız'ın kalkanı önden gelen birincil vuruşu engeller (yerden/gökten gelen alanlar hariç)
+	if not bool(opts.get("area", false)) and target.has_method("blocks_hit_from") 			and bool(target.call("blocks_hit_from", attacker.global_position)):
+		res["blocked"] = true
+		target.call("on_blocked", opts.get("dir", Vector2.RIGHT))
 		return res
 	var kind := weapon.element
 	var def: DamageCalc.Defense = target.get("defense")

@@ -455,7 +455,7 @@ static func _room_connected(r: Room) -> bool:
 
 static func _make_waves(layout: DungeonLayout, fl: Dictionary, dg: Dictionary, floor_index: int, rng: RandomNumberGenerator, enemy_mult: float) -> void:
 	var wv: Dictionary = dg["waves"]
-	var pool: Array = dg["prototype_enemies"][str(floor_index)]["pool"]
+	var pool: Array = fl["spawn_pool"]
 	var combat: Array[Room] = []
 	var elites: Array[Room] = []
 	for r: Room in layout.rooms:
@@ -482,47 +482,61 @@ static func _make_waves(layout: DungeonLayout, fl: Dictionary, dg: Dictionary, f
 		var waves: Array = []
 		for w: int in k:
 			var size := n / k + (1 if w < n % k else 0)
-			waves.append(_wave(size, pool, dg, rng))
+			waves.append(wave(size, pool, rng))
 		for ei: int in elite_rooms:
 			if ei == i:
-				(waves[waves.size() - 1] as Array).append(_elite_spec(pool, dg, rng))
+				(waves[waves.size() - 1] as Array).append(elite_spec(fl, rng))
 		combat[i].waves = waves
 	for r: Room in elites:
-		r.waves = [[_elite_spec(pool, dg, rng)]]
+		r.waves = [[elite_spec(fl, rng)]]
 	var boss := layout.rooms[layout.boss_id]
 	var bp: Array = fl["boss_pool"]
-	boss.waves = [[{"id": str(dg["placeholder_boss"]["base"]), "material": "", "elite": false, "boss": true,
-		"boss_id": str(bp[rng.randi_range(0, bp.size() - 1)])}]]
+	var bid := str(bp[rng.randi_range(0, bp.size() - 1)])
+	boss.waves = [[{"id": bid, "material": "", "elite": false, "boss": true, "boss_id": bid}]]
 
 
-## size kadar düşman: havuzdan ağırlıklı seçim; fare seçilirse sürü halinde (rat_group) gelir.
-static func _wave(size: int, pool: Array, dg: Dictionary, rng: RandomNumberGenerator) -> Array:
+## size kadar düşman: katın spawn_pool'undan ağırlıklı seçim (varyantlar malzemesiyle). Sürü düşmanları (pack)
+## gruplar halinde gelir; max_per_wave'i dolan düşman (destek, duvar gözü) o dalgada bir daha seçilmez.
+static func wave(size: int, pool: Array, rng: RandomNumberGenerator) -> Array:
 	var out: Array = []
-	var total_w := 0.0
-	for e: Array in pool:
-		total_w += float(e[2])
-	var group: Array = dg["prototype_enemies"]["rat_group"]
-	while out.size() < size:
-		var roll := rng.randf() * total_w
-		var pick: Array = pool[pool.size() - 1]
+	var counts: Dictionary = {}
+	var guard := 0
+	while out.size() < size and guard < 200:
+		guard += 1
+		var opts: Array = []
+		var total_w := 0.0
 		for e: Array in pool:
-			roll -= float(e[2])
+			var base: String = Enemy.resolve_variant(str(e[0]))[0]
+			var cap := int(Enemy.record(base).get("max_per_wave", 999))
+			if int(counts.get(base, 0)) < cap:
+				opts.append(e)
+				total_w += float(e[1])
+		if opts.is_empty():
+			opts = pool
+			for e2: Array in pool:
+				total_w += float(e2[1])
+		var roll := rng.randf() * total_w
+		var pick: Array = opts[opts.size() - 1]
+		for e3: Array in opts:
+			roll -= float(e3[1])
 			if roll <= 0.0:
-				pick = e
+				pick = e3
 				break
+		var vm := Enemy.resolve_variant(str(pick[0]))
+		var rec := Enemy.record(str(vm[0]))
 		var count := 1
-		if str(pick[0]) == "cave_rat":
-			count = mini(rng.randi_range(int(group[0]), int(group[1])), size - out.size())
+		if rec.has("pack"):
+			var pk: Array = rec["pack"]
+			count = mini(rng.randi_range(int(pk[0]), int(pk[1])), size - out.size())
 		for i: int in count:
-			out.append({"id": str(pick[0]), "material": str(pick[1]), "elite": false, "boss": false})
+			out.append({"id": str(vm[0]), "material": str(vm[1]), "elite": false, "boss": false})
+		counts[vm[0]] = int(counts.get(vm[0], 0)) + count
 	return out
 
 
-static func _elite_spec(pool: Array, dg: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
-	var base_pool: Array = dg["placeholder_elite"]["base_pool"]
-	var opts: Array = []
-	for e: Array in pool:
-		if str(e[0]) in base_pool:
-			opts.append(e)
-	var pick: Array = opts[rng.randi_range(0, opts.size() - 1)] if not opts.is_empty() else [base_pool[0], ""]
-	return {"id": str(pick[0]), "material": str(pick[1]), "elite": true, "boss": false}
+## Elit: katın temel düşmanlarından (enemy_pool) biri, rastgele aurayla.
+static func elite_spec(fl: Dictionary, rng: RandomNumberGenerator) -> Dictionary:
+	var base_pool: Array = fl["enemy_pool"]
+	var auras: Array = DataDB.records(DataDB.table("enemies")["elite_auras"])
+	return {"id": str(base_pool[rng.randi_range(0, base_pool.size() - 1)]), "material": "", "elite": true, "boss": false,
+		"aura": str(auras[rng.randi_range(0, auras.size() - 1)])}

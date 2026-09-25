@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Zindan Oyunu — derleme ve test komutları
-# Kullanım: make test | make unit | make smoke | make matrix | make dungeon | make export-windows | make all
+# Kullanım: make test | make unit | make smoke | make matrix | make dungeon | make bosses | make export-windows | make all
 
 GODOT   ?= godot
 BLENDER ?= blender
@@ -10,10 +10,12 @@ WIN_DIR := build/windows
 WIN_ZIP := build/zindan-oyunu-windows-v$(VERSION).zip
 
 TEST_ROOM := res://scenes/test_room.tscn
-# Zindan smoke testi: sabit seed, ölümsüz bot, düşman sayısı ×0,2 (haritanın yürünebilirliği denenir)
-DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2
+# Zindan smoke testi: sabit seed, ölümsüz bot, düşman sayısı ×0,2 ve canı ×0,25 (haritanın yürünebilirliği denenir)
+DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2 --enemy-hp=0.25
+# Aşama 7 boss testi: bot her katta doğrudan boss'a gider, katın beklenen level ve silah gücüyle (ateş + buz kılıç)
+BOSS_ARGS ?= --autoplay --god --boss-test --seed=7 --weapons=sword:fire,sword:ice
 
-.PHONY: all import test unit smoke matrix dungeon sprites sfx export-windows clean
+.PHONY: all import test unit smoke matrix dungeon bosses sprites sfx export-windows clean
 
 all: sprites sfx test export-windows
 
@@ -22,7 +24,7 @@ import:
 	@mkdir -p build
 	@$(GODOT) --headless --path . --import > /dev/null 2>&1
 
-test: unit smoke matrix dungeon
+test: unit smoke matrix dungeon bosses
 
 # Birim testleri (bir test script hatasıyla yarıda kesilirse de başarısız sayılır)
 unit: import
@@ -54,6 +56,15 @@ dungeon: import
 	if grep -q "SCRIPT ERROR" build/dungeon.log; then echo "DUNGEON: script hatası"; exit 1; fi; \
 	if [ $$code -ne 0 ]; then echo "DUNGEON: başarısız (kod $$code) — ayrıntı: build/dungeon.log"; exit 1; fi; \
 	echo "DUNGEON: geçti"
+
+# Aşama 7 kabulü: her boss yenilebilir (süre sınırı içinde), tüm saldırılarını kullanır, 2. faza girer ve her
+# saldırısı en az bosses.min_warn_sec önceden işaretlidir
+bosses: import
+	@$(GODOT) --headless --path . --fixed-fps 60 -- $(BOSS_ARGS) 2>&1 | tee build/bosses.log | grep -E "\[BossTest\]|\[Zindan\] ZAFER|\[Otopilot\] (TAKILDI|SÜRE)|SCRIPT ERROR|ERROR" ; \
+	code=$${PIPESTATUS[0]}; \
+	if grep -q "SCRIPT ERROR" build/bosses.log; then echo "BOSSES: script hatası"; exit 1; fi; \
+	if [ $$code -ne 0 ]; then echo "BOSSES: başarısız (kod $$code) — ayrıntı: build/bosses.log"; exit 1; fi; \
+	echo "BOSSES: geçti"
 
 sprites:
 	$(PYTHON) tools/blender/render_sprites.py

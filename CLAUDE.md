@@ -37,7 +37,7 @@ kaldığımız yer README'nin **Durum** bölümünde ve GDD'nin **Proje Durumu v
   şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\`; `make` ve `python3` `C:\msys64\ucrt64\bin` içinde; `zip` yok
   (`make export-windows` PowerShell `Compress-Archive` kullanır).
 - Testler ve zindan botu oyuncunun kayıt dosyasına (`user://save.json`) dokunmaz; ayrı dosyalar kullanır.
-- `make test` tüm testleri çalıştırır (birim, test odası smoke, ırk×silah matrisi, zindan smoke). `make` kurulu değilse
+- `make test` tüm testleri çalıştırır (birim, test odası smoke, ırk×silah matrisi, zindan smoke, boss testi — `make bosses`). `make` kurulu değilse
   Makefile'daki komutları doğrudan çalıştır, ör.:
   - `godot --headless --path . --import`
   - `godot --headless --path . -s tests/run_tests.gd` (çıktıda "SCRIPT ERROR" varsa test başarısızdır)
