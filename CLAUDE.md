@@ -31,6 +31,10 @@ kaldığımız yer README'nin **Durum** bölümünde ve GDD'nin **Proje Durumu v
 - Kullanıcı **Git Bash** kullanıyor: ona vereceğin komutlarda yol ayıracı `/` olsun (`\` değil).
 
 ## Test ve derleme (Windows)
+- **Test süresi (kullanıcı kararı, 26 Eyl 2026):** testler uzun sürmesin. Geliştirme sırasında yalnızca ilgili birim testlerini
+  ya da `make quick`'i (birim + smoke, ~1 dk) çalıştır; uzun bot testlerini (`make dungeon`, `make bosses`, `make matrix`) tekrar tekrar
+  çalıştırma. Tam `make test` (~3,5 dk) aşama sonunda **bir kez**, arka planda çalıştırılır. Ayar/denge için gerekirse tek boss ya da
+  tek kat denenir (`--boss-test --floor=N`), tüm run değil. Ekran görüntüsü yalnızca gerçekten gerekiyorsa.
 - Godot 4.7.2 ve aynı sürümün export şablonları gerekir. `godot` komutu yoksa kullanıcıya kurulumu adım adım anlat
   (Godot'yu GitHub releases'tan indir, PATH'e ekle ya da `GODOT=/c/.../Godot_v4.7.2-stable_win64_console.exe` kullan).
   **Bu bilgisayarda kurulu (Aşama 6):** `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`;
