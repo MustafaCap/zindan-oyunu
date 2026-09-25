@@ -111,7 +111,7 @@ const SCHEMA := {
 		"drops": {"boss_weapons": "number", "chest_weapons": "number",
 			"normal_potion_chance": "number", "elite_potion_chance": "number", "boss_potion_chance": "number",
 			"chest_talisman_chance": "number"},
-		"pickup": {"gold_magnet_tiles": "number", "potion_pickup_tiles": "number", "scatter_tiles": "number", "auto_equip_empty_active": "bool"},
+		"pickup": {"gold_magnet_tiles": "number", "potion_pickup_tiles": "number", "scatter_tiles": "number"},
 		"chest": {"trap_chance": "number", "trap_warning_sec": "number", "trap_radius": "number", "trap_damage_pct": "number"},
 		"merchant": {"weapons": "number", "talismans": "number", "weapon_prices": "dict", "talisman_price": "number",
 			"potion_price": "number", "sell_pct": "number"},

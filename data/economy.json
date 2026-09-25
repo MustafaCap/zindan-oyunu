@@ -1,8 +1,9 @@
 {
   "_note": "Aşama 5: loot düşmeleri, altın, çanta, tüccar, demirci ve sandık sayıları. GDD'de sayısı olmayan her şey burada; hepsi '_default' sayılır ve oyun testinde ayarlanır. Altın ve fiyatlar katın altın çarpanıyla (floor_gold_mult) çarpılır.",
-  "bag_size": 12,
+  "bag_size": 0,
+  "_default_bag_size": "Kullanıcı kararı (Aşama 5): envanterin tamamı 4 slottur (Aktif 1, Aktif 2, Rezonans, Esnek); çanta yoktur. Yeni eşya almak için boş (uygun) slot gerekir, yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler; bag_size > 0 yapılırsa çanta geri gelir.",
   "start_weapons": { "warrior": "sword", "ghost": "dagger", "archer": "bow", "magical": "staff" },
-  "_default_start_weapons": "Her run ırkın kendi ailesinden Yaygın (elementsiz) level 1 bir silahla Aktif 1'de başlar; çanta boş.",
+  "_default_start_weapons": "Her run ırkın kendi ailesinden Yaygın (elementsiz) level 1 bir silahla Aktif 1'de başlar; diğer 3 slot boş.",
   "floor_gold_mult": { "1": 1, "2": 2, "3": 3, "4": 4 },
   "gold": {
     "normal": [2, 5],
@@ -24,8 +25,7 @@
     "gold_magnet_tiles": 1.6,
     "potion_pickup_tiles": 1.0,
     "scatter_tiles": 0.7,
-    "auto_equip_empty_active": true,
-    "_default": "Altın yaklaşınca kendiliğinden toplanır; iksir üstünden geçince (taşıma sınırı dolmadıysa, Ghost almaz). Silah ve tılsım F ile alınır; boş bir aktif slot varsa ve silah açıksa (savaş dışında) oraya takılır, yoksa çantaya."
+    "_default": "Altın yaklaşınca kendiliğinden toplanır; iksir üstünden geçince (taşıma sınırı dolmadıysa, Ghost almaz). Silah ve tılsım F ile alınır (yalnızca savaş dışında): uygun boş slota konur (açık silah: Aktif 1, Aktif 2, Rezonans, Esnek; kilitli silah: Rezonans, Esnek; tılsım: Esnek). Uygun boş slot yoksa yerdekiyle değiştirilir ve eski eşya yere düşer (açık silah kullanılan aktif silahla, kilitli silah Rezonans'takiyle, tılsım Esnek'tekiyle)."
   },
   "chest": {
     "trap_chance": 0.25,

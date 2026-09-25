@@ -2,7 +2,7 @@
 ## GDD Görsel Stil > Loot: düşen eşyanın nadirliğine göre ışık sütunu (Yaygın gri, Ender mavi, Destansı mor,
 ## Efsanevi turuncu; nadirlik arttıkça sütun uzar, efsanevi nabız gibi atar).
 ## Altın yaklaşınca kendiliğinden toplanır, iksir üstünden geçince (taşıma sınırı dolmadıysa); silah ve tılsım F ile
-## alınır (DungeonRun). Oyuncu yakındayken eşyanın adı sütunun üstünde görünür.
+## alınır (DungeonRun); uygun boş slot yoksa F yerdekiyle değiştirir ve eski eşya yere düşer. Oyuncu yakındayken eşyanın adı sütunun üstünde görünür.
 class_name LootDrop
 extends Node2D
 
@@ -58,6 +58,12 @@ func label_text() -> String:
 func prompt() -> String:
 	if picked or not is_item():
 		return ""
+	var inv := GameState.inventory
+	if inv and inv.free_slot_for(item, GameState.level) == "" and inv.first_free_bag() < 0:
+		var slot := inv.swap_slot_for(item, GameState.level)
+		var old: Variant = inv.slots.get(slot)
+		if old != null:
+			return "F: Değiştir — %s  ↔  %s: %s (yere düşer)" % [label_text(), Inventory.SLOT_TITLES[slot], (old as Object).call("display_name")]
 	return "F: Al — %s" % label_text()
 
 

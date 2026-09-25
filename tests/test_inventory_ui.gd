@@ -1,5 +1,5 @@
 ## Aşama 5 — envanter arayüzü (sürükle-bırak, sağ tık, yere bırakma, tüccar, demirci, tooltip) ve zindanda loot
-## (düşman loot'u, altın/iksir toplama, F ile alma, sandık, tüccar tezgâhı, çanta kısayolu).
+## (düşman loot'u, altın/iksir toplama, F ile alma ve 4 slot doluyken değiştirme, sandık, tüccar tezgâhı, I kısayolu).
 extends "res://tests/test_case.gd"
 
 var _world: Node2D
@@ -36,59 +36,52 @@ func test_drag_and_drop_moves_and_swaps() -> void:
 	var p: Player = s[1]
 	var inv := GameState.inventory
 	var axe := Weapon.make("axe", "rare", "fire", [], 5)
-	inv.bag[0] = axe
+	inv.slots["resonance"] = axe
 	ui.open_ui("bag", p)
-	assert_true((Engine.get_main_loop() as SceneTree).paused, "çanta açıkken oyun durur")
+	assert_true((Engine.get_main_loop() as SceneTree).paused, "envanter açıkken oyun durur")
+	assert_eq(ui._bag_nodes.size(), 0, "çanta ızgarası yok (4 slot)")
 	var changes := [0]
 	ui.changed.connect(func() -> void: changes[0] += 1)
-	var from: ItemSlot = ui._bag_nodes[0]
+	var from: ItemSlot = ui._slot_nodes["resonance"]
 	var to: ItemSlot = ui._slot_nodes["active_2"]
 	var data: Variant = ui.drag_data_for(from)
-	assert_true(data != null, "dolu gözden sürüklenir")
+	assert_true(data != null, "dolu slottan sürüklenir")
 	assert_true(ui.can_drop(data, to), "boş aktif slota bırakılabilir")
 	ui.do_drop(data, to)
 	assert_eq(inv.slots["active_2"], axe)
+	assert_eq(inv.slots["resonance"], null)
 	assert_eq(changes[0], 1, "değişiklik bildirildi")
 	# Kilitli silah aktif slota bırakılamaz, Rezonans'a bırakılabilir
-	inv.bag[1] = Weapon.make("bow", "epic", "ice", ["fury"], 40)
-	var d2: Variant = ui.drag_data_for(ui._bag_nodes[1])
+	inv.slots["flex"] = Weapon.make("bow", "epic", "ice", ["fury"], 40)
+	var d2: Variant = ui.drag_data_for(ui._slot_nodes["flex"])
 	assert_true(not ui.can_drop(d2, ui._slot_nodes["active_1"]), "kilitli → aktif olmaz")
 	assert_true(ui.can_drop(d2, ui._slot_nodes["resonance"]), "kilitli → Rezonans olur")
-	# Boş göz sürüklenmez
-	assert_eq(ui.drag_data_for(ui._bag_nodes[5]), null)
+	# Boş slot sürüklenmez
+	assert_eq(ui.drag_data_for(ui._slot_nodes["resonance"]), null)
 	# Savaşta slota bırakılamaz
 	GameState.set_in_combat(true)
 	assert_true(not ui.can_drop(d2, ui._slot_nodes["resonance"]), "savaşta slot kilitli")
-	assert_true(ui.can_drop(d2, ui._bag_nodes[7]), "savaşta çanta içi serbest")
 	GameState.set_in_combat(false)
 	ui.close()
 	assert_true(not (Engine.get_main_loop() as SceneTree).paused, "kapanınca oyun devam eder")
 
 
-func test_quick_action_equips_and_unequips() -> void:
+func test_quick_action_active_and_resonance() -> void:
 	var s := _setup()
 	var ui: InventoryUI = s[0]
 	var inv := GameState.inventory
 	ui.open_ui("bag", s[1])
-	inv.bag[2] = Weapon.make("mace", "rare", "water", [], 3)
-	inv.bag[3] = Weapon.make("tome", "rare", "dark", [], 60)
-	inv.bag[4] = Talisman.make("wind_feather")
-	ui.quick_action(ui._bag_nodes[2])
-	assert_true(inv.slots["active_2"] is Weapon and (inv.slots["active_2"] as Weapon).type_id == "mace", "boş aktif slota takıldı")
-	ui.quick_action(ui._bag_nodes[3])
-	assert_true((inv.slots["resonance"] as Weapon).type_id == "tome", "kilitli silah Rezonans'a")
-	ui.quick_action(ui._bag_nodes[4])
-	assert_true(inv.slots["flex"] is Talisman, "tılsım Esnek'e")
+	var start: Weapon = inv.slots["active_1"]
+	var mace := Weapon.make("mace", "rare", "water", [], 3)
+	inv.slots["resonance"] = mace
+	ui.quick_action(ui._slot_nodes["resonance"])
+	assert_eq(inv.slots["active_2"], mace, "Rezonans'taki açık silah boş aktif slota")
+	ui.quick_action(ui._slot_nodes["active_2"])
+	assert_eq(inv.slots["resonance"], mace, "aktif → Rezonans")
+	inv.slots["flex"] = Weapon.make("tome", "rare", "dark", [], 60)
 	ui.quick_action(ui._slot_nodes["flex"])
-	assert_eq(inv.slots["flex"], null, "slottaki çantaya çıktı")
-	# İki aktif dolu: çantadaki açık silah kullanılan aktif silahla yer değiştirir
-	inv.bag[8] = Weapon.make("dagger", "common", "physical", [], 1)
-	var old: Weapon = inv.slots[inv.active_slot]
-	var idx := inv.bag.find(null)
-	ui.quick_action(ui._bag_nodes[8])
-	assert_eq((inv.slots[inv.active_slot] as Weapon).type_id, "dagger")
-	assert_eq(inv.bag[8], old, "eski aktif silah çantaya")
-	assert_true(idx >= 0)
+	assert_true((inv.slots["flex"] as Weapon).type_id == "tome", "kilitli silah aktif slota gitmez")
+	assert_eq(inv.slots["active_1"], start)
 
 
 func test_drop_zone_puts_item_on_ground() -> void:
@@ -96,14 +89,14 @@ func test_drop_zone_puts_item_on_ground() -> void:
 	var ui: InventoryUI = s[0]
 	var inv := GameState.inventory
 	ui.open_ui("bag", s[1])
-	inv.bag[0] = Weapon.make("axe", "rare", "fire")
+	inv.slots["resonance"] = Weapon.make("axe", "rare", "fire")
 	var dropped := []
 	ui.drop_requested.connect(func(it: Variant) -> void: dropped.append(it))
-	var data: Variant = ui.drag_data_for(ui._bag_nodes[0])
+	var data: Variant = ui.drag_data_for(ui._slot_nodes["resonance"])
 	assert_true(ui.can_drop(data, ui._drop_slot))
 	ui.do_drop(data, ui._drop_slot)
 	assert_eq(dropped.size(), 1)
-	assert_eq(inv.bag[0], null)
+	assert_eq(inv.slots["resonance"], null)
 	var d2: Variant = ui.drag_data_for(ui._slot_nodes["active_1"])
 	assert_true(not ui.can_drop(d2, ui._drop_slot), "son aktif silah bırakılamaz")
 
@@ -125,26 +118,22 @@ func test_merchant_panel_buy_and_sell() -> void:
 	ui.buy_stock(0)
 	assert_eq(inv.gold, 1000 - price)
 	assert_eq(prop.stock.size(), 1)
-	var bi := -1
-	for i: int in inv.bag.size():
-		if inv.bag[i] != null:
-			bi = i
-	assert_true(bi >= 0, "alınan çantada")
-	ui.select_slot(ui._bag_nodes[bi])
+	assert_true(inv.slots["active_2"] is Weapon, "alınan boş slota")
+	ui.select_slot(ui._slot_nodes["active_2"])
 	assert_true(not ui._sell_button.disabled, "seçili eşya satılabilir")
 	var g := inv.gold
 	ui.sell_selected()
-	assert_eq(inv.bag[bi], null)
+	assert_eq(inv.slots["active_2"], null)
 	assert_eq(inv.gold, g + roundi(price * 0.3))
 	inv.potions = 0
 	ui.buy_potion()
 	assert_eq(inv.potions, 1, "iksir alındı")
 	# Sürükleyerek sat
-	inv.bag[3] = Weapon.make("bow", "rare", "fire")
-	var data: Variant = ui.drag_data_for(ui._bag_nodes[3])
+	inv.slots["resonance"] = Weapon.make("bow", "rare", "fire")
+	var data: Variant = ui.drag_data_for(ui._slot_nodes["resonance"])
 	assert_true(ui.can_drop(data, ui._sell_slot))
 	ui.do_drop(data, ui._sell_slot)
-	assert_eq(inv.bag[3], null, "sürüklenen satıldı")
+	assert_eq(inv.slots["resonance"], null, "sürüklenen satıldı")
 
 
 func test_blacksmith_panel() -> void:
@@ -153,10 +142,10 @@ func test_blacksmith_panel() -> void:
 	var inv := GameState.inventory
 	inv.gold = 5000
 	var w := Weapon.make("axe", "epic", "fire", ["fury"], 1)
-	inv.bag[0] = w
+	inv.slots["resonance"] = w
 	ui.open_ui("blacksmith", s[1], null)
 	assert_true(ui._smith_box.visible)
-	var data: Variant = ui.drag_data_for(ui._bag_nodes[0])
+	var data: Variant = ui.drag_data_for(ui._slot_nodes["resonance"])
 	assert_true(ui.can_drop(data, ui._smith_slot))
 	ui.do_drop(data, ui._smith_slot)
 	assert_eq(ui.smith_weapon(), w, "örste")
@@ -177,15 +166,15 @@ func test_tooltip_compares_with_active_weapon() -> void:
 	var s := _setup()
 	var ui: InventoryUI = s[0]
 	var inv := GameState.inventory
-	inv.bag[0] = Weapon.make("axe", "epic", "fire", ["fury"], 10)
+	inv.slots["resonance"] = Weapon.make("axe", "epic", "fire", ["fury"], 10)
 	ui.open_ui("bag", s[1])
-	ui.on_slot_hover(ui._bag_nodes[0], true)
+	ui.on_slot_hover(ui._slot_nodes["resonance"], true)
 	var txt := ui._tooltip_text.text
 	assert_true(ui._tooltip.visible)
 	assert_true(txt.contains("Aktif silahla kıyas (Kılıç)") and txt.contains("DPS"), "aktif silahla karşılaştırma: %s" % txt)
 	assert_true(txt.contains("Öfke"), "özellik")
 	assert_true(txt.contains("Rezonans'ta"), "Rezonans değeri")
-	ui.on_slot_hover(ui._bag_nodes[0], false)
+	ui.on_slot_hover(ui._slot_nodes["resonance"], false)
 	assert_true(not ui._tooltip.visible)
 	var lt := WeaponInfo.tooltip(Weapon.make_legendary("sky_rift", ["fury"], 60), "warrior", 10)
 	assert_true(lt.contains("KİLİTLİ") and lt.contains("Efsanevi pasif") and lt.contains("Sağ tık eki"))
@@ -223,6 +212,27 @@ func test_dungeon_loot_flow() -> void:
 	assert_true(run.try_interact())
 	assert_eq(inv.slots["active_2"], w, "boş aktif slota takıldı")
 	assert_eq(run.player.weapons.size(), 2, "oyuncunun silahları yenilendi")
+	# 4 slot doluyken F yerdekiyle değiştirir, eski eşya yere düşer
+	inv.slots["resonance"] = Weapon.make("axe", "rare", "fire")
+	inv.slots["flex"] = Weapon.make("bow", "rare", "ice")
+	var used: Weapon = inv.slots[inv.active_slot]
+	var neu := Weapon.make("mace", "epic", "dark", ["fury"])
+	var d3 := run._spawn_drop({"kind": "weapon", "item": neu}, run.player.global_position, 0.0)
+	d3.global_position = run.player.global_position
+	assert_true(str(d3.prompt()).begins_with("F: Değiştir"), "yer yokken ipucu değiştir der")
+	assert_true(run.try_interact())
+	assert_eq(inv.slots[inv.active_slot], neu, "kullanılan aktif silahla değişti")
+	var back := run.drops.filter(func(d: LootDrop) -> bool: return d.item == used)
+	assert_eq(back.size(), 1, "eski silah yere düştü")
+	for b: LootDrop in back:
+		run._remove_drop(b)
+	# Savaşta eşya alınamaz
+	GameState.set_in_combat(true)
+	var d4 := run._spawn_drop({"kind": "weapon", "item": Weapon.make("bow", "common")}, run.player.global_position, 0.0)
+	d4.global_position = run.player.global_position
+	assert_true(not run.pick_up(d4), "savaşta alınmaz")
+	GameState.set_in_combat(false)
+	run._remove_drop(d4)
 	# İksir üstünden geçince (sınır doluysa kalır)
 	inv.potions = 3
 	var pd := run._spawn_drop({"kind": "potion"}, run.player.global_position, 0.0)
@@ -279,13 +289,13 @@ func test_interim_floor_min_level_and_unlock() -> void:
 	var run := DungeonRun.new()
 	run.fixed_seed = 12
 	tree.root.add_child(run)
-	GameState.inventory.bag[0] = Weapon.make("axe", "rare", "fire", [], 12)
+	GameState.inventory.slots["resonance"] = Weapon.make("axe", "rare", "fire", [], 12)
 	run.set_player_level(1)
 	assert_eq(run.player.level, 1)
 	run.enter_floor(2)
 	assert_eq(GameState.level, 15, "2. katta en az level 15")
 	assert_eq(run.player.level, 15)
-	assert_true(not (GameState.inventory.bag[0] as Weapon).is_locked(GameState.level), "kilidi açıldı")
+	assert_true(not (GameState.inventory.slots["resonance"] as Weapon).is_locked(GameState.level), "kilidi açıldı")
 	run.free()
 	for n: Node in tree.get_nodes_in_group("enemies"):
 		n.free()

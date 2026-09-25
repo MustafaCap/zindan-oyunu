@@ -24,9 +24,12 @@ import:
 
 test: unit smoke matrix dungeon
 
-# Birim testleri
+# Birim testleri (bir test script hatasıyla yarıda kesilirse de başarısız sayılır)
 unit: import
-	$(GODOT) --headless --path . -s tests/run_tests.gd
+	@$(GODOT) --headless --path . -s tests/run_tests.gd 2>&1 | tee build/unit.log ; \
+	code=$${PIPESTATUS[0]}; \
+	if grep -q "SCRIPT ERROR" build/unit.log; then echo "UNIT: script hatası (build/unit.log)"; exit 1; fi; \
+	exit $$code
 
 # Otomatik oynayan bot test odasını temizlemeli (çıkış kodu 0); hata ya da ölüm testi düşürür
 smoke: import

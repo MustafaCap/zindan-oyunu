@@ -27,8 +27,9 @@ geçilecek.
   Boss kesilince 1 silah düşer, nadirliği katın normal oranlarıyla (ör. 3. katta efsanevi %5). Silah ayrıca sandık, gizli oda
   ve tüccardan gelir; sandıkta tılsım da çıkabilir. Silah F ile alınır; nadirliğe göre ışık sütunu.
   Sandıklar %25 tuzaklı (kırmızı işaret, 1 sn sonra patlar).
-- `Inventory` + `InventoryUI` (I): 12 gözlü çanta ve 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek); sürükle-bırak, sağ tık/çift tık
-  ile tak-çıkar, yere bırakma, stat karşılaştırmalı tooltip. Kilitli silah aktif slota konamaz; savaşta slotlar kilitli.
+- `Inventory` + `InventoryUI` (I): envanterin tamamı 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek), çanta yok. Yer yoksa F yerdekiyle
+  değiştirir, eski eşya yere düşer. Sürükle-bırak, sağ tık/çift tık (aktif ↔ Rezonans), yere bırakma, stat karşılaştırmalı
+  tooltip. Kilitli silah aktif slota konamaz; savaşta slotlar kilitli ve eşya alınamaz.
 - Silah leveli ve yetişme XP'si (1,5 kat, oyuncuyu geçemez; yalnızca slottakiler, kilitliler almaz). XP Aşama 6'da gelir; şimdilik
   menüden "Silahlara +1000 XP".
 - `ItemEffects`: Rezonans ek hasarı (%10 kilitli / %7 açık), Esnek slot (özellik ve efsanevi pasif %9, tılsım tam), 3 tılsım,
@@ -36,12 +37,14 @@ geçilecek.
 - Tüccar (F): 3 silah + 1 tılsım + iksir satar, eşya alır (%30). Demirci (F): level atlatma, element/özellik yeniden çekme.
 - Run ırkın kendi ailesinden Yaygın bir silahla başlar.
 
-**Kullanıcının Aşama 5'te istediği değişiklik:** düşmanlardan silah düşmez, yalnızca altın; boss 1 silah düşürür ve bu silah
-garanti iyi değildir (katın normal nadirlik oranları). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kaldırıldı.
+**Kullanıcının Aşama 5'te istediği değişiklikler:**
+- Envanterin tamamı 4 slot, çanta yok: yeni eşya için yer yoksa bir eşya geride bırakılır.
+- Düşmanlardan silah düşmez, yalnızca altın; boss 1 silah düşürür ve bu silah
+  garanti iyi değildir (katın normal nadirlik oranları). "3-4. kat boss'u en az Destansı" ve "elit üst nadirlik ×2" kaldırıldı.
 
 **Aşama 5'te GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/economy.json` ve `data/legendaries.json` içinde;
 ayrıntılı liste GDD > Uygulamada Verilen Kararlar > Loot ve envanter):
-- Düşme oranları, altın miktarları (× kat çarpanı 1-4), tüccar fiyatları, demirci bedelleri, çanta 12 göz, tuzak %25.
+- Düşme oranları, altın miktarları (× kat çarpanı 1-4), tüccar fiyatları, demirci bedelleri, tuzak %25.
 - 4. katta gizli oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür.
 - Başlangıç silahı: Warrior kılıç, Ghost hançer, Archer yay, Magical asa (Yaygın, level 1).
 - Silah XP eğrisi oyuncununkiyle aynı; XP'yi yalnızca 4 slottaki açık silahlar alır.
@@ -78,7 +81,7 @@ Aşama 0-4'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümünde
 | Tab | Aktif silah değiştir |
 | 1 | İksir (Ghost kullanamaz) |
 | F | Etkileşim: yerdeki silah/tılsım, sandık, tüccar, demirci, merdiven |
-| I | Çanta ve slotlar (sürükle-bırak, sağ tık tak/çıkar; açıkken oyun durur) |
+| I | Envanter: 4 slot (sürükle-bırak, sağ tık aktif ↔ Rezonans; açıkken oyun durur) |
 | M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, test odası ↔ zindan |
 | R | Zindan: ölünce ya da kazanınca yeni run · Test odası: odayı yeniden başlat |
 | 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
@@ -88,10 +91,12 @@ Aşama 0-4'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümünde
 
 ## Geliştirme
 
+Aşama 6'dan itibaren geliştirme Claude Code ile bu klasörde yapılıyor; kurallar [`CLAUDE.md`](CLAUDE.md) dosyasında.
+
 Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, `zip`, Python 3.
 
 ```bash
-make test            # birim testleri (164) + test odası smoke + ırk×silah matrisi + zindan smoke (loot, tüccar, demirci dahil) (make unit / smoke / matrix / dungeon ayrı da çalışır)
+make test            # birim testleri (166) + test odası smoke + ırk×silah matrisi + zindan smoke (loot, tüccar, demirci dahil) (make unit / smoke / matrix / dungeon ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites         # sprite'ları üretir (Aşama 8)
 make sfx             # ses efektlerini üretir (Aşama 9)
@@ -103,7 +108,7 @@ Godot başka bir yerdeyse: `make test GODOT=/yol/godot`.
 Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırken; test odası için `godot --path . res://scenes/test_room.tscn -- <bayrak>`):
 - Zindan: `--seed=N` (aynı seed aynı haritalar) · `--floor=N` (N. kattan başla) · `--god` (hasar alınmaz) ·
   `--enemy-mult=0.2` (düşman sayısı çarpanı) · `--reveal` (minimapin tamamı) · `--open-menu` · `--autoplay` (bot 4 katı oynar)
-- Loot/arayüz: `--loot-rain` (çevreye loot saçar) · `--fill-bag` (çantayı doldurur) · `--open-bag` · `--open-ui=merchant` / `blacksmith`
+- Loot/arayüz: `--loot-rain` (çevreye loot saçar) · `--fill-bag` (boş slotları doldurur) · `--open-bag` (envanteri açar) · `--open-ui=merchant` / `blacksmith`
 - Bir katın haritasını ASCII basmak: `godot --headless --path . -s tools/dev/print_dungeon.gd -- --floor=2 --seed=42`
 - `--autoplay` — test odasında oyuncuyu bot oynatır (smoke testi bunu kullanır; hiç kombo yapamazsa test düşer)
 - `--race=ghost --level=20 --weapons=scythe:water,dagger:lightning:fury` — ırk, level ve iki silah (tip:element[:özellik])

@@ -1,9 +1,11 @@
-## Inventory — run'ın çantası, 4 slotu, altını ve iksirleri (GDD: Kontroller ve Slotlar, Rezonans ve Esnek Slot).
+## Inventory — run'ın 4 slotu, altını ve iksirleri (GDD: Kontroller ve Slotlar, Rezonans ve Esnek Slot).
 ## Saf mantıktır; arayüz (InventoryUI) ve DungeonRun bunu çağırır. GameState.inventory run boyunca tutar.
+## Kullanıcı kararı (Aşama 5): envanterin tamamı 4 slottur, çanta yoktur (economy.bag_size = 0); yeni eşya için yer
+## yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler (bag_size > 0 olursa çanta geri gelir).
 ##   Aktif 1 / Aktif 2: yalnızca açık (kilitsiz) silah.   Rezonans: kilitli ya da açık silah.
-##   Esnek: silah (kilitli ya da açık) ya da tılsım.       Çanta: her eşya (economy.bag_size göz).
-## Kurallar: en az bir aktif silah kalır; savaş sürerken (GameState.in_combat) slotlara dokunulamaz (çanta içinde yer
-## değiştirmek ve yerden çantaya almak serbest). Dolu yere bırakılan eşya yer değiştirir (karşı taraf da kurala uymalı).
+##   Esnek: silah (kilitli ya da açık) ya da tılsım.
+## Kurallar: en az bir aktif silah kalır; savaş sürerken (GameState.in_combat) slotlara dokunulamaz ve eşya alınamaz.
+## Dolu yere bırakılan eşya yer değiştirir (karşı taraf da kurala uymalı).
 ## Eşya adresi (ref): {"area": "bag", "index": i} ya da {"area": "slot", "name": "active_1"}.
 class_name Inventory
 extends RefCounted
@@ -168,20 +170,48 @@ func bag_free() -> int:
 	return n
 
 
-## Yerden alınan eşyayı koyar: boş aktif slota (açık silahsa, savaş dışında ve equip true ise), yoksa çantaya.
-## Döndürür: konduğu yerin adı ("active_2", "bag") ya da "" (çanta dolu).
-func add_item(item: Variant, player_level: int, equip_if_empty: bool = true, in_combat: bool = false) -> String:
-	if equip_if_empty and not in_combat and item is Weapon and not (item as Weapon).is_locked(player_level):
-		for s: String in ACTIVE_SLOTS:
-			if slots[s] == null:
-				slots[s] = item
-				_fix_active_slot()
-				return s
+## Eşyanın konabileceği ilk boş slot: açık silah Aktif 1 → Aktif 2 → Rezonans → Esnek; kilitli silah Rezonans → Esnek;
+## tılsım Esnek. Yoksa "".
+func free_slot_for(item: Variant, player_level: int) -> String:
+	for s: String in SLOT_NAMES:
+		if slots[s] == null and can_hold(slot_ref(s), item, player_level) == "":
+			return s
+	return ""
+
+
+## Yerden alınan ya da satın alınan eşyayı koyar: uygun boş slota, yoksa (varsa) çantaya.
+## Döndürür: konduğu slotun adı, "bag" ya da "" (yer yok). Savaşta eşya alınamaz ("").
+func add_item(item: Variant, player_level: int, in_combat: bool = false) -> String:
+	if in_combat:
+		return ""
+	var s := free_slot_for(item, player_level)
+	if s != "":
+		slots[s] = item
+		_fix_active_slot()
+		return s
 	var i := first_free_bag()
 	if i < 0:
 		return ""
 	bag[i] = item
 	return "bag"
+
+
+## Yer yokken yerdekiyle değiştirilecek slot: açık silah kullanılan aktif silahla, kilitli silah Rezonans'la,
+## tılsım Esnek'le.
+func swap_slot_for(item: Variant, player_level: int) -> String:
+	if item is Talisman:
+		return "flex"
+	if (item as Weapon).is_locked(player_level):
+		return "resonance"
+	return active_slot if slots.get(active_slot) != null else "active_1"
+
+
+## Eşyayı slota koyar, oradakini döndürür (yere bırakılır).
+func swap_in(item: Variant, slot: String) -> Variant:
+	var old: Variant = slots[slot]
+	slots[slot] = item
+	_fix_active_slot()
+	return old
 
 
 ## Aktif silahlar sırayla (Aktif 1, Aktif 2; boş olanlar atlanır).

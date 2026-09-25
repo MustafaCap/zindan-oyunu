@@ -1,6 +1,7 @@
 ## Shop — tüccar ve demirci işlemleri (GDD: Ekonomi ve Oda Tipleri). Saf mantıktır; InventoryUI ve zindan botu çağırır.
 ## Fiyatlar economy.json'dan, katın altın çarpanıyla (1. kat ×1 … 4. kat ×4) çarpılır.
-##   Tüccar: silah (nadirliğe göre), tılsım ve iksir satar; çantadaki (ve slottaki) eşyaları alış fiyatının %30'una alır.
+##   Tüccar: silah (nadirliğe göre), tılsım ve iksir satar; slottaki eşyaları (son aktif silah hariç) alış fiyatının
+##   %30'una alır.
 ##   Demirci: silahı bir sonraki 5'in katına level atlatır (en fazla oyuncunun leveli); elementi (Ender+, efsanevi hariç)
 ##   ya da özellikleri (Destansı+) yeniden çeker. Her yeniden çekme o silahta bir sonrakini ×1,5 pahalılaştırır.
 ## İşlem fonksiyonları "" (oldu) ya da hatanın nedenini döndürür.
@@ -30,18 +31,18 @@ static func sell_price(item: Variant, floor_i: int) -> int:
 	return roundi(item_price(item, floor_i) * float(_ec()["merchant"]["sell_pct"]))
 
 
-## Tezgâhtaki eşyayı satın alır; çantaya konur (çanta doluysa alınamaz).
-static func buy(inv: Inventory, stock: Array, index: int, floor_i: int) -> String:
+## Tezgâhtaki eşyayı satın alır; uygun boş slota konur (yer yoksa alınamaz; önce bir eşya sat ya da bırak).
+static func buy(inv: Inventory, stock: Array, index: int, floor_i: int, player_level: int = 1) -> String:
 	if index < 0 or index >= stock.size() or stock[index] == null:
 		return "Bu eşya artık yok"
 	var item: Variant = stock[index]
 	var price := item_price(item, floor_i)
 	if inv.gold < price:
 		return "Altın yetmiyor (%d gerekli)" % price
-	if inv.first_free_bag() < 0:
-		return "Çanta dolu"
+	if inv.free_slot_for(item, player_level) == "" and inv.first_free_bag() < 0:
+		return "Boş slot yok (önce bir eşya sat ya da yere bırak)"
 	inv.spend_gold(price)
-	inv.add_item(item, 0, false)
+	inv.add_item(item, player_level)
 	stock.remove_at(index)
 	return ""
 

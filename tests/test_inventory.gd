@@ -13,14 +13,16 @@ func _w(level: int = 1, type: String = "axe", rarity: String = "rare", el: Strin
 	return Weapon.make(type, rarity, el, [], level)
 
 
-func test_run_starts_with_race_weapon_and_empty_bag() -> void:
+## Kullanıcı kararı: envanterin tamamı 4 slot, çanta yok. Run ırkın başlangıç silahıyla, diğer 3 slot boş başlar.
+func test_run_starts_with_race_weapon_and_four_slots() -> void:
 	GameState.start_run("archer")
 	var inv := GameState.inventory
-	assert_eq(inv.bag.size(), int(DataDB.table("economy")["bag_size"]), "çanta 12 göz")
-	assert_eq(inv.bag_free(), inv.bag.size(), "çanta boş")
+	assert_eq(inv.bag.size(), 0, "çanta yok")
+	assert_eq(inv.slots.size(), 4, "4 slot")
 	var w := inv.slots["active_1"] as Weapon
 	assert_true(w != null and w.type_id == "bow" and w.rarity_id == "common" and w.level == 1, "Archer yayla başlar")
-	assert_eq(inv.slots["active_2"], null)
+	for s: String in ["active_2", "resonance", "flex"]:
+		assert_eq(inv.slots[s], null, s + " boş")
 	assert_eq(GameState.potions, 2)
 	assert_eq(GameState.gold, 0)
 	GameState.reset_run()
@@ -37,60 +39,82 @@ func test_slot_rules() -> void:
 	assert_true(inv.can_hold(Inventory.slot_ref("active_1"), t, 80) != "", "tılsım aktif slota konamaz")
 	assert_true(inv.can_hold(Inventory.slot_ref("resonance"), t, 80) != "", "tılsım Rezonans'a konamaz")
 	assert_eq(inv.can_hold(Inventory.slot_ref("flex"), t, 1), "", "tılsım Esnek'e")
-	assert_eq(inv.can_hold(Inventory.bag_ref(3), t, 1), "", "çantaya her şey")
 
 
 func test_move_swap_and_last_active_rule() -> void:
 	var inv := _inv()
 	var a1: Weapon = inv.slots["active_1"]
 	var axe := _w(1)
-	inv.bag[0] = axe
-	assert_eq(inv.move(Inventory.bag_ref(0), Inventory.slot_ref("active_1"), 1, false), "", "çantadan aktif slota (yer değiştirir)")
+	inv.slots["resonance"] = axe
+	assert_eq(inv.move(Inventory.slot_ref("resonance"), Inventory.slot_ref("active_1"), 1, false), "", "Rezonans ↔ aktif yer değiştirir")
 	assert_eq(inv.slots["active_1"], axe)
-	assert_eq(inv.bag[0], a1, "eski silah çantaya geçti")
-	# Son aktif silah çantaya çıkarılamaz
-	var free := inv.first_free_bag()
-	assert_true(inv.move(Inventory.slot_ref("active_1"), Inventory.bag_ref(free), 1, false) != "", "en az bir aktif silah kalmalı")
+	assert_eq(inv.slots["resonance"], a1)
+	# Son aktif silah boş bir slota taşınamaz / bırakılamaz
+	assert_true(inv.move(Inventory.slot_ref("active_1"), Inventory.slot_ref("flex"), 1, false) != "", "en az bir aktif silah kalmalı")
 	assert_true(inv.can_remove(Inventory.slot_ref("active_1"), false) != "", "son aktif silah satılamaz/bırakılamaz")
 	# İkinci aktif silah varken çıkarılabilir; kullanılan slot boşalınca diğerine geçilir
-	assert_eq(inv.move(Inventory.bag_ref(0), Inventory.slot_ref("active_2"), 1, false), "")
+	assert_eq(inv.move(Inventory.slot_ref("resonance"), Inventory.slot_ref("active_2"), 1, false), "")
 	inv.active_slot = "active_2"
 	assert_eq(inv.active_index(), 1)
-	assert_eq(inv.move(Inventory.slot_ref("active_2"), Inventory.bag_ref(5), 1, false), "")
+	assert_eq(inv.move(Inventory.slot_ref("active_2"), Inventory.slot_ref("flex"), 1, false), "")
 	assert_eq(inv.active_slot, "active_1", "boşalan aktif slottan diğerine geçildi")
 	assert_eq(inv.active_weapons().size(), 1)
-	# Kilitli silah, aktif silahla yer değiştiremez (kilitli olan aktif slota gideceği için)
-	inv.bag[6] = _w(30)
-	assert_true(inv.move(Inventory.bag_ref(6), Inventory.slot_ref("active_1"), 10, false) != "")
-	assert_eq(inv.move(Inventory.bag_ref(6), Inventory.slot_ref("resonance"), 10, false), "")
-	# Rezonans'taki kilitli silah çantadaki açık silahla yer değiştirebilir mi? (açık silah Rezonans'a gider: evet)
-	assert_eq(inv.move(Inventory.bag_ref(5), Inventory.slot_ref("resonance"), 10, false), "")
-	assert_eq((inv.bag[5] as Weapon).level, 30, "kilitli silah çantaya döndü")
+	# Kilitli silah aktif silahla yer değiştiremez (kilitli olan aktif slota gideceği için)
+	inv.slots["resonance"] = _w(30)
+	assert_true(inv.move(Inventory.slot_ref("resonance"), Inventory.slot_ref("active_1"), 10, false) != "")
+	assert_eq(inv.move(Inventory.slot_ref("resonance"), Inventory.slot_ref("flex"), 10, false), "", "kilitli silah Esnek'e geçebilir")
 
 
-func test_combat_locks_slots_but_not_bag() -> void:
+func test_combat_locks_slots_and_pickup() -> void:
 	var inv := _inv()
-	inv.bag[0] = _w(1)
-	assert_true(inv.move(Inventory.bag_ref(0), Inventory.slot_ref("active_2"), 1, true) != "", "savaşta slota konamaz")
-	assert_eq(inv.move(Inventory.bag_ref(0), Inventory.bag_ref(4), 1, true), "", "savaşta çanta içi düzenleme serbest")
-	assert_true(inv.can_remove(Inventory.slot_ref("active_1"), true) != "")
-	# Savaşta yerden alınan silah boş aktif slota değil çantaya gider
-	assert_eq(inv.add_item(_w(1), 1, true, true), "bag")
-	assert_eq(inv.add_item(_w(1), 1, true, false), "active_2", "savaş dışında boş aktif slota takılır")
-	assert_eq(inv.add_item(_w(50), 1, true, false), "bag", "kilitli silah çantaya")
+	inv.slots["resonance"] = _w(1)
+	assert_true(inv.move(Inventory.slot_ref("resonance"), Inventory.slot_ref("active_2"), 1, true) != "", "savaşta slot değişmez")
+	assert_true(inv.can_remove(Inventory.slot_ref("resonance"), true) != "", "savaşta bırakılamaz")
+	assert_eq(inv.add_item(_w(1), 1, true), "", "savaşta eşya alınamaz")
 
 
-func test_bag_full() -> void:
+## Yerden alma: uygun ilk boş slot; açık silah Aktif → Rezonans → Esnek, kilitli silah Rezonans → Esnek, tılsım Esnek.
+func test_pickup_fills_free_slots_then_full() -> void:
 	var inv := _inv()
-	for i: int in inv.bag.size():
-		inv.bag[i] = _w(1)
+	assert_eq(inv.add_item(_w(50), 1), "resonance", "kilitli silah Rezonans'a")
+	assert_eq(inv.add_item(_w(1), 1), "active_2", "açık silah boş aktif slota")
+	assert_eq(inv.add_item(Talisman.make("wind_feather"), 1), "flex", "tılsım Esnek'e")
+	assert_eq(inv.add_item(_w(1), 1), "", "4 slot dolu: yer yok")
+	assert_eq(inv.free_slot_for(Talisman.make("blood_stone"), 1), "")
+	var inv2 := _inv()
+	inv2.slots["active_2"] = _w(1)
+	inv2.slots["resonance"] = _w(1)
+	assert_eq(inv2.add_item(_w(1), 1), "flex", "açık silah son çare Esnek'e")
+
+
+## Yer yoksa yerdekiyle değiştirme: açık silah kullanılan aktif silahla, kilitli silah Rezonans'la, tılsım Esnek'le.
+func test_swap_when_full() -> void:
+	var inv := _inv()
 	inv.slots["active_2"] = _w(1)
-	assert_eq(inv.add_item(_w(1), 1), "", "çanta dolu")
-	assert_eq(inv.bag_free(), 0)
+	inv.slots["resonance"] = _w(1)
+	inv.slots["flex"] = Talisman.make("wind_feather")
+	inv.active_slot = "active_2"
+	var neu := _w(1, "bow")
+	assert_eq(inv.swap_slot_for(neu, 1), "active_2", "kullanılan aktif silahla")
+	var old: Variant = inv.swap_in(neu, "active_2")
+	assert_true(old is Weapon and old != neu, "eski silah döner (yere düşer)")
+	assert_eq(inv.slots["active_2"], neu)
+	assert_eq(inv.swap_slot_for(_w(60), 1), "resonance", "kilitli silah Rezonans'la")
+	assert_eq(inv.swap_slot_for(Talisman.make("blood_stone"), 1), "flex", "tılsım Esnek'le")
+
+
+func test_optional_bag_still_works() -> void:
+	# bag_size > 0 yapılırsa çanta geri gelir (kod destekler)
+	var inv := Inventory.new(4)
+	inv.slots["active_1"] = _w(1)
+	for s: String in ["active_2", "resonance", "flex"]:
+		inv.slots[s] = _w(1) if s != "flex" else Talisman.make("blood_stone")
+	assert_eq(inv.add_item(_w(1), 1), "bag", "slotlar doluysa çantaya")
+	assert_eq(inv.bag_free(), 3)
 
 
 func test_owned_talismans() -> void:
-	var inv := _inv()
+	var inv := Inventory.new(4)
 	inv.bag[2] = Talisman.make("wind_feather")
 	inv.slots["flex"] = Talisman.make("element_heart")
 	var owned := inv.owned_talismans()
@@ -141,7 +165,8 @@ func test_catch_up_xp() -> void:
 
 
 func test_xp_only_for_slotted_unlocked_weapons() -> void:
-	var inv := _inv()
+	var inv := Inventory.new(4)
+	inv.slots["active_1"] = Weapon.make("sword", "common")
 	var bagged := _w(1)
 	var locked := _w(20)
 	var res := _w(1)
@@ -176,9 +201,9 @@ func test_buy_sell_and_potions() -> void:
 	assert_eq(Shop.buy(inv, stock, 0, 1), "")
 	assert_eq(inv.gold, 1000 - Shop.item_price(_w(1, "sword", "rare"), 1))
 	assert_eq(stock.size(), 1, "satılan eşya tezgâhtan kalktı")
-	assert_true(inv.bag[0] is Weapon, "alınan çantaya gider")
+	assert_true(inv.slots["active_2"] is Weapon, "alınan boş slota gider")
 	var g := inv.gold
-	assert_eq(Shop.sell(inv, Inventory.bag_ref(0), 1, false), "")
+	assert_eq(Shop.sell(inv, Inventory.slot_ref("active_2"), 1, false), "")
 	assert_eq(inv.gold, g + Shop.sell_price(_w(1, "sword", "rare"), 1))
 	assert_true(Shop.sell(inv, Inventory.slot_ref("active_1"), 1, false) != "", "son aktif silah satılamaz")
 	inv.potions = 2
@@ -187,9 +212,10 @@ func test_buy_sell_and_potions() -> void:
 	assert_true(Shop.buy_potion(inv, 1, "warrior") != "", "taşıma sınırı 3")
 	inv.potions = 0
 	assert_true(Shop.buy_potion(inv, 1, "ghost") != "", "Ghost iksir alamaz")
-	for i: int in inv.bag.size():
-		inv.bag[i] = _w(1)
-	assert_true(Shop.buy(inv, stock, 0, 1).contains("dolu"), "çanta doluyken alınamaz")
+	inv.slots["active_2"] = _w(1)
+	inv.slots["resonance"] = _w(1)
+	inv.slots["flex"] = _w(1)
+	assert_true(Shop.buy(inv, stock, 0, 1).contains("Boş slot yok"), "slotlar doluyken alınamaz")
 
 
 # --- demirci ---

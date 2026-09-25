@@ -1,5 +1,5 @@
 ## Talisman — tılsım eşyası (GDD: Rezonans ve Esnek Slot > Tılsımlar). Yalnızca Esnek slotta etki eder (tam etki);
-## çantada durur. Etkileri Player'da işlenir (Kan Taşı, Rüzgâr Tüyü, Element Kalbi). Sayılar talismans.json'dan.
+## Esnek dışındaki slotlara konamaz. Etkileri Player'da işlenir (Kan Taşı, Rüzgâr Tüyü, Element Kalbi). Sayılar talismans.json'dan.
 class_name Talisman
 extends RefCounted
 
