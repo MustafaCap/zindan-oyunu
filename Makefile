@@ -46,7 +46,7 @@ matrix: import
 
 # Aşama 4 kabulü: bot 4 katı baştan sona yürür — her odaya girer, gizli duvarı kırar, boss'ları keser, merdivenle iner
 dungeon: import
-	@$(GODOT) --headless --path . --fixed-fps 60 -- $(DUNGEON_ARGS) 2>&1 | tee build/dungeon.log | grep -E "\[Otopilot\] .*(bitti|TAKILDI|GEZİLEMEYEN|SÜRE)|\[Zindan\] (ZAFER|Gizli|OYUNCU)|SCRIPT ERROR|ERROR" ; \
+	@$(GODOT) --headless --path . --fixed-fps 60 -- $(DUNGEON_ARGS) 2>&1 | tee build/dungeon.log | grep -E "\[Otopilot\] (.*(bitti|TAKILDI|GEZİLEMEYEN|SÜRE)|loot)|\[Zindan\] (ZAFER|Gizli|OYUNCU)|SCRIPT ERROR|ERROR" ; \
 	code=$${PIPESTATUS[0]}; \
 	if grep -q "SCRIPT ERROR" build/dungeon.log; then echo "DUNGEON: script hatası"; exit 1; fi; \
 	if [ $$code -ne 0 ]; then echo "DUNGEON: başarısız (kod $$code) — ayrıntı: build/dungeon.log"; exit 1; fi; \

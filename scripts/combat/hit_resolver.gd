@@ -16,7 +16,8 @@ const P := DamageCalc.PHYSICAL
 
 ## opts anahtarları (hepsi isteğe bağlı):
 ##   skill_mult (1.0), heavy (false), dir (Vector2, düz uzayda vuruş yönü), crit_bonus_chance (0),
-##   crit_damage_bonus (0), damage_buffs (0), element_bonus (0), mastery_level (0), combo_damage_bonus (0)
+##   crit_damage_bonus (0), damage_buffs (0), element_bonus (0), mastery_level (0), combo_damage_bonus (0),
+##   flex_traits (Array: Esnek slottaki silahın özellikleri), flex_scale (0,09: onların gücü)
 ## candidates: yakındaki diğer hedefler (zincir, sekme ve alan kombo'ları için).
 ## Döndürür: {"damage", "crit", "combo", "executed", "immune", "chained": Array, "ricochet": Node}
 static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dictionary,
@@ -45,8 +46,9 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	var caps: Dictionary = DataDB.get_value("progression", "stat_caps")
 	var crit_chance := minf(float(DataDB.get_value("progression", "combat.base_crit_chance")) + float(opts.get("crit_bonus_chance", 0.0)), float(caps["crit_chance"]))
 	hit.is_crit = bool(combo.get("guaranteed_crit", false)) or rng.randf() < crit_chance
-	if weapon.has_trait("fury"):
-		hit.damage_buffs += Traits.fury_bonus(int(target.get("fury_stacks")))
+	var fury_s := trait_scale(weapon, "fury", opts)
+	if fury_s > 0.0:
+		hit.damage_buffs += Traits.fury_bonus(int(target.get("fury_stacks")), fury_s)
 		target.set("fury_stacks", int(target.get("fury_stacks")) + 1)
 	hit.backstab = DamageCalc.is_behind(target.global_position, target.get("facing_cart"), attacker.global_position)
 	var dmg := DamageCalc.compute(hit, def)
@@ -78,19 +80,23 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 			total_dealt += secondary_hit(weapon, o, float(el["chain_damage_pct"]), kind, opts, true, dir)
 			(res["chained"] as Array).append(o)
 
-	# Özellikler
-	if weapon.has_trait("lifesteal") and attacker.has_method("heal"):
-		attacker.call("heal", Traits.lifesteal_amount(total_dealt))
-	if weapon.has_trait("execute") and not target.get("dead") \
-			and Traits.should_execute(float(target.get("hp")), float(target.get("max_hp")), bool(target.get("is_boss"))):
+	# Özellikler (silahın kendi özellikleri tam güçle, Esnek slottakiler %9 ile)
+	var ls_s := trait_scale(weapon, "lifesteal", opts)
+	if ls_s > 0.0 and attacker.has_method("heal"):
+		attacker.call("heal", Traits.lifesteal_amount(total_dealt, ls_s))
+	var ex_s := trait_scale(weapon, "execute", opts)
+	if ex_s > 0.0 and not target.get("dead") \
+			and Traits.should_execute(float(target.get("hp")), float(target.get("max_hp")), bool(target.get("is_boss")), ex_s):
 		_text(target, "İNFAZ", Color(1.0, 0.3, 0.25))
 		target.call("execute", dir)
 		res["executed"] = true
-	if weapon.has_trait("stun") and not target.get("dead") and Traits.roll_stun(rng):
+	var stun_s := trait_scale(weapon, "stun", opts)
+	if stun_s > 0.0 and not target.get("dead") and Traits.roll_stun(rng, stun_s):
 		var sd := Traits.data("stun")
 		st.stun(float(sd["duration"]), float(sd["boss_slow_duration"]), float(sd["boss_slow"]))
 		_text(target, "YAVAŞ" if bool(target.get("is_boss")) else "SERSEM", Color(1.0, 0.95, 0.5))
-	if weapon.has_trait("ricochet") and Traits.roll_ricochet(rng):
+	var ric_s := trait_scale(weapon, "ricochet", opts)
+	if ric_s > 0.0 and Traits.roll_ricochet(rng, ric_s):
 		var rd := Traits.data("ricochet")
 		var near := _nearest(target, candidates, float(rd["range"]), 1)
 		if not near.is_empty():
@@ -101,6 +107,14 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 
 	GameState.record_damage(weapon.type_id, total_dealt)
 	return res
+
+
+## Özelliğin bu vuruştaki gücü: silahta varsa 1, Esnek slottaki silahta varsa + flex_scale (yoksa 0).
+static func trait_scale(weapon: Weapon, trait_id: String, opts: Dictionary) -> float:
+	var s := 1.0 if weapon.has_trait(trait_id) else 0.0
+	if trait_id in (opts.get("flex_traits", []) as Array):
+		s += float(opts.get("flex_scale", 0.0))
+	return s
 
 
 ## İkincil vuruş: ana vuruşun pct katı, kritik ve arkadan vuruş yok. Hedefin bağışıklığı geçerlidir.

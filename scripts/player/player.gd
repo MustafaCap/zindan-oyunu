@@ -4,6 +4,8 @@
 ## Irk statları RaceStats'tan (ırk-silah matrisi dahil, aktif silahın ailesine göre), kaynak ve bekleme süreleri
 ## RaceKit'ten gelir. Bütün vuruşlar deal_hit → HitResolver'dan geçer. Tüm sayılar DataDB'den okunur.
 ## Girdi üç kaynaktan gelir: klavye/fare, autoplay botu (smoke testi) ya da external_intent (matris testi).
+## Aşama 5: zindanda silahlar, Rezonans/Esnek slot ve iksirler Inventory'den gelir (load_loadout); eşya etkileri
+## (Rezonans ek hasarı, Esnek slot, tılsımlar, efsanevi pasif ve sağ tık ekleri) ItemEffects'te işlenir.
 class_name Player
 extends CharacterBody2D
 
@@ -27,7 +29,17 @@ var hp: float
 var move_speed_tiles: float
 var radius_tiles: float
 var defense: DamageCalc.Defense
-var potions: int = 0
+## Zindanda silahlar, slotlar ve iksirler buradan (null ise test odası: weapons ve _potions yerel).
+var inventory: Inventory
+var effects: ItemEffects
+var _potions: int = 0
+var potions: int:
+	get: return inventory.potions if inventory else _potions
+	set(v):
+		if inventory:
+			inventory.potions = v
+		else:
+			_potions = v
 
 var facing_cart: Vector2 = Vector2.RIGHT
 var aim_point: Vector2 = Vector2.ZERO     ## farenin (ya da botun hedefinin) dünya konumu
@@ -84,13 +96,20 @@ var _shape: CollisionPolygon2D
 func _ready() -> void:
 	add_to_group("player")
 	_race = DataDB.table("races")[race_id]
+	effects = ItemEffects.new(self)
+	if inventory:
+		weapons = inventory.active_weapons()
+		active_index = inventory.active_index()
+		effects.resonance = inventory.resonance_weapon()
+		effects.flex = inventory.flex_item()
 	if weapons.is_empty():
 		weapons.append(Weapon.make("sword", "common"))
 	active_index = clampi(active_index, 0, weapons.size() - 1)
 	_combat = DataDB.get_value("progression", "combat")
 	_feel = DataDB.get_value("progression", "feel")
 	kit = RaceKit.new(race_id, level)
-	potions = int(DataDB.get_value("progression", "potions.start"))
+	if inventory == null:
+		potions = int(DataDB.get_value("progression", "potions.start"))
 	radius_tiles = float(_combat["player_radius"])
 	dash_cd_max = float(_combat["dash_cooldown"])
 	_apply_stats(true)
@@ -170,9 +189,16 @@ func attack_range(w: Weapon = null) -> float:
 	return float(ww.type_data()["range"]) * (1.0 + stats_for(ww).attack_range_bonus)
 
 
+## Saldırı hızı bonusu: ırk/matris + eşyaların geçici bonusu (efsanevi pasif), tavana uyar.
+func attack_speed_bonus(w: Weapon = null) -> float:
+	var ww := w if w else weapon()
+	var extra := effects.attack_speed_bonus() if effects else 0.0
+	return minf(stats_for(ww).attack_speed_bonus + extra, float(DataDB.get_value("progression", "stat_caps.attack_speed")))
+
+
 func attack_interval(w: Weapon = null) -> float:
 	var ww := w if w else weapon()
-	return 1.0 / (float(ww.type_data()["attacks_per_sec"]) * maxf(1.0 + stats_for(ww).attack_speed_bonus, 0.1))
+	return 1.0 / (float(ww.type_data()["attacks_per_sec"]) * maxf(1.0 + attack_speed_bonus(ww), 0.1))
 
 
 ## Şimdiye kadarki saldırı sayısı (zindan çatlak duvarı bir saldırının duvara gelip gelmediğini buradan anlar).
@@ -209,6 +235,7 @@ func _physics_process(delta: float) -> void:
 	_lean_t = maxf(_lean_t - delta, 0.0)
 	visual.lean = _lean_t / 0.12
 	kit.tick(delta)
+	effects.tick(delta)
 	_tick_buffs(delta)
 	if dead:
 		return
@@ -239,7 +266,7 @@ func _physics_process(delta: float) -> void:
 		if intent["dash"] and dash_cd <= 0.0:
 			_start_dash(move_cart)
 		else:
-			var spd := move_speed_tiles * (1.0 + (float(_race["abilities"]["q"].get("speed_bonus", 0.0)) if is_flying() else 0.0))
+			var spd := move_speed_tiles * effects.move_speed_mult() * (1.0 + (float(_race["abilities"]["q"].get("speed_bonus", 0.0)) if is_flying() else 0.0))
 			velocity = Iso.to_screen(move_cart.limit_length(1.0) * Iso.tiles(spd))
 		if intent["q"]:
 			RaceAbilities.use(self, "q")
@@ -307,7 +334,9 @@ func _empty_intent() -> Dictionary:
 
 func _start_dash(move_cart: Vector2) -> void:
 	var dir := move_cart.normalized() if move_cart.length() > 0.1 else facing_cart
+	dash_cd_max = float(_combat["dash_cooldown"]) * effects.dash_cooldown_mult()
 	dash_cd = dash_cd_max
+	effects.on_dash()
 	iframes = maxf(iframes, float(_combat["dash_iframes"]))
 	var dur := float(_combat["dash_duration"])
 	move_override(Iso.to_screen(dir * Iso.tiles(float(_combat["dash_distance"])) / dur), dur)
@@ -423,6 +452,8 @@ func swap_weapon() -> void:
 		charging = false
 		charge_t = 0.0
 	active_index = (active_index + 1) % weapons.size()
+	if inventory:
+		inventory.set_active_index(active_index)
 	_apply_stats()
 	refresh_weapon_visual()
 	Events.weapon_swapped.emit(active_index)
@@ -434,6 +465,28 @@ func refresh_weapon_visual() -> void:
 	visual.weapon_color = Weapon.kind_color(w.element)
 	visual.weapon_style = str(w.type_data()["visual"])
 	visual.show_weapon = not (w.type_id == "spear" and is_instance_valid(spear_out))
+
+
+## Zindan: aktif silahları, Rezonans ve Esnek slotu envanterden yeniden okur (envanter değişince). Can oranı korunur.
+func load_loadout(inv: Inventory) -> void:
+	inventory = inv
+	if charging:
+		charging = false
+		charge_t = 0.0
+	effects.resonance = inv.resonance_weapon()
+	effects.flex = inv.flex_item()
+	var list := inv.active_weapons()
+	if list.is_empty():
+		list.append(Weapon.make("sword", "common"))
+	set_weapons(list, inv.active_index())
+
+
+## Level değişince (hata ayıklama menüsü; Aşama 6'da XP) statlar ve maks mana yenilenir.
+func set_level(new_level: int) -> void:
+	level = maxi(new_level, 1)
+	kit.set_level(level)
+	_stats_cache.clear()
+	_apply_stats()
 
 
 func set_weapons(list: Array[Weapon], index: int = 0) -> void:
@@ -518,9 +571,13 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 		return {}
 	var s := stats_for(w)
 	var o := opts.duplicate()
+	var eo := effects.hit_opts()
 	o["skill_mult"] = skill_mult
-	o["damage_buffs"] = s.damage_buffs + ability_damage_buff() + float(o.get("damage_buffs", 0.0))
-	o["element_bonus"] = s.element_bonus + float(o.get("element_bonus", 0.0))
+	o["damage_buffs"] = s.damage_buffs + ability_damage_buff() + float(o.get("damage_buffs", 0.0)) + float(eo["damage_buffs"])
+	o["element_bonus"] = s.element_bonus + float(o.get("element_bonus", 0.0)) + float(eo["element_bonus"])
+	if eo.has("flex_traits"):
+		o["flex_traits"] = eo["flex_traits"]
+		o["flex_scale"] = eo["flex_scale"]
 	o["crit_bonus_chance"] = s.crit_bonus + float(o.get("crit_bonus_chance", 0.0))
 	if not o.has("dir"):
 		var d := Iso.to_cart(target.global_position - global_position)
@@ -529,6 +586,7 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 	damage_by_source[source] = float(damage_by_source.get(source, 0.0)) + float(res.get("damage", 0.0))
 	if float(res.get("damage", 0.0)) > 0.0:
 		kit.on_hit_landed(attack_id)
+	effects.after_hit(target, w, res, attack_id, o)
 	return res
 
 
@@ -578,12 +636,17 @@ func use_potion() -> bool:
 
 
 func _on_enemy_killed(enemy: Node, is_elite: bool, _is_boss: bool) -> void:
+	if dead:
+		return
+	effects.on_kill(enemy as Node2D, is_elite)
 	var h: Dictionary = _race["healing"]
-	if not h.has("heal_on_kill") or dead:
+	if not h.has("heal_on_kill"):
 		return
 	var pct := float(h["heal_on_elite_kill"] if is_elite else h["heal_on_kill"])
-	if bool(h.get("lifesteal_becomes_kill_heal", false)) and weapon().has_trait("lifesteal"):
-		pct += float(Traits.data("lifesteal")["pct"])
+	if bool(h.get("lifesteal_becomes_kill_heal", false)):
+		# Can Emme: aktif silahta tam, Esnek slottaki silahta %9 (GDD: Ghost'ta öldürme başına iyileşmeye dönüşür)
+		var ls := HitResolver.trait_scale(weapon(), "lifesteal", effects.hit_opts())
+		pct += float(Traits.data("lifesteal")["pct"]) * ls
 	if enemy == null:
 		return
 	restore(max_hp * pct)
@@ -591,6 +654,8 @@ func _on_enemy_killed(enemy: Node, is_elite: bool, _is_boss: bool) -> void:
 
 func _on_combo(_id: String, _t: Node) -> void:
 	combos_done += 1
+	if not dead:
+		effects.on_combo()
 
 
 ## Düşmandan gelen hasar (hasar formülünden geçer: ırk direnci ve zırh).

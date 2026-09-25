@@ -3,8 +3,11 @@
 ## giriş odasında başlar, odaları gezer (RoomController kapıları kilitler ve dalgaları yönetir), kat boss'unu keser
 ## (canı tamamen dolar), boss odasında beliren merdivenle bir alt kata iner. 4. kat boss'u kesilince "Kazandın".
 ## Gizli oda: bir odanın duvarındaki çatlak bölüme vurarak (yakın saldırı ya da mermi) kırılır.
-## Irk, level ve silahlar hata ayıklama menüsünden (M) seçilir; savaş sırasında silah/ırk değiştirilemez
-## (GDD: slot değişimi yalnızca oda dışında). Tab ile iki aktif silah arasında geçiş her zaman serbest.
+## Irk ve level hata ayıklama menüsünden (M) seçilir; savaş sırasında değiştirilemez (GDD: slot değişimi yalnızca
+## oda dışında). Tab ile iki aktif silah arasında geçiş her zaman serbest.
+## Aşama 5: run ırkın başlangıç silahıyla başlar; düşmanlar, sandıklar ve boss'lar loot düşürür (LootGenerator →
+## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: çanta ve slotlar
+## (InventoryUI; sürükle-bırak), F: tüccar ve demirci panelleri. Silahlar, Rezonans ve Esnek slot GameState.inventory'den.
 ## Komut satırı ("--" sonrasına):
 ##   --autoplay        Bot oynar: her odayı gezer, gizli duvarı kırar, boss'ları keser, 4 katı bitirir (çıkış 0).
 ##                     Ölürse 2, süre dolarsa 3, takılırsa 6, gezilemeyen oda kalırsa 7.
@@ -12,7 +15,11 @@
 ##   --seed=N          Run seed'i (aynı seed aynı haritaları üretir).   --floor=N   N. kattan başla.
 ##   --enemy-mult=X    Düşman sayısı çarpanı (smoke testini kısaltmak için).   --reveal   Minimapin tamamını göster.
 ##   --open-menu       Hata ayıklama menüsü açık başlar.
-##   --race=… --level=… --weapons=…   Test odasıyla aynı.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
+##   --race=… --level=… --weapons=…   Test odasıyla aynı (--weapons verilirse aktif slotlara o silahlar konur).
+##   --loot-rain       Run başında oyuncunun çevresine test için loot saçar.
+##   --fill-bag        Run başında çantaya katın loot'undan 9 silah ve bir tılsım koyar (arayüz testi).
+##   --hover-bag=N     (Ekran görüntüsü için) çantanın N. gözünün tooltip'ini gösterir.
+##   --open-bag        Çanta açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
 class_name DungeonRun
 extends Node2D
 
@@ -29,6 +36,10 @@ var juice: Juice
 var hud: Hud
 var menu: DebugMenu
 var minimap: Minimap
+var bag_ui: InventoryUI
+var loot_rng := RandomNumberGenerator.new()
+var drops: Array[LootDrop] = []
+var loot_stats := {"weapons": 0, "talismans": 0, "gold": 0, "potions": 0, "sold": 0, "bought": 0, "smith": 0, "chests": 0, "traps": 0}
 
 var rooms: Array[RoomController] = []
 var props: Array[RoomProp] = []
@@ -55,10 +66,16 @@ var _elapsed: float = 0.0
 var _floor_elapsed: float = 0.0
 var _shots_dir: String = ""
 var _shot_times: Array[float] = [1.0, 3.0]
-var _prompt_prop: RoomProp
+var _walk_cache: Dictionary = {}
 var _boss_node: Node2D
 var _active_room: int = -1
 var _last_inside: Vector2 = Vector2.INF
+var _custom_weapons: bool = false
+var _loot_rain: bool = false
+var _open_bag: bool = false
+var _open_ui: String = ""
+var _fill_bag: bool = false
+var _hover_bag: int = -1
 
 
 func _ready() -> void:
@@ -87,7 +104,18 @@ func _ready() -> void:
 			config["race"] = arg.get_slice("=", 1)
 		elif arg.begins_with("--level="):
 			config["level"] = int(arg.get_slice("=", 1))
+		elif arg == "--loot-rain":
+			_loot_rain = true
+		elif arg == "--open-bag":
+			_open_bag = true
+		elif arg == "--fill-bag":
+			_fill_bag = true
+		elif arg.begins_with("--hover-bag="):
+			_hover_bag = int(arg.get_slice("=", 1))
+		elif arg.begins_with("--open-ui="):
+			_open_ui = arg.get_slice("=", 1)
 		elif arg.begins_with("--weapons="):
+			_custom_weapons = true
 			var specs := arg.get_slice("=", 1).split(",")
 			for i: int in mini(specs.size(), 2):
 				var parts := specs[i].split(":")
@@ -124,11 +152,12 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
-	hud.stage_text = "Aşama 4 · zindan üretimi"
+	hud.stage_text = "Aşama 5 · loot ve envanter"
+	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
-		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F etkileşim · Esc çık",
-		"M: HATA AYIKLAMA MENÜSÜ (ırk, silah, kat, yeni harita, ölümsüz, test odası) · Çatlak duvarlara vur: gizli oda! · R: yeni run (ölünce)",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I çanta · Esc çık",
+		"M: HATA AYIKLAMA MENÜSÜ (ırk, level, kat, loot testi, ölümsüz, test odası) · Çatlak duvarlara vur: gizli oda! · R: yeni run (ölünce)",
 	]))
 
 	minimap = Minimap.new()
@@ -147,6 +176,14 @@ func _ready() -> void:
 	menu.applied.connect(_on_menu_applied)
 	menu.action.connect(_on_menu_action)
 
+	bag_ui = InventoryUI.new()
+	add_child(bag_ui)
+	bag_ui.changed.connect(_on_inventory_changed)
+	bag_ui.drop_requested.connect(func(it: Variant) -> void:
+		_spawn_drop({"kind": "talisman" if it is Talisman else "weapon", "item": it}, player.global_position, 0.4))
+	Events.enemy_killed.connect(_on_enemy_killed_loot)
+	Events.xp_gained.connect(_on_xp_gained)
+
 	new_run(start_floor)
 
 	if autoplay:
@@ -155,6 +192,15 @@ func _ready() -> void:
 		add_child(_autopilot)
 	if open_menu:
 		menu.open.call_deferred(TestRoom.config)
+	if _open_bag:
+		bag_ui.open_ui.call_deferred("bag", player)
+	if _hover_bag >= 0:
+		(func() -> void: bag_ui.on_slot_hover(bag_ui._bag_nodes[_hover_bag], true)).call_deferred()
+	if _open_ui != "":
+		for p: RoomProp in props:
+			if p.kind == _open_ui:
+				_ensure_stock(p)
+				bag_ui.open_ui.call_deferred(_open_ui, player, p)
 	if _shots_dir != "":
 		var shots := TestRoom.ShotTaker.new()
 		shots.dir = _shots_dir
@@ -165,6 +211,10 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	get_tree().paused = false
 	GameState.set_in_combat(false)
+	if Events.enemy_killed.is_connected(_on_enemy_killed_loot):
+		Events.enemy_killed.disconnect(_on_enemy_killed_loot)
+	if Events.xp_gained.is_connected(_on_xp_gained):
+		Events.xp_gained.disconnect(_on_xp_gained)
 
 
 # --- run ve katlar ---
@@ -175,10 +225,25 @@ func new_run(from_floor: int = 1) -> void:
 	fixed_seed = -1 if not autoplay else fixed_seed
 	GameState.start_run(str(TestRoom.config["race"]))
 	GameState.run_seed = seed_value
+	GameState.level = maxi(int(TestRoom.config.get("level", 1)), 1)
+	# --weapons verildiyse aktif slotlara o silahlar (oyuncunun levelinde); yoksa ırkın başlangıç silahı
+	if _custom_weapons:
+		for i: int in mini((TestRoom.config["weapons"] as Array).size(), 2):
+			var w := TestRoom.make_weapon(TestRoom.config["weapons"][i])
+			GameState.inventory.slots[Inventory.ACTIVE_SLOTS[i]] = w
+	for k: String in loot_stats.keys():
+		loot_stats[k] = 0
 	finished = false
 	victory = false
 	_spawn_player(TestRoom.config, false)
 	enter_floor(from_floor)
+	if _loot_rain:
+		loot_rain(8)
+	if _fill_bag:
+		for i: int in 9:
+			GameState.inventory.add_item(LootGenerator.make_weapon(GameState.floor_index, "elite" if i % 2 == 0 else "normal", loot_rng), GameState.level, false)
+		var t := LootGenerator.roll_talisman(loot_rng, [])
+		GameState.inventory.add_item(t, GameState.level, false)
 	print("[Zindan] Yeni run: seed %d, %d. kattan" % [seed_value, from_floor])
 
 
@@ -187,7 +252,13 @@ func enter_floor(index: int) -> void:
 	GameState.floor_index = index
 	GameState.set_in_combat(false)
 	var fl: Dictionary = DataDB.table("floors")["floors"][str(index)]
+	# GEÇİCİ (Aşama 6'ya kadar): kata inince level katın hedef aralığının altındaysa alt sınıra çıkar
+	if bool(DataDB.table("economy")["interim_floor_min_level"]):
+		var min_lvl := int(fl["level_range"][0])
+		if GameState.level < min_lvl:
+			set_player_level(min_lvl)
 	layout = DungeonGenerator.generate(index, GameState.floor_seed(index), enemy_mult)
+	loot_rng.seed = hash([layout.seed_value, "loot"])
 	var ts := IsoTileset.build(Color(str(fl["placeholder_color"])), Color(str(fl["wall_color"])), Color(str(fl["obstacle_color"])))
 	floor_layer = TileMapLayer.new()
 	floor_layer.tile_set = ts
@@ -210,9 +281,11 @@ func enter_floor(index: int) -> void:
 		add_child(rc)
 		rooms.append(rc)
 		if r.type in ["chest", "secret", "merchant", "blacksmith"]:
-			_add_prop("chest" if r.type == "secret" else r.type, r.id, r.center())
+			var pr := _add_prop("chest" if r.type == "secret" else r.type, r.id, r.center())
+			pr.secret = r.type == "secret"
 	paint_tiles()
 	nav = DungeonNav.new(layout, false)
+	_walk_cache = layout.walkable(false)
 	player.global_position = cell_to_world(layout.rooms[layout.start_id].center())
 	camera.global_position = player.global_position
 	camera.reset_smoothing()
@@ -238,12 +311,16 @@ func _clear_floor() -> void:
 		if is_instance_valid(p):
 			p.queue_free()
 	props.clear()
+	for d: LootDrop in drops:
+		if is_instance_valid(d):
+			d.queue_free()
+	drops.clear()
 	for n: Node in get_tree().get_nodes_in_group("enemies"):
 		n.remove_from_group("enemies")
 		n.queue_free()
 	if world:
 		for n: Node in world.get_children():
-			if n is Projectile or n is GroundEffect or n is EnemyMelee:
+			if n is Projectile or n is GroundEffect or n is EnemyMelee or n is ChestTrap:
 				n.queue_free()
 	# Eski karolar hemen kalksın: yeni katın ilk fizik adımında eski duvarlar oyuncuyu itmesin
 	for layer: TileMapLayer in [floor_layer, wall_layer]:
@@ -375,23 +452,22 @@ func room_controller(id: int) -> RoomController:
 
 # --- oyuncu ---
 
-## keep_state: aynı run içinde ayar değişti (konum ve iksirler korunur); false: yeni run.
+## Oyuncuyu (yeniden) kurar: ırk config'ten, level GameState'ten, silahlar/slotlar/iksirler envanterden.
+## keep_state: aynı run içinde ayar değişti (konum korunur); false: yeni run.
 func _spawn_player(cfg: Dictionary, keep_state: bool = true) -> void:
 	var pos := Vector2.ZERO
-	var potions := -1
+	var hp_ratio := 1.0
 	if player and is_instance_valid(player):
 		pos = player.global_position
-		if keep_state:
-			potions = player.potions
+		if keep_state and player.max_hp > 0.0:
+			hp_ratio = player.hp / player.max_hp
 		player.remove_from_group("player")
 		player.queue_free()
 	player = Player.new()
 	player.race_id = str(cfg["race"])
-	player.level = int(cfg.get("level", 1))
-	var list: Array[Weapon] = []
-	for wc: Dictionary in cfg["weapons"]:
-		list.append(TestRoom.make_weapon(wc))
-	player.weapons = list
+	GameState.race_id = player.race_id
+	player.level = GameState.level
+	player.inventory = GameState.inventory
 	player.autoplay = autoplay
 	player.invulnerable = god or bool(cfg.get("god", false))
 	player.bot_nav = nav_dir
@@ -399,8 +475,9 @@ func _spawn_player(cfg: Dictionary, keep_state: bool = true) -> void:
 	player.rng.seed = 7 if autoplay else randi()
 	world.add_child(player)
 	player.global_position = pos
-	if potions >= 0:
-		player.potions = potions
+	if hp_ratio < 1.0:
+		player.hp = player.max_hp * hp_ratio
+		player.health_changed.emit(player.hp, player.max_hp)
 	player.died.connect(_on_player_died)
 	hud.player = player
 	_attach_xray(player, Color(0.6, 0.85, 1.0))
@@ -418,6 +495,7 @@ func _process(delta: float) -> void:
 	_update_xray()
 	_track_room()
 	_check_secret_wall()
+	_update_drops()
 	_update_prompt()
 	_update_hud()
 
@@ -537,11 +615,12 @@ func _add_prop(kind: String, room_id: int, cell: Vector2i) -> RoomProp:
 	return p
 
 
-func nearest_prop() -> RoomProp:
-	var best: RoomProp = null
+## En yakın etkileşimli nesne: oda nesnesi (RoomProp) ya da yerdeki silah/tılsım (LootDrop).
+func nearest_prop() -> Node2D:
+	var best: Node2D = null
 	var best_d := float(_dg["interact_range_tiles"])
-	for p: RoomProp in props:
-		if not is_instance_valid(p) or p.prompt() == "":
+	for p: Node2D in props + drops:
+		if not is_instance_valid(p) or str(p.call("prompt")) == "":
 			continue
 		var d := Iso.tile_distance(p.global_position, player.global_position)
 		if d <= best_d:
@@ -551,22 +630,233 @@ func nearest_prop() -> RoomProp:
 
 
 func _update_prompt() -> void:
-	_prompt_prop = nearest_prop() if not player.dead else null
-	hud.prompt_text = _prompt_prop.prompt() if _prompt_prop else ""
+	var p := nearest_prop() if not player.dead else null
+	hud.prompt_text = str(p.call("prompt")) if p else ""
 
 
-## F: en yakın nesneyle etkileşim. Merdiven bir alt kata indirir.
+## F: en yakın nesneyle etkileşim. Merdiven bir alt kata indirir; yerdeki eşya alınır; sandık açılır;
+## tüccar ve demirci arayüzü açar (bot için doğrudan işlem yapar).
 func try_interact() -> bool:
-	var p := nearest_prop()
-	if p == null or finished:
+	var n := nearest_prop()
+	if n == null or finished:
 		return false
-	if p.kind == "stairs":
-		enter_floor(GameState.floor_index + 1)
-		return true
-	var msg := p.use()
-	if msg != "":
-		hud.flash_note(msg)
+	if n is LootDrop:
+		return pick_up(n as LootDrop)
+	var p := n as RoomProp
+	match p.kind:
+		"stairs":
+			enter_floor(GameState.floor_index + 1)
+		"chest":
+			p.use()
+			_open_chest(p)
+		"merchant":
+			_ensure_stock(p)
+			p.use()
+			if autoplay:
+				bot_merchant(p)
+			else:
+				bag_ui.open_ui("merchant", player, p)
+		"blacksmith":
+			p.use()
+			if autoplay:
+				bot_blacksmith()
+			else:
+				bag_ui.open_ui("blacksmith", player, p)
 	return true
+
+
+# --- loot (Aşama 5) ---
+
+## Düşman ölünce loot: altın, bazen silah ve iksir (elit ve boss daha fazla).
+func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
+	if layout == null or enemy == null or not is_instance_valid(enemy) or not (enemy as Node2D).is_inside_tree():
+		return
+	if enemy.get_parent() != world:
+		return
+	var kind := "boss" if is_boss else ("elite" if is_elite else "normal")
+	var pos := (enemy as Node2D).global_position
+	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng):
+		_spawn_drop(d, pos)
+
+
+func _open_chest(p: RoomProp) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([layout.seed_value, p.room_id, "chest"])
+	loot_stats["chests"] = int(loot_stats["chests"]) + 1
+	var owned := GameState.inventory.owned_talismans()
+	for d: Dictionary in LootGenerator.chest_drops(GameState.floor_index, p.secret, rng, owned):
+		_spawn_drop(d, p.global_position, 1.0)
+	if not p.secret and rng.randf() < float(DataDB.table("economy")["chest"]["trap_chance"]):
+		loot_stats["traps"] = int(loot_stats["traps"]) + 1
+		var trap := ChestTrap.new()
+		world.add_child(trap)
+		trap.global_position = p.global_position
+		hud.flash_note("Sandık tuzaklı! Kırmızı alandan çık!")
+	else:
+		hud.flash_note("Sandık açıldı")
+
+
+func _ensure_stock(p: RoomProp) -> void:
+	if p.stock_ready:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([layout.seed_value, p.room_id, "merchant"])
+	p.stock = LootGenerator.merchant_stock(GameState.floor_index, rng, GameState.inventory.owned_talismans())
+	p.stock_ready = true
+
+
+## Loot'u yere koyar: kaynağın çevresinde, yürünebilir bir karoya saçılır.
+func _spawn_drop(d: Dictionary, origin: Vector2, scatter_mult: float = 1.0) -> LootDrop:
+	var drop := LootDrop.make(str(d["kind"]), d.get("item"), int(d.get("amount", 0)))
+	world.add_child(drop)
+	drop.toss(origin, _scatter_point(origin, float(DataDB.table("economy")["pickup"]["scatter_tiles"]) * scatter_mult))
+	drops.append(drop)
+	return drop
+
+
+func _scatter_point(origin: Vector2, radius: float) -> Vector2:
+	for i: int in 8:
+		var a := loot_rng.randf() * TAU
+		var r := loot_rng.randf_range(0.35, 1.0) * radius
+		var p := origin + Iso.to_screen(Vector2(cos(a), sin(a)) * Iso.tiles(r))
+		if _walk_cache.has(world_to_cell(p)):
+			return p
+	var oc := world_to_cell(origin)
+	return cell_to_world(oc) if _walk_cache.has(oc) else origin
+
+
+## Altın ve iksir yaklaşınca toplanır; oyuncuya en yakın eşyanın (4 karo içinde) ad etiketi görünür.
+func _update_drops() -> void:
+	if player.dead:
+		return
+	var pk: Dictionary = DataDB.table("economy")["pickup"]
+	var can_potion := bool(DataDB.table("races")[player.race_id]["healing"]["potions"])
+	var inv := GameState.inventory
+	var nearest: LootDrop = null
+	var nearest_d := 4.0
+	for d: LootDrop in drops.duplicate():
+		if not is_instance_valid(d) or d.picked:
+			drops.erase(d)
+			continue
+		var dist := Iso.tile_distance(d.global_position, player.global_position)
+		d.player_near = false
+		if d.kind != "gold" and dist < nearest_d:
+			nearest_d = dist
+			nearest = d
+		match d.kind:
+			"gold":
+				if dist <= float(pk["gold_magnet_tiles"]):
+					inv.add_gold(d.amount)
+					loot_stats["gold"] = int(loot_stats["gold"]) + d.amount
+					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+%d altın" % d.amount, LootDrop.GOLD_COLOR, 16)
+					Events.gold_changed.emit(inv.gold)
+					_remove_drop(d)
+			"potion":
+				if can_potion and dist <= float(pk["potion_pickup_tiles"]) and inv.add_potion():
+					loot_stats["potions"] = int(loot_stats["potions"]) + 1
+					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+1 iksir", LootDrop.POTION_COLOR, 18)
+					_remove_drop(d)
+		if autoplay and d.is_item() and is_instance_valid(d) and not d.picked and dist <= 1.2 and inv.first_free_bag() >= 0:
+			pick_up(d)
+	if nearest != null and is_instance_valid(nearest) and not nearest.picked:
+		nearest.player_near = true
+
+
+func _remove_drop(d: LootDrop) -> void:
+	d.picked = true
+	drops.erase(d)
+	d.queue_free()
+
+
+## Yerdeki silah/tılsımı alır: boş aktif slota (açık silahsa ve savaş dışındaysa), yoksa çantaya.
+func pick_up(d: LootDrop) -> bool:
+	if d.picked or not d.is_item():
+		return false
+	var inv := GameState.inventory
+	var auto_eq := bool(DataDB.table("economy")["pickup"]["auto_equip_empty_active"])
+	var where := inv.add_item(d.item, GameState.level, auto_eq, GameState.in_combat)
+	if where == "":
+		hud.flash_note("Çanta dolu! (I: çantayı aç, bir şey bırak ya da sat)")
+		return false
+	loot_stats["weapons" if d.kind == "weapon" else "talismans"] = int(loot_stats["weapons" if d.kind == "weapon" else "talismans"]) + 1
+	var name := d.label_text()
+	hud.flash_note("%s → %s" % [name, "çanta" if where == "bag" else Inventory.SLOT_TITLES[where]])
+	_remove_drop(d)
+	Events.inventory_changed.emit()
+	if where != "bag":
+		_on_inventory_changed()
+	return true
+
+
+func _on_inventory_changed() -> void:
+	if player and is_instance_valid(player):
+		player.load_loadout(GameState.inventory)
+	Events.inventory_changed.emit()
+
+
+## Oyuncunun leveli değişir (hata ayıklama menüsü, geçici kat alt sınırı; Aşama 6'da XP).
+func set_player_level(new_level: int) -> void:
+	var before := GameState.level
+	GameState.level = clampi(new_level, 1, int(DataDB.get_value("progression", "player.max_level")))
+	if player and is_instance_valid(player):
+		player.set_level(GameState.level)
+	var unlocked: PackedStringArray = []
+	for it: Variant in GameState.inventory.all_items():
+		if it is Weapon and (it as Weapon).level > before and (it as Weapon).level <= GameState.level:
+			unlocked.append((it as Weapon).display_name())
+	if not unlocked.is_empty() and hud:
+		hud.flash_note("Kilidi açıldı: %s" % ", ".join(unlocked))
+
+
+## XP (Aşama 6'da düşmanlardan; şimdilik hata ayıklama menüsünden) slottaki silahlara da gider.
+func _on_xp_gained(amount: float) -> void:
+	for r: Dictionary in GameState.inventory.grant_weapon_xp(amount, GameState.level):
+		var w: Weapon = r["weapon"]
+		Events.floating_text.emit(player.global_position + Vector2(0, -96), "%s Lv %d" % [w.display_name(), w.level], w.rarity_color().lightened(0.3), 18)
+	_on_inventory_changed()
+
+
+## Test: oyuncunun çevresine katın loot'undan n silah + altın + iksir + tılsım saçar.
+func loot_rain(n: int) -> void:
+	var f := GameState.floor_index
+	for i: int in n:
+		var src := "elite" if i % 3 == 0 else "normal"
+		_spawn_drop({"kind": "weapon", "item": LootGenerator.make_weapon(f, src, loot_rng)}, player.global_position, 2.6)
+	_spawn_drop({"kind": "gold", "amount": LootGenerator.gold_amount(f, "boss", loot_rng)}, player.global_position, 2.0)
+	_spawn_drop({"kind": "potion"}, player.global_position, 2.0)
+	var t := LootGenerator.roll_talisman(loot_rng, GameState.inventory.owned_talismans())
+	if t:
+		_spawn_drop({"kind": "talisman", "item": t}, player.global_position, 2.6)
+
+
+# --- bot (zindan smoke testi) tüccar ve demircide ---
+
+## Bot: çantadakileri satar, iksir alır, altın yetiyorsa tezgâhtan bir eşya alır.
+func bot_merchant(p: RoomProp) -> void:
+	var inv := GameState.inventory
+	var f := GameState.floor_index
+	for i: int in inv.bag.size():
+		if inv.bag[i] != null and Shop.sell(inv, Inventory.bag_ref(i), f, GameState.in_combat) == "":
+			loot_stats["sold"] = int(loot_stats["sold"]) + 1
+	if Shop.buy_potion(inv, f, player.race_id) == "":
+		loot_stats["bought"] = int(loot_stats["bought"]) + 1
+	for i2: int in p.stock.size():
+		if Shop.item_price(p.stock[i2], f) <= inv.gold and Shop.buy(inv, p.stock, i2, f) == "":
+			loot_stats["bought"] = int(loot_stats["bought"]) + 1
+			break
+	_on_inventory_changed()
+
+
+## Bot: aktif silahı level atlatır, olmazsa elementini yeniden çeker.
+func bot_blacksmith() -> void:
+	var inv := GameState.inventory
+	var w := player.weapon()
+	var f := GameState.floor_index
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([layout.seed_value, "smith"])
+	if Shop.level_up(inv, w, GameState.level, f) == "" or Shop.reroll_element(inv, w, f, rng) == "":
+		loot_stats["smith"] = int(loot_stats["smith"]) + 1
+	_on_inventory_changed()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -574,7 +864,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		try_interact()
 	elif event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).keycode
-		if key == KEY_M:
+		if key == KEY_I and not bag_ui.visible and not menu.visible:
+			bag_ui.open_ui("bag", player)
+			get_viewport().set_input_as_handled()
+		elif key == KEY_M:
 			menu.open(TestRoom.config)
 			menu.set_lock_reason("Savaş sürerken ırk ve silahlar değiştirilemez (oda dışında serbest)." if GameState.in_combat else "")
 		elif key == KEY_R and finished:
@@ -627,6 +920,7 @@ func open_secret() -> void:
 	minimap.secrets_open = true
 	paint_tiles()
 	nav = DungeonNav.new(layout, true)
+	_walk_cache = layout.walkable(true)
 	var mid := cell_to_world(layout.secret_wall_cells[1])
 	Events.enemy_died_fx.emit(mid + Vector2(0, -20), player.facing_cart)
 	Events.secret_found.emit(layout.secret_id)
@@ -652,17 +946,20 @@ func _update_hud() -> void:
 			room_txt += " · Dalga %d / %d · Kalan düşman %d" % [maxi(rc.wave_index + 1, 1), rc.info.waves.size(), rc.alive_count()]
 		elif rc.state == RoomController.State.CLEARED and rc.has_enemies():
 			room_txt += " · temizlendi"
-	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest"
+	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest (I: çanta)"
 	hud.wave_text = "%d. Kat — %s   ·   %s\n%s   ·   Seed %d%s" % [GameState.floor_index, fl["name"], room_txt, slot_txt,
 		GameState.run_seed, "   ·   ÖLÜMSÜZ (test)" if player.invulnerable else ""]
 
 
+## Menü "Uygula": ırk ve level (silahlar envanterde kalır; menüdeki silahlar "Silahları çantaya ekle" ile gelir).
 func _on_menu_applied(c: Dictionary) -> void:
 	if GameState.in_combat:
-		hud.flash_note("Savaş sürerken ırk ve silahlar değiştirilemez")
+		hud.flash_note("Savaş sürerken ırk ve level değiştirilemez")
 		return
 	TestRoom.config = c
+	GameState.level = maxi(int(c.get("level", 1)), 1)
 	_spawn_player(c)
+	set_player_level(GameState.level)
 	hud.flash_note("Yeni ayar uygulandı")
 
 
@@ -673,6 +970,22 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 			new_run(int(c.get("floor", 1)))
 		"test_room":
 			get_tree().change_scene_to_file(TEST_ROOM_SCENE)
+		"add_weapons":
+			var added := 0
+			for wc: Dictionary in c["weapons"]:
+				var w := TestRoom.make_weapon(wc)
+				w.level = GameState.level
+				if GameState.inventory.add_item(w, GameState.level, false) != "":
+					added += 1
+			hud.flash_note("%d silah çantaya eklendi" % added if added > 0 else "Çanta dolu")
+		"loot_rain":
+			loot_rain(8)
+		"gold":
+			GameState.inventory.add_gold(500)
+			hud.flash_note("+500 altın")
+		"weapon_xp":
+			Events.xp_gained.emit(1000.0)
+			hud.flash_note("Slottaki silahlara +1000 XP")
 
 
 func _show_data_error() -> void:

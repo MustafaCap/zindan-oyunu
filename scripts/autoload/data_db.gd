@@ -48,7 +48,11 @@ const SCHEMA := {
 		"boss_freeze_immunity_sec": "number",
 	},
 	"traits": {"_each": {"name": "string", "adjective": "string", "description": "string"}},
-	"legendaries": {"passive_templates": "dict", "weapons": "array"},
+	"legendaries": {
+		"passive_templates": {"_each": {"description": "string", "flex_field": "string"}},
+		"skill_templates": {"_each": {"description": "string"}},
+		"weapons": "array",
+	},
 	"talismans": {"_each": {"name": "string", "description": "string"}},
 	"enemies": {
 		"materials": {"_each": {"name": "string", "prefix": "string", "tint": "string", "immune": "array", "resistant": "array", "weak": "array"}},
@@ -101,6 +105,21 @@ const SCHEMA := {
 			},
 		},
 		"room_types": {"_each": {"description": "string"}},
+	},
+	"economy": {
+		"bag_size": "number", "start_weapons": "dict", "floor_gold_mult": "dict",
+		"gold": {"normal": "array", "elite": "array", "boss": "array", "chest": "array", "secret_chest": "array"},
+		"drops": {"normal_weapon_chance": "number", "elite_weapons": "number", "boss_weapons": "number", "chest_weapons": "number",
+			"normal_potion_chance": "number", "elite_potion_chance": "number", "boss_potion_chance": "number",
+			"chest_talisman_chance": "number"},
+		"pickup": {"gold_magnet_tiles": "number", "potion_pickup_tiles": "number", "scatter_tiles": "number", "auto_equip_empty_active": "bool"},
+		"chest": {"trap_chance": "number", "trap_warning_sec": "number", "trap_radius": "number", "trap_damage_pct": "number"},
+		"merchant": {"weapons": "number", "talismans": "number", "weapon_prices": "dict", "talisman_price": "number",
+			"potion_price": "number", "sell_pct": "number"},
+		"blacksmith": {"level_up_cost_per_level": "number", "reroll_element_cost": "number", "reroll_trait_cost": "number",
+			"reroll_cost_growth": "number"},
+		"weapon_xp": {"xp_slots": "array", "locked_gains_xp": "bool"},
+		"interim_floor_min_level": "bool",
 	},
 	"dungeon": {
 		"grid_cell_tiles": "number", "corridor_width": "number", "main_path_ratio": "number", "min_combat_rooms": "number",
@@ -181,6 +200,22 @@ const HEAVY_STYLE_FIELDS := {
 	"homing": ["projectiles", "damage_mult", "speed", "turn_rate", "range", "seek_range", "radius"],
 	"orb": ["damage_mult", "speed", "range", "radius", "explosion_radius"],
 	"trap": ["damage_mult", "max_range", "arm_time", "trigger_radius", "radius", "lifetime"],
+}
+## Efsanevi pasif ve sağ tık eki (skill) şablonları -> zorunlu sayılar.
+const PASSIVE_FIELDS := {
+	"sky_lightning": ["every_n_hits", "damage_pct", "radius"], "death_burst": ["damage_pct", "radius"],
+	"combo_reset": ["chance"], "kill_frenzy": ["attack_speed", "duration"], "crit_nova": ["damage_pct", "radius"],
+}
+const SKILL_FIELDS := {
+	"heavy_nova": ["radius", "skill_mult", "delay"],
+	"heavy_strikes": ["count", "skill_mult", "radius", "spread", "delay", "interval", "max_range"],
+	"heavy_shards": ["count", "skill_mult", "speed", "seek_range", "range", "radius", "turn_rate"],
+}
+## Tılsım id -> zorunlu sayılar (kodda karşılığı olan tılsımlar).
+const TALISMAN_FIELDS := {
+	"blood_stone": ["damage_per_stack", "duration", "max_stacks"],
+	"wind_feather": ["dash_cooldown_reduction", "move_speed_bonus", "duration"],
+	"element_heart": ["element_damage_bonus", "duration"],
 }
 const TRAIT_FIELDS := {
 	"fury": ["per_hit", "max"], "execute": ["threshold", "boss_threshold"], "lifesteal": ["pct"],
@@ -425,6 +460,7 @@ func _cross_check() -> void:
 			errors.append("loot_tables.floors: %s. kat için tablo yok" % fid)
 
 	_check_dungeon(enemy_ids)
+	_check_loot(rarity_ids, element_ids)
 
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
@@ -515,6 +551,78 @@ func _check_dungeon(enemy_ids: Array) -> void:
 	for eid: Variant in dg["placeholder_elite"]["base_pool"] + [dg["placeholder_boss"]["base"]]:
 		if not str(eid) in enemy_ids or not (enemies[str(eid)] as Dictionary).has("stats"):
 			errors.append("dungeon: yer tutucu elit/boss için '%s' düşmanının statları yok" % eid)
+
+
+## Aşama 5: efsanevi silahlar, tılsımlar ve ekonomi (başlangıç silahları, kat çarpanları, fiyatlar).
+func _check_loot(rarity_ids: Array, element_ids: Array) -> void:
+	var lg: Dictionary = tables["legendaries"]
+	for pid: String in _records(lg["passive_templates"]):
+		if PASSIVE_FIELDS.has(pid):
+			_require_numbers(lg["passive_templates"][pid], PASSIVE_FIELDS[pid], "legendaries.passive_templates.%s" % pid)
+			var ff := str(lg["passive_templates"][pid]["flex_field"])
+			if not ff in PASSIVE_FIELDS[pid]:
+				errors.append("legendaries.passive_templates.%s.flex_field: '%s' pasifin sayılarından biri olmalı" % [pid, ff])
+		else:
+			errors.append("legendaries.passive_templates: bilinmeyen pasif '%s' (kodda karşılığı yok)" % pid)
+	for sid: String in _records(lg["skill_templates"]):
+		if SKILL_FIELDS.has(sid):
+			_require_numbers(lg["skill_templates"][sid], SKILL_FIELDS[sid], "legendaries.skill_templates.%s" % sid)
+		else:
+			errors.append("legendaries.skill_templates: bilinmeyen skill '%s' (kodda karşılığı yok)" % sid)
+	var ids := {}
+	for i: int in (lg["weapons"] as Array).size():
+		var w: Variant = lg["weapons"][i]
+		var where := "legendaries.weapons[%d]" % i
+		if typeof(w) != TYPE_DICTIONARY:
+			errors.append(where + ": nesne ({...}) olmalı")
+			continue
+		var ok := true
+		for k: String in ["id", "name", "type", "element", "passive", "skill"]:
+			if not (w as Dictionary).has(k) or typeof(w[k]) != TYPE_STRING:
+				errors.append("%s: '%s' metni eksik" % [where, k])
+				ok = false
+		if not ok:
+			continue
+		if ids.has(w["id"]):
+			errors.append("%s: aynı id iki kez '%s'" % [where, w["id"]])
+		ids[w["id"]] = true
+		if not tables["weapon_types"].has(w["type"]):
+			errors.append("%s.type: bilinmeyen silah tipi '%s'" % [where, w["type"]])
+		if not w["element"] in element_ids:
+			errors.append("%s.element: bilinmeyen element '%s'" % [where, w["element"]])
+		if not (lg["passive_templates"] as Dictionary).has(w["passive"]):
+			errors.append("%s.passive: bilinmeyen pasif '%s'" % [where, w["passive"]])
+		if not (lg["skill_templates"] as Dictionary).has(w["skill"]):
+			errors.append("%s.skill: bilinmeyen skill '%s'" % [where, w["skill"]])
+	if (lg["weapons"] as Array).is_empty():
+		errors.append("legendaries.weapons: en az bir efsanevi silah olmalı")
+	for tid: String in TALISMAN_FIELDS.keys():
+		if not tables["talismans"].has(tid):
+			errors.append("talismans: '%s' tılsımı yok" % tid)
+			continue
+		_require_numbers(tables["talismans"][tid], TALISMAN_FIELDS[tid], "talismans.%s" % tid)
+	var ec: Dictionary = tables["economy"]
+	for rid: String in _records(tables["races"]):
+		var sw: Variant = (ec["start_weapons"] as Dictionary).get(rid)
+		if sw == null or not tables["weapon_types"].has(str(sw)):
+			errors.append("economy.start_weapons.%s: geçerli bir silah tipi olmalı" % rid)
+	for fid: String in _records(tables["floors"]["floors"]):
+		if not _type_ok((ec["floor_gold_mult"] as Dictionary).get(fid), "number"):
+			errors.append("economy.floor_gold_mult: %s. kat için sayı yok" % fid)
+	for r: String in rarity_ids:
+		if not _type_ok((ec["merchant"]["weapon_prices"] as Dictionary).get(r), "number"):
+			errors.append("economy.merchant.weapon_prices: '%s' nadirliği için fiyat yok" % r)
+	for k: String in (ec["gold"] as Dictionary).keys():
+		var g: Array = ec["gold"][k]
+		if g.size() != 2 or not _type_ok(g[0], "number") or not _type_ok(g[1], "number") or float(g[0]) > float(g[1]):
+			errors.append("economy.gold.%s: [en az, en çok] olmalı" % k)
+	for s: Variant in ec["weapon_xp"]["xp_slots"]:
+		if not str(s) in ["active_1", "active_2", "resonance", "flex"]:
+			errors.append("economy.weapon_xp.xp_slots: bilinmeyen slot '%s'" % s)
+	for fid2: String in _records(tables["loot_tables"]["floors"]):
+		var wl: Array = tables["loot_tables"]["floors"][fid2]["weapon_level"]
+		if wl.size() != 2 or int(wl[0]) > int(wl[1]) or int(wl[0]) < 1:
+			errors.append("loot_tables.floors.%s.weapon_level: [en az, en çok] olmalı" % fid2)
 
 
 ## Sözlükte verilen alanların hepsi sayı olmalı.

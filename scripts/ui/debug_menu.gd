@@ -3,6 +3,8 @@
 ## Aşama 4: zindanda da açılır — "Uygula" ırk/level/silahları yerinde değiştirir (savaş sırasında değil: GDD slot
 ## değişimi yalnızca oda dışında), "Bu kattan yeni harita" seçilen kattan yeni seed'le run başlatır, bir düğme de
 ## test odası ↔ zindan arasında geçer.
+## Aşama 5: zindanda "Uygula" yalnızca ırk ve leveli değiştirir (silahlar envanterdedir); "Loot (test)" satırı:
+## menüdeki iki silahı çantaya ekle, loot yağdır, +500 altın, slottaki silahlara +1000 XP.
 ## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
 class_name DebugMenu
 extends CanvasLayer
@@ -94,7 +96,7 @@ func _build() -> void:
 
 	var title := _label("Hata Ayıklama Menüsü", 28, Color(1, 0.9, 0.6))
 	box.add_child(title)
-	var sub := "Irk, level ve iki aktif silahı seç; 'Uygula' yeni ayarı yerinde uygular (savaş dışında). (M / Esc: kapat)" \
+	var sub := "Irk ve level seç; 'Uygula' yerinde uygular (savaş dışında). Silahlar çantada: 'Silahları çantaya ekle'. (M / Esc: kapat)" \
 		if context == "dungeon" else "Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (M / Esc: kapat)"
 	box.add_child(_label(sub, 15, Color(0.7, 0.7, 0.75)))
 
@@ -168,6 +170,19 @@ func _build() -> void:
 	_god.add_theme_font_size_override("font_size", 16)
 	_god.toggled.connect(func(on: bool) -> void: config["god"] = on)
 	dn_row.add_child(_god)
+
+	# Loot testi (yalnızca zindan)
+	var lt_row := _row(box, "Loot (test)")
+	lt_row.visible = context == "dungeon"
+	for pair: Array in [["add_weapons", "Silahları çantaya ekle"], ["loot_rain", "Loot yağdır"], ["gold", "+500 altın"], ["weapon_xp", "Silahlara +1000 XP"]]:
+		var lb := Button.new()
+		lb.text = str(pair[1])
+		lb.custom_minimum_size = Vector2(0, 38)
+		var act := str(pair[0])
+		lb.pressed.connect(func() -> void:
+			close()
+			action.emit(act, config.duplicate(true)))
+		lt_row.add_child(lb)
 
 	# Düşmanlar (yalnızca test odası)
 	var en_row := _row(box, "Düşmanlar")

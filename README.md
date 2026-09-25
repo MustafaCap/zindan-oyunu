@@ -11,46 +11,48 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 1 | Vuruş hissi prototipi | ✅ Bitti (vuruş hissi onaylandı) |
 | 2 | Savaş çekirdeği | ✅ Bitti (kombolar onaylandı) |
 | 3 | Irklar ve silahlar | ✅ Bitti (onaylandı) |
-| 4 | Zindan üretimi | 🧪 Kullanıcı testinde |
-| 5 | Loot ve envanter | — |
+| 4 | Zindan üretimi | ✅ Bitti (onaylandı) |
+| 5 | Loot ve envanter | 🧪 Kullanıcı testinde |
 | 6 | İlerleme | — |
 | 7 | Düşmanlar ve boss'lar | — |
 | 8 | Sanat | — |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 4 (sürüm 0.4.0) kodlandı. Oyun artık 4 katlık zindanla açılır:
-- `DungeonGenerator` her kat için seed'den harita üretir: oda ızgarası (girişten boss'a ana yol + yan dallar), oda
-  tipleri (savaş, elit, tüccar, demirci, sandık, gizli, boss), 11 oda şablonu (8 savaş şablonu) + döndürme/aynalama,
-  3 karoluk koridorlar, rastgele engeller (her odanın tüm zemini kapıdan ulaşılabilir kalır) ve düşman dalgaları.
-- `RoomController`: odaya girince kapılar kilitlenir, dalgalar gelir, temizlenince açılır; savaş sürerken ırk/silah
-  değişikliği kapalı (`GameState.in_combat`, GDD: slot değişimi yalnızca oda dışında).
-- `DungeonRun` (ana sahne): 4 katın placeholder renk paletleri, boss sonrası tam can + merdivenle alt kata iniş,
-  4. katta "KAZANDIN!", çatlak duvarı kırılarak bulunan gizli oda, F ile sandık/tüccar/demirci (yer tutucu), minimap,
-  duvar arkası siluet, boss can barı, seed göstergesi.
-- `DungeonNav`: düşmanlar ve test botu engellerin etrafından dolaşır.
-- `make dungeon`: ölümsüz bot sabit seed'le 4 katı baştan sona yürür (her oda, gizli oda, boss'lar, merdivenler).
-- Hata ayıklama menüsü (M) zindanda da açılır: kat seçimi + "Bu kattan yeni harita", "Test odasına git", "Ölümsüz (test)".
-Kullanıcı onaylayınca Aşama 5'e (loot ve envanter) geçilecek.
+**Kalınan yer:** Aşama 5 (sürüm 0.5.0) kodlandı; `asama-5` dalı `asama-4`'ün üstünde. Kullanıcı onaylayınca Aşama 6'ya (ilerleme)
+geçilecek.
+- `LootGenerator`: katın nadirlik tablosu, elit/gizli oda üst nadirlik ×2, efsanevi 3. kattan, 3-4. kat boss'u en az Destansı,
+  12 tip, element ve özellik sayısı nadirliğe göre, kat silah leveli (1 / 10 / 25-40 / 50). 10.000 düşüşlük testte oranlar ±%1.
+- Düşmeler: altın (yaklaşınca toplanır), silah (F), iksir (üstünden geçince), sandıkta tılsım; nadirliğe göre ışık sütunu.
+  Sandıklar %25 tuzaklı (kırmızı işaret, 1 sn sonra patlar).
+- `Inventory` + `InventoryUI` (I): 12 gözlü çanta ve 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek); sürükle-bırak, sağ tık/çift tık
+  ile tak-çıkar, yere bırakma, stat karşılaştırmalı tooltip. Kilitli silah aktif slota konamaz; savaşta slotlar kilitli.
+- Silah leveli ve yetişme XP'si (1,5 kat, oyuncuyu geçemez; yalnızca slottakiler, kilitliler almaz). XP Aşama 6'da gelir; şimdilik
+  menüden "Silahlara +1000 XP".
+- `ItemEffects`: Rezonans ek hasarı (%10 kilitli / %7 açık), Esnek slot (özellik ve efsanevi pasif %9, tılsım tam), 3 tılsım,
+  12 efsanevi silahın pasifleri ve sağ tık ekleri.
+- Tüccar (F): 3 silah + 1 tılsım + iksir satar, eşya alır (%30). Demirci (F): level atlatma, element/özellik yeniden çekme.
+- Run ırkın kendi ailesinden Yaygın bir silahla başlar.
 
-**Aşama 4'te GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/dungeon.json` ve `data/floors.json` içinde;
-ayrıntılı liste GDD > Uygulamada Verilen Kararlar > Zindan (Aşama 4)):
-- Run Süresi tablosundaki oda sayısı (boss dahil) giriş odasını ve gizli odayı saymaz; bu ikisi ektir. Savaş odası en az 3.
-- Ana yol oda sayısının %60'ı; boss ana yolun sonunda, tek kapılı. Tüccar/demirci/sandık önce çıkmaz odalara, elit en az 2 oda derine.
-- Katın düşman sayısı (60/70/80/90) savaş odalarına bölünür, oda başına 2-4 dalga (dalga başına ≤ 8); kat başına 2 elit.
-- Aşama 7'ye kadar tüm katlarda 1. kat düşman modelleri + malzeme varyantları (2. kat Alevli, 3. kat Taş/Alevli,
-  4. kat Hayalet); yer tutucu elit (×3 can) ve katın boss adını taşıyan yer tutucu boss (×6 can, dev Damar Kütlesi).
-- Gizli oda 0-1 (GDD aralığı); çatlak duvar 3 vuruşta kırılır; içinde sandık.
-- Kilitli odanın dışına düşen oyuncu/düşman içeri geri alınır (güvenlik ağı).
+**Aşama 5'te GDD'de olmayan ayrıntılar için verilen kararlar** (hepsi `data/economy.json` ve `data/legendaries.json` içinde;
+ayrıntılı liste GDD > Uygulamada Verilen Kararlar > Loot ve envanter):
+- Düşme oranları, altın miktarları (× kat çarpanı 1-4), tüccar fiyatları, demirci bedelleri, çanta 12 göz, tuzak %25.
+- 4. katta elit/gizli oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür.
+- Başlangıç silahı: Warrior kılıç, Ghost hançer, Archer yay, Magical asa (Yaygın, level 1).
+- Silah XP eğrisi oyuncununkiyle aynı; XP'yi yalnızca 4 slottaki açık silahlar alır.
+- Rezonans ek hasarı element durumu bırakmaz ve kombo yapmaz (ikincil vuruş).
+- 12 efsanevi silah önerildi (her tipten bir; ad, element, pasif, sağ tık eki) — kullanıcı değiştirebilir.
+- **GEÇİCİ:** Aşama 6'ya kadar kata inince level katın alt sınırına çıkar (15 / 35 / 55); Aşama 6'da kalkar.
 
-Aşama 0-3'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümündedir.
+Aşama 0-4'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümündedir.
 
 **Bilinen durumlar / notlar:**
-- Aşama 6'ya kadar level atlanmaz ve düşmanlar katla güçlenmez; level 1'de 60 düşmanlı 1. kat zordur. Test için M menüsünden
-  level seçilebilir ya da "Ölümsüz (test)" açılabilir.
+- Aşama 6'ya kadar XP ile level atlanmaz ve düşmanlar katla güçlenmez; 1. kat level 1'de zordur. Test için M menüsünden level seçilebilir
+  ya da "Ölümsüz (test)" açılabilir. Menüdeki "Loot (test)" satırı loot yağdırır, altın ve silah XP'si verir.
+- Hata ayıklama menüsünden level düşürülürse aktif slottaki yüksek levelli silah kullanılmaya devam eder (yalnızca test durumu).
 - `bpy` (Blender Python) çalışma ortamının paket deposunda bulunamadı. Aşama 8'e kadar gerekmiyor; o aşamada tekrar denenecek ya da başka yol bulunacak.
 - .exe imzasız olduğu için Windows SmartScreen "Windows bilgisayarınızı korudu" uyarısı gösterebilir: **Ek bilgi → Yine de çalıştır**.
-- Ghost iksir kullanamaz (Aşama 3'te onaylandı; `data/races.json` > ghost > healing > potions).
+- Ghost iksir kullanamaz (Aşama 3'te onaylandı); iksir toplamaz, tüccar ona iksir satmaz.
 - Hata ayıklama menüsü ve test odası geçicidir; Aşama 10'da gerçek menüler gelir.
 
 ## Oyunu çalıştırma (Windows)
@@ -70,8 +72,9 @@ Aşama 0-3'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümünde
 | Space | Atılma |
 | Tab | Aktif silah değiştir |
 | 1 | İksir (Ghost kullanamaz) |
-| F | Etkileşim: sandık, tüccar, demirci, merdiven |
-| M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, test odası ↔ zindan |
+| F | Etkileşim: yerdeki silah/tılsım, sandık, tüccar, demirci, merdiven |
+| I | Çanta ve slotlar (sürükle-bırak, sağ tık tak/çıkar; açıkken oyun durur) |
+| M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, test odası ↔ zindan |
 | R | Zindan: ölünce ya da kazanınca yeni run · Test odası: odayı yeniden başlat |
 | 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
 | 8 | (Test odası) Aktif silahın özelliğini değiştir (Öfke, İnfaz, Can Emme, Sekme, Sersemletme) |
@@ -83,7 +86,7 @@ Aşama 0-3'te verilen kararlar da GDD > Uygulamada Verilen Kararlar bölümünde
 Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, `zip`, Python 3.
 
 ```bash
-make test            # birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke (make unit / smoke / matrix / dungeon ayrı da çalışır)
+make test            # birim testleri (164) + test odası smoke + ırk×silah matrisi + zindan smoke (loot, tüccar, demirci dahil) (make unit / smoke / matrix / dungeon ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites         # sprite'ları üretir (Aşama 8)
 make sfx             # ses efektlerini üretir (Aşama 9)
@@ -95,6 +98,7 @@ Godot başka bir yerdeyse: `make test GODOT=/yol/godot`.
 Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırken; test odası için `godot --path . res://scenes/test_room.tscn -- <bayrak>`):
 - Zindan: `--seed=N` (aynı seed aynı haritalar) · `--floor=N` (N. kattan başla) · `--god` (hasar alınmaz) ·
   `--enemy-mult=0.2` (düşman sayısı çarpanı) · `--reveal` (minimapin tamamı) · `--open-menu` · `--autoplay` (bot 4 katı oynar)
+- Loot/arayüz: `--loot-rain` (çevreye loot saçar) · `--fill-bag` (çantayı doldurur) · `--open-bag` · `--open-ui=merchant` / `blacksmith`
 - Bir katın haritasını ASCII basmak: `godot --headless --path . -s tools/dev/print_dungeon.gd -- --floor=2 --seed=42`
 - `--autoplay` — test odasında oyuncuyu bot oynatır (smoke testi bunu kullanır; hiç kombo yapamazsa test düşer)
 - `--race=ghost --level=20 --weapons=scythe:water,dagger:lightning:fury` — ırk, level ve iki silah (tip:element[:özellik])
