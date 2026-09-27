@@ -154,7 +154,7 @@ export-android: import
 	cp $(ANDROID_DIR)/ZindanOyunu.apk $(ANDROID_APK)
 	@echo "Hazır: $(ANDROID_APK)"
 
-# Android uygulama simgeleri (assets/icon/): Warrior sprite'ı ve kılıç ikonundan
+# Android uygulama simgeleri (assets/icon/): assets/icon/source/emblem.jpg'deki amblemden
 android-icons:
 	$(GODOT) --headless --path . -s tools/android/make_icons.gd
 

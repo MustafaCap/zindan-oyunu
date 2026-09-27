@@ -622,6 +622,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 10 (v0.10.3) | **Linux sürümü:** oyun Linux'ta da oynanabilir (x86_64, tek dosya, pck gömülü). Sürüm sayfasına `oyun.indir.linux.tar.gz` (çalıştırma izni korunur); arayüz yazı tipine Linux'taki Palatino benzeri ve serif fontlar eklendi |
 | 10 (v0.10.2) | **Magical mana:** normal vuruş (sol tık) **mana harcamaz** (1 → 0; her silahta); skill bedelleri düşürüldü: sağ tık 55 → **45**, Q 65 → **55**, E 90 → **75** (maks levelde arka arkaya karışık 7 skill, eskiden 5-6) |
 | 11 (v0.11.1) | **Mycela'nın Spor Sisi** ("ekranı yeşile boyayan" 2. faz mekaniği) çok güçlüydü: arena 2. fazın sonuna kadar sporla dolu kalıyor, temiz hava alanları 30 sn'de 4 → 2 karo küçülüyordu. Artık sis **3 sn** sürer (önce 1,5 sn işaret), 10 sn arayla tekrarlar; temiz alanlar küçülmez (4 karo). Sis sürerken **Kök Patlaması yok** (oyuncunun altında kırmızı işaret çıkmaz), **Spor Bulutu tek ve küçük** (3 × 1,6 karo yerine 1 × 0,9 karo); sis başlarken yerdeki bulutlar ve kök işaretleri dağılır |
+| 11 (v0.11.1) | **Android uygulama simgesi** değişti: Warrior ve kılıç yerine kanlı zeminde balta, kılıç, mızrak ve iki yaydan oluşan amblem (kaynak `assets/icon/source/emblem.jpg`, `make android-icons`). Uyarlanabilir simgede amblem küçültülüp ortaya konur, kenarı zemine karışır; Android 7'de görselin tamamı |
 | 11 (v0.11.1) | **Kayıt sistemi:** run kendiliğinden kaydedilir, ana menüdeki **YÜKLE** kaldığın yerden sürdürür. **Ölüm run'ı yine bitirir** (kayıt yalnızca oyunu kapatıp sonra devam etmek için; ölüm, zafer ve run'ı bırakmak kaydı siler). Esc menüsünde "Kaydet ve ana menüye dön" ve "Kaydet ve oyundan çık" (run sürer); eski "Ana menüye dön" artık "Run'ı bırak" (ölüm sayılır). Kayıtlı run varken YENİ OYUN önce sorar, o run bırakılmış (ölüm) sayılır |
 | 10 (v0.10.1) | **Sandık nadirliği:** sandığın kendi tablosu — 1. kat %70 / %25 / %4 / %1, 2. kat en az Ender (— / %70 / %27 / %3), 3. kat en az Destansı (— / — / %70 / %30), 4. kat **%100 Efsanevi**; gizli oda sandığı üstüne ×2 (`loot_tables.chest_rarity_weights`) |
 
@@ -1165,7 +1166,8 @@ Kod: `scripts/ui/` (MainMenu, RaceSelect, PauseMenu, RunSummary, UiTheme, BloodD
 ### Android (Aşama 11)
 
 Kod: `scripts/autoload/mobile.gd` (Mobile), `scripts/ui/touch_controls.gd` (TouchControls), `data/touch.json`, `tools/android/`
-(imza anahtarı, simge üretimi, SDK'sız ortam için imzalayıcı), `assets/icon/`, `export_presets.cfg` > Android, `make export-android`.
+(imza anahtarı, simge üretimi, SDK'sız ortam için imzalayıcı), `assets/icon/` (v0.11.1'den beri `source/emblem.jpg` amblemi),
+`export_presets.cfg` > Android, `make export-android`.
 Masaüstü oyun değişmedi: dokunmatik mod yalnızca Android'de (ya da `--touch` ile) açılır.
 
 - **Dağıtım:** hazır APK şablonuyla (Gradle'sız) imzalı APK, yalnızca arm64-v8a (güncel telefonların hepsi; 32 bit ve x86

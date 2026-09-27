@@ -107,8 +107,8 @@ Son değişiklikler:
   oyuncunun altında kök (kırmızı işaret) çıkmıyor, spor bulutu tek ve küçük. **Kayıt sistemi:** run kendiliğinden kaydediliyor
   (kata girince, oda temizlenince, odaya girmeden önce, 10 sn'de bir; savaşta değil), ana menüdeki YÜKLE kaldığın yerden
   sürdürüyor. Esc menüsünde "Kaydet ve ana menüye dön", "Kaydet ve oyundan çık" ve "Run'ı bırak" (ölüm sayılır). Ölüm,
-  zafer ve run'ı bırakmak kaydı siliyor; kayıt varken yeni oyun önce soruyor. GitHub Actions artık Windows, Linux ve Android'in
-  üçünü de derliyor.
+  zafer ve run'ı bırakmak kaydı siliyor; kayıt varken yeni oyun önce soruyor. Android'de yeni uygulama simgesi (kanlı zeminde
+  balta, kılıç, mızrak ve yaylı amblem). GitHub Actions artık Windows, Linux ve Android'in üçünü de derliyor.
 - 0.11.0: Android sürümü (`oyun.indir.apk`): dokunmatik kontroller (joystick, saldırı ve yetenek düğmeleri, sürükleyerek ya da
   otomatik nişan), telefonda büyüyen arayüz, envanterde "Kapat" düğmesi, geri tuşu = Esc, uygulama simgesi. Masaüstü oyun değişmedi.
 - 0.10.3: Linux sürümü (`oyun.indir.linux.tar.gz`).

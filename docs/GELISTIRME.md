@@ -18,7 +18,7 @@ Oyunun tasarımı `docs/GDD.md`'de, projenin durumu README'de. Bu dosya derleme,
 | `make export-windows` | `build/windows/ZindanOyunu.exe` ve `build/zindan-oyunu-windows-vX.Y.Z.zip` |
 | `make export-linux` | `build/linux/ZindanOyunu.x86_64` ve `build/zindan-oyunu-linux-vX.Y.Z.tar.gz` (tar.gz çalıştırma iznini korur; `tools/dev/pack_linux.py`) |
 | `make export-android` | `build/android/ZindanOyunu.apk` ve `build/zindan-oyunu-android-vX.Y.Z.apk` (arm64, Android 7+, `tools/android/zindan-oyunu.keystore` ile imzalı) |
-| `make android-icons` | Android uygulama simgelerini (`assets/icon/`) Warrior sprite'ı ve kılıç ikonundan yeniden üretir |
+| `make android-icons` | Android uygulama simgelerini (`assets/icon/`) `assets/icon/source/emblem.jpg`'deki amblemden yeniden üretir (v0.11.1; görsel `.gdignore`'lu klasörde, oyuna gömülmez) |
 | `make test` | Bütün testler: birim, test odası smoke, ırk × silah matrisi, zindan smoke, boss testi (uzun) |
 | `make quick` | Birim testleri + test odası smoke (~1 dk) |
 | `make unit` / `smoke` / `matrix` / `dungeon` / `bosses` | Testleri tek tek çalıştırır |
