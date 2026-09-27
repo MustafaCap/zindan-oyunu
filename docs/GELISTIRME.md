@@ -15,6 +15,7 @@ Oyunun tasarımı `docs/GDD.md`'de, projenin durumu README'de. Bu dosya derleme,
 | Komut | Ne yapar |
 | --- | --- |
 | `make export-windows` | `build/windows/ZindanOyunu.exe` ve `build/zindan-oyunu-windows-vX.Y.Z.zip` |
+| `make export-linux` | `build/linux/ZindanOyunu.x86_64` ve `build/zindan-oyunu-linux-vX.Y.Z.tar.gz` (tar.gz çalıştırma iznini korur; `tools/dev/pack_linux.py`) |
 | `make test` | Bütün testler: birim, test odası smoke, ırk × silah matrisi, zindan smoke, boss testi (uzun) |
 | `make quick` | Birim testleri + test odası smoke (~1 dk) |
 | `make unit` / `smoke` / `matrix` / `dungeon` / `bosses` | Testleri tek tek çalıştırır |
@@ -60,7 +61,23 @@ Test çıktısında "SCRIPT ERROR" varsa test başarısızdır.
 - Her aşama kendi dalında (`asama-N`, bir öncekinden açılır). Commit mesajları Türkçe.
 - Aşama bitince .exe derlenir, README ve GDD güncellenir, yerelde commit edilir. Oyun test edilip onaylanınca push:
   `git push -u origin asama-N`, sonra `git switch main`, `git merge --no-ff asama-N`, `git push origin main` (`gh` kurulu değil).
-- Sürüm: `main`'de etiket (`git tag -a vX.Y`, `git push origin vX.Y`) ve GitHub **Releases**'e `oyun.indir.zip` (`make export-windows`
+- Sürüm: `main`'de etiket (`git tag -a vX.Y`, `git push origin vX.Y`) ve GitHub **Releases**'e Linux için `oyun.indir.linux.tar.gz`
+  (`make export-linux` arşivinin kopyası), Windows için `oyun.indir.zip` (`make export-windows`
   zip'inin kopyası, içinde `ZindanOyunu.exe`). README'nin başındaki bağlantı (`releases/latest/download/oyun.indir.zip`) hep son sürümü
   indirir. .exe 153 MB olduğu için repoya konmaz (GitHub'ın dosya sınırı 100 MB).
 - Derlemeler repo dışında, `ZindanOyunu-Derlemeler\asama-N\` klasörlerinde.
+
+## Linux'ta denemek (bu bilgisayarda)
+
+WSL'de Ubuntu kurulu ve WSLg pencere açabiliyor. `make export-linux`'tan sonra arşiv WSL'de açılıp çalıştırılabilir:
+
+```
+wsl -d Ubuntu
+mkdir -p ~/zindan-test && cd ~/zindan-test
+tar xzf "/mnt/c/Users/mcap5/Git_Dosyaları/ZindanOyunu-Derlemeler/zindan-oyunu/build/zindan-oyunu-linux-vX.Y.Z.tar.gz"
+./ZindanOyunu/ZindanOyunu.x86_64
+```
+
+WSL'de çizim yazılımsal (Mesa llvmpipe) olduğu için yavaştır ve bu Ubuntu'da ses kütüphanesi olmadığından oyun sessiz sürücüye
+geçer; ikisi de normal bir Linux masaüstünde sorun değil. `-- --seed=5 --shots=KLASÖR --shot-times=4,7` ile ekran görüntüsü alınabilir.
+
