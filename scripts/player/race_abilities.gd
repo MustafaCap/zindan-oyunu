@@ -18,6 +18,7 @@ static func use(p: Player, slot: String) -> bool:
 			p.note("%s bekliyor %.1f sn" % [ab["name"], float(p.kit.cooldowns[slot])])
 		else:
 			p.note("%s yetersiz" % p.kit.resource_name(), Color(0.5, 0.7, 1.0))
+		Audio.play("deny")
 		return false
 	# Hedef gerektiren yetenek: hedef yoksa bedel ödenmez
 	var target: Node2D = null
@@ -25,9 +26,11 @@ static func use(p: Player, slot: String) -> bool:
 		target = p.enemy_near_point(p.aim_point, float(ab["range"]))
 		if target == null:
 			p.note("Menzilde hedef yok")
+			Audio.play("deny")
 			return false
 	p.kit.use(slot, fam)
 	p.uses[slot] = int(p.uses[slot]) + 1
+	Audio.play(Audio.sound_for("abilities." + str(ab["id"])), p.global_position)
 	Events.floating_text.emit(p.global_position + Vector2(0, -86), str(ab["name"]), Color(0.95, 0.9, 0.7), 18)
 	var id := p.next_attack_id()
 	var col := Weapon.kind_color(w.element)

@@ -48,6 +48,7 @@ func open(title: String, subtitle: String, p_choices: Array, totals: Dictionary 
 		_row.add_child(_card(i, choices[i], totals))
 	visible = true
 	get_tree().paused = true
+	Audio.play("reward_open")
 
 
 func close() -> void:
@@ -60,6 +61,7 @@ func pick(i: int) -> void:
 		return
 	var c: Dictionary = choices[i]
 	close()
+	Audio.play("reward_pick")
 	chosen.emit(c)
 
 

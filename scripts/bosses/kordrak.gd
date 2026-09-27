@@ -47,6 +47,7 @@ func modify_incoming(amount: float, info: Dictionary) -> float:
 			cool_stacks = 0
 			plates_off_t = float(mech()["armor_off_duration"])
 			Events.floating_text.emit(global_position + Vector2(0, -150), "PLAKALAR KIRILDI!", Color(0.6, 0.9, 1.0), 28)
+			Audio.play("plates_break")
 			Events.area_pulse.emit(global_position, 2.0, Color(0.6, 0.9, 1.0))
 		_update_armor()
 	return amount
@@ -77,6 +78,7 @@ func tick_mechanic(delta: float) -> void:
 
 func enter_phase2() -> void:
 	plates_gone = true
+	Audio.play("plates_break")
 	cool_stacks = 0
 	_update_armor()
 	Events.floating_text.emit(global_position + Vector2(0, -170), "ÇEKİRDEK AÇIKTA", Color(1.0, 0.6, 0.2), 26)

@@ -75,6 +75,7 @@ func _pulse() -> void:
 		return
 	var attack_id := player.next_attack_id()
 	Events.area_pulse.emit(global_position, radius, color)
+	Audio.play(Audio.sound_for("ground_effects." + look), global_position)
 	if look == "rain":
 		for i: int in 7:
 			var a := _rng.randf() * TAU

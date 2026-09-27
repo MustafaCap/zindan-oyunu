@@ -747,14 +747,18 @@ func use_potion() -> bool:
 		return false
 	if not bool(_race["healing"]["potions"]):
 		note("%s iksir kullanamaz" % _race["name"], Color(1, 0.6, 0.6))
+		Audio.play("deny")
 		return false
 	if potions <= 0:
 		note("İksir yok", Color(1, 0.6, 0.6))
+		Audio.play("deny")
 		return false
 	if hp >= max_hp:
 		note("Can dolu")
+		Audio.play("deny")
 		return false
 	potions -= 1
+	Audio.play("potion_drink")
 	restore(max_hp * float(DataDB.get_value("progression", "potions.heal_pct")))
 	return true
 
@@ -836,6 +840,7 @@ func _try_second_chance() -> bool:
 	if sc.is_empty() or GameState.second_chance_used:
 		return false
 	GameState.second_chance_used = true
+	Audio.play("second_chance")
 	hp = max_hp * float(sc["revive_hp"])
 	iframes = float(sc["iframes"])
 	visual.flash(0.3, Color(1.0, 0.9, 0.5))

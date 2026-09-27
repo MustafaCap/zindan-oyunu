@@ -1,0 +1,1037 @@
+{
+  "_note": "Aşama 9 (ses): tüm ses ayarları ve eşlemeleri. Sesler tools/audio/sfx_synth.py ile üretilir (make sfx). _default notları GDD'de olmayan kararlardır.",
+  "buses": {
+    "_default": "Kanal varsayılan ses düzeyleri (0-1); oyuncu O tuşuyla açılan panelden değiştirir, user://settings.json'a kaydedilir",
+    "Master": 0.8,
+    "Music": 0.55,
+    "SFX": 0.85,
+    "UI": 0.7
+  },
+  "limiter_ceiling_db": -0.5,
+  "positional": {
+    "_default": "Konumlu seslerin (AudioStreamPlayer2D) duyulma uzaklığı (ekran pikseli; ekran kenarı ~-5 dB), sönüm eğrisi ve sağ-sol kaydırma gücü",
+    "max_distance": 2200.0,
+    "attenuation": 1.0,
+    "panning_strength": 0.6
+  },
+  "pool": {
+    "_default": "Aynı anda çalabilen ses oynatıcı sayısı (dünyada konumlu / konumsuz)",
+    "world": 32,
+    "flat": 12
+  },
+  "defaults": {
+    "db": 0.0,
+    "pitch": 0.06,
+    "poly": 4,
+    "gap": 0.03,
+    "bus": "SFX",
+    "positional": true
+  },
+  "sounds": {
+    "_note": "Ses efektleri: id -> variants (assets/audio/sfx/<id>_<n>.wav sayısı; tools/audio/sfx.py ile aynı), isteğe bağlı db (ses düzeyi düzeltmesi), pitch (± rastgele perde oranı), poly (aynı anda en fazla kaç tane), gap (aynı sesin iki çalınması arası en az sn), bus (SFX/UI/Music), positional (dünyadaki konumundan duyulur; false ise ortadan). Verilmeyenler defaults'tan gelir.",
+    "hit_flesh": {
+      "variants": 4,
+      "poly": 5,
+      "gap": 0.025
+    },
+    "hit_heavy": {
+      "variants": 3,
+      "poly": 4,
+      "gap": 0.03
+    },
+    "hit_crit": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.05
+    },
+    "hit_bone": {
+      "variants": 4,
+      "poly": 5,
+      "gap": 0.025
+    },
+    "hit_stone": {
+      "variants": 3,
+      "poly": 4
+    },
+    "hit_metal": {
+      "variants": 3,
+      "poly": 4
+    },
+    "hit_ghost": {
+      "variants": 3,
+      "poly": 4
+    },
+    "hit_block": {
+      "variants": 3,
+      "poly": 2,
+      "gap": 0.12
+    },
+    "hit_immune": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.12,
+      "db": -4
+    },
+    "execute": {
+      "variants": 1
+    },
+    "swing_blade": {
+      "variants": 4,
+      "poly": 3,
+      "db": -3
+    },
+    "swing_heavy": {
+      "variants": 3,
+      "poly": 3,
+      "db": -3
+    },
+    "punch": {
+      "variants": 4,
+      "poly": 3,
+      "db": -4,
+      "gap": 0.04
+    },
+    "thrust": {
+      "variants": 3,
+      "poly": 3,
+      "db": -3
+    },
+    "stab": {
+      "variants": 2
+    },
+    "spin": {
+      "variants": 2
+    },
+    "throw_whirl": {
+      "variants": 2
+    },
+    "slam": {
+      "variants": 2
+    },
+    "bow": {
+      "variants": 4,
+      "poly": 3,
+      "db": -3
+    },
+    "bow_heavy": {
+      "variants": 2
+    },
+    "crossbow": {
+      "variants": 3,
+      "poly": 3,
+      "db": -3
+    },
+    "crossbow_fan": {
+      "variants": 2
+    },
+    "cast": {
+      "variants": 4,
+      "poly": 3,
+      "db": -3
+    },
+    "cast_multi": {
+      "variants": 2
+    },
+    "orb_cast": {
+      "variants": 2
+    },
+    "rune": {
+      "variants": 3,
+      "poly": 3,
+      "db": -4
+    },
+    "rune_arm": {
+      "variants": 2
+    },
+    "rune_blast": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.06
+    },
+    "explosion_small": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.06
+    },
+    "explosion_fire": {
+      "variants": 2,
+      "poly": 3,
+      "gap": 0.06
+    },
+    "flesh_burst": {
+      "variants": 2,
+      "poly": 3,
+      "gap": 0.08
+    },
+    "arrow_impact": {
+      "variants": 3,
+      "poly": 4,
+      "gap": 0.05,
+      "db": -4
+    },
+    "storm_pulse": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -2
+    },
+    "el_fire": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -5
+    },
+    "el_water": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -5
+    },
+    "el_lightning": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -5
+    },
+    "el_poison": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -5
+    },
+    "el_ice": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -5
+    },
+    "el_dark": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08,
+      "db": -4
+    },
+    "freeze": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.2
+    },
+    "combo_electroshock": {
+      "variants": 1
+    },
+    "combo_melt": {
+      "variants": 1
+    },
+    "combo_freeze": {
+      "variants": 1
+    },
+    "combo_shatter": {
+      "variants": 1
+    },
+    "combo_poison_burst": {
+      "variants": 1
+    },
+    "combo_steam": {
+      "variants": 1
+    },
+    "combo_rot": {
+      "variants": 1
+    },
+    "death_flesh": {
+      "variants": 4,
+      "poly": 4,
+      "gap": 0.04
+    },
+    "death_bone": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.05
+    },
+    "death_ghost": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.08
+    },
+    "death_stone": {
+      "variants": 2,
+      "poly": 3,
+      "gap": 0.06
+    },
+    "death_metal": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.08
+    },
+    "death_elite": {
+      "variants": 2,
+      "poly": 1,
+      "gap": 0.3
+    },
+    "boss_death": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "enemy_swing": {
+      "variants": 3,
+      "poly": 3,
+      "db": -4
+    },
+    "enemy_bow": {
+      "variants": 3,
+      "poly": 3,
+      "db": -4
+    },
+    "spit": {
+      "variants": 3,
+      "poly": 3,
+      "db": -3
+    },
+    "splat": {
+      "variants": 3,
+      "poly": 3,
+      "gap": 0.05,
+      "db": -4
+    },
+    "fireball": {
+      "variants": 2,
+      "poly": 3,
+      "db": -3
+    },
+    "shadow_bolt": {
+      "variants": 2,
+      "poly": 3,
+      "db": -3
+    },
+    "spore": {
+      "variants": 2,
+      "poly": 3,
+      "db": -4
+    },
+    "beam": {
+      "variants": 2,
+      "poly": 2,
+      "db": -3
+    },
+    "bite": {
+      "variants": 3,
+      "poly": 3,
+      "db": -2
+    },
+    "scream": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.3
+    },
+    "void_pull": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.3
+    },
+    "summon": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.5
+    },
+    "spawn_flesh": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.15
+    },
+    "heal_spell": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.5,
+      "db": -3
+    },
+    "stealth": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.2,
+      "db": -3
+    },
+    "ground_slam": {
+      "variants": 2,
+      "poly": 3,
+      "gap": 0.08
+    },
+    "telegraph": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.35,
+      "db": -6,
+      "pitch": 0.03
+    },
+    "anvil_slam": {
+      "variants": 2,
+      "poly": 1,
+      "gap": 0.3
+    },
+    "dark_burst": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.1
+    },
+    "dark_slash": {
+      "variants": 2
+    },
+    "root_burst": {
+      "variants": 2,
+      "poly": 3,
+      "gap": 0.1
+    },
+    "lava_fill": {
+      "variants": 1,
+      "poly": 1,
+      "gap": 0.4
+    },
+    "gas": {
+      "variants": 2,
+      "poly": 2,
+      "gap": 0.12,
+      "db": -3
+    },
+    "void_rift": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.2
+    },
+    "boss_scream": {
+      "variants": 1,
+      "poly": 1,
+      "gap": 0.5
+    },
+    "gaze_beam": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.3
+    },
+    "eyelid": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1
+    },
+    "plates_break": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.5
+    },
+    "nyx_found": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.5
+    },
+    "torch_light": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.2
+    },
+    "roar_morvath": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "roar_mycela": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "roar_kordrak": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "roar_nyxthar": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "dash": {
+      "variants": 3,
+      "positional": false,
+      "poly": 2,
+      "db": -3
+    },
+    "player_hurt": {
+      "variants": 3,
+      "positional": false,
+      "poly": 2,
+      "gap": 0.15
+    },
+    "heartbeat": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.3,
+      "pitch": 0.0,
+      "db": -2
+    },
+    "player_death": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "potion_drink": {
+      "variants": 2,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.3
+    },
+    "potion_pickup": {
+      "variants": 1,
+      "positional": false,
+      "gap": 0.1
+    },
+    "weapon_swap": {
+      "variants": 3,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.1
+    },
+    "level_up": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.6,
+      "pitch": 0.0
+    },
+    "second_chance": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "pitch": 0.0
+    },
+    "deny": {
+      "variants": 2,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.35
+    },
+    "shield_rush": {
+      "variants": 1,
+      "positional": false
+    },
+    "ground_slam_big": {
+      "variants": 1,
+      "positional": false
+    },
+    "phase": {
+      "variants": 1,
+      "positional": false
+    },
+    "shadow_step": {
+      "variants": 1,
+      "positional": false
+    },
+    "back_leap": {
+      "variants": 1,
+      "positional": false
+    },
+    "arrow_rain": {
+      "variants": 1,
+      "positional": false
+    },
+    "flight": {
+      "variants": 1,
+      "positional": false
+    },
+    "storm_cast": {
+      "variants": 1,
+      "positional": false
+    },
+    "door_slam": {
+      "variants": 2,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.3
+    },
+    "door_open": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.3,
+      "db": -2
+    },
+    "wave_start": {
+      "variants": 2,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.5
+    },
+    "room_clear": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.5,
+      "pitch": 0.0
+    },
+    "chest_open": {
+      "variants": 2,
+      "poly": 1,
+      "gap": 0.2
+    },
+    "trap_arm": {
+      "variants": 1,
+      "poly": 1
+    },
+    "coin": {
+      "variants": 4,
+      "poly": 3,
+      "gap": 0.045,
+      "pitch": 0.1
+    },
+    "item_pickup": {
+      "variants": 2,
+      "positional": false,
+      "poly": 1,
+      "gap": 0.1
+    },
+    "loot_common": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.05
+    },
+    "loot_rare": {
+      "variants": 1,
+      "poly": 2,
+      "gap": 0.1
+    },
+    "loot_epic": {
+      "variants": 1,
+      "poly": 1,
+      "gap": 0.2
+    },
+    "loot_legendary": {
+      "variants": 1,
+      "poly": 1,
+      "gap": 0.5,
+      "pitch": 0.0
+    },
+    "wall_crack": {
+      "variants": 3,
+      "poly": 2,
+      "gap": 0.1
+    },
+    "wall_break": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1
+    },
+    "secret_found": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "pitch": 0.0
+    },
+    "stairs": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "pitch": 0.0
+    },
+    "floor_enter": {
+      "variants": 1,
+      "positional": false,
+      "poly": 1,
+      "gap": 1.0,
+      "pitch": 0.0
+    },
+    "buy": {
+      "variants": 2,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.1
+    },
+    "sell": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.1
+    },
+    "anvil": {
+      "variants": 2,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.2
+    },
+    "reroll": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.2
+    },
+    "ui_click": {
+      "variants": 2,
+      "positional": false,
+      "bus": "UI",
+      "poly": 2,
+      "gap": 0.03,
+      "pitch": 0.03
+    },
+    "ui_hover": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.05,
+      "pitch": 0.04
+    },
+    "ui_open": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.1
+    },
+    "ui_close": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.1
+    },
+    "ui_drag": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.05
+    },
+    "ui_drop": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.05
+    },
+    "reward_open": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.5,
+      "pitch": 0.0
+    },
+    "reward_pick": {
+      "variants": 1,
+      "positional": false,
+      "bus": "UI",
+      "poly": 1,
+      "gap": 0.3,
+      "pitch": 0.0
+    },
+    "victory": {
+      "variants": 1,
+      "positional": false,
+      "bus": "Music",
+      "poly": 1,
+      "gap": 2.0,
+      "pitch": 0.0
+    },
+    "defeat": {
+      "variants": 1,
+      "positional": false,
+      "bus": "Music",
+      "poly": 1,
+      "gap": 2.0,
+      "pitch": 0.0
+    }
+  },
+  "weapons": {
+    "_note": "Silah tipi -> sol tık (light) ve sağ tık (heavy) sesi",
+    "sword": {
+      "light": "swing_blade",
+      "heavy": "spin"
+    },
+    "axe": {
+      "light": "swing_heavy",
+      "heavy": "throw_whirl"
+    },
+    "fist": {
+      "light": "punch",
+      "heavy": "punch"
+    },
+    "scythe": {
+      "light": "swing_heavy",
+      "heavy": "swing_heavy"
+    },
+    "dagger": {
+      "light": "swing_blade",
+      "heavy": "stab"
+    },
+    "mace": {
+      "light": "swing_heavy",
+      "heavy": "slam"
+    },
+    "bow": {
+      "light": "bow",
+      "heavy": "bow_heavy"
+    },
+    "crossbow": {
+      "light": "crossbow",
+      "heavy": "crossbow_fan"
+    },
+    "spear": {
+      "light": "thrust",
+      "heavy": "throw_whirl"
+    },
+    "tome": {
+      "light": "cast",
+      "heavy": "cast_multi"
+    },
+    "staff": {
+      "light": "cast",
+      "heavy": "orb_cast"
+    },
+    "rune": {
+      "light": "rune",
+      "heavy": "rune_arm"
+    }
+  },
+  "ground_effects": {
+    "_note": "Yere kurulan saldırıların (GroundEffect.look) patlama/vuruş sesi",
+    "rune": "rune_blast",
+    "rain": "arrow_impact",
+    "storm": "storm_pulse"
+  },
+  "projectile_explosion": "explosion_small",
+  "abilities": {
+    "shield_charge": "shield_rush",
+    "ground_slam": "ground_slam_big",
+    "phase": "phase",
+    "shadow_step": "shadow_step",
+    "back_leap": "back_leap",
+    "arrow_rain": "arrow_rain",
+    "flight": "flight",
+    "element_storm": "storm_cast"
+  },
+  "elements": {
+    "_note": "Element durumu bırakan vuruşun ek sesi",
+    "fire": "el_fire",
+    "water": "el_water",
+    "lightning": "el_lightning",
+    "poison": "el_poison",
+    "ice": "el_ice",
+    "dark": "el_dark"
+  },
+  "combos": {
+    "electroshock": "combo_electroshock",
+    "melt": "combo_melt",
+    "freeze": "combo_freeze",
+    "shatter": "combo_shatter",
+    "poison_burst": "combo_poison_burst",
+    "steam": "combo_steam",
+    "rot": "combo_rot"
+  },
+  "body": {
+    "_default": "Düşmanın vuruş/ölüm sesi gövdesine göre: et (varsayılan), kemik, taş, metal, hayalet. Malzeme varyantı (Taş, Hayalet) gövdeyi değiştirir.",
+    "default": "flesh",
+    "enemies": {
+      "skeleton_warrior": "bone",
+      "skeleton_archer": "bone",
+      "stone_golemling": "stone",
+      "iron_guard": "metal",
+      "shade": "ghost",
+      "wailer": "ghost",
+      "void_summoner": "ghost"
+    },
+    "materials": {
+      "stone": "stone",
+      "ghost": "ghost"
+    },
+    "bosses": {
+      "morvath": "flesh",
+      "mycela": "flesh",
+      "kordrak": "stone",
+      "nyxthar": "ghost"
+    }
+  },
+  "hits": {
+    "flesh": "hit_flesh",
+    "bone": "hit_bone",
+    "stone": "hit_stone",
+    "metal": "hit_metal",
+    "ghost": "hit_ghost",
+    "heavy": "hit_heavy",
+    "crit": "hit_crit",
+    "blocked": "hit_block",
+    "immune": "hit_immune",
+    "execute": "execute",
+    "freeze": "freeze"
+  },
+  "deaths": {
+    "flesh": "death_flesh",
+    "bone": "death_bone",
+    "stone": "death_stone",
+    "metal": "death_metal",
+    "ghost": "death_ghost",
+    "elite": "death_elite",
+    "boss": "boss_death"
+  },
+  "enemy_attacks": {
+    "_note": "Düşman saldırısı (attack.type) -> ses; mermide attack.look",
+    "arc": "enemy_swing",
+    "slam": "ground_slam",
+    "beam": "beam",
+    "lunge": "bite",
+    "cone": "scream",
+    "projectiles": {
+      "arrow": "enemy_bow",
+      "spit": "spit",
+      "spore": "spore",
+      "fireball": "fireball",
+      "shadow": "shadow_bolt"
+    }
+  },
+  "projectile_impacts": {
+    "_note": "Düşman mermisi bitince (look)",
+    "spit": "splat",
+    "spore": "splat",
+    "fireball": "el_fire",
+    "shadow": "el_dark",
+    "arrow": "arrow_impact"
+  },
+  "enemy_abilities": {
+    "pull": "void_pull",
+    "summon": "summon",
+    "heal": "heal_spell",
+    "stealth": "stealth",
+    "reappear": "shadow_step"
+  },
+  "hazards": {
+    "_default": "Yerdeki tehlike uyarısı bitince çalan ses: önce etikete (label) göre, yoksa biçimine (burst/zone) ve türüne (kind) göre; düşman ölüm etkileri (label _death ile biter) death'ten. Boss tehlikeleri en az telegraph_min_warn sn uyarılıysa işaret belirince alçak bir uyarı sesi çalar.",
+    "telegraph": "telegraph",
+    "telegraph_min_warn": 0.5,
+    "labels": {
+      "anvil_slam": "anvil_slam",
+      "vein_lash": "flesh_burst",
+      "root_burst": "root_burst",
+      "scream": "boss_scream",
+      "phase2_fireballs": "explosion_fire",
+      "phase2_zones": "spawn_flesh",
+      "shadow_copies_fake": "dark_slash",
+      "eye_spawns": "spawn_flesh",
+      "totems": "root_burst",
+      "relocate": "stealth",
+      "shadow_copies": "summon"
+    },
+    "burst": {
+      "physical": "ground_slam",
+      "fire": "explosion_fire",
+      "poison": "combo_poison_burst",
+      "dark": "dark_burst"
+    },
+    "zone": {
+      "fire": "lava_fill",
+      "poison": "gas",
+      "dark": "void_rift"
+    },
+    "death": {
+      "burst": "flesh_burst",
+      "zone": "gas"
+    }
+  },
+  "bosses": {
+    "_note": "Boss: giriş/2. faz kükremesi, müziği ve saldırı başlangıç sesleri (attack id -> ses); 2. faz kükremesi boss_phase2_pitch perdesinde",
+    "morvath": {
+      "roar": "roar_morvath",
+      "music": "boss_morvath",
+      "attacks": {
+        "gaze_beam": "gaze_beam"
+      }
+    },
+    "mycela": {
+      "roar": "roar_mycela",
+      "music": "boss_mycela",
+      "attacks": {
+        "spore_shot": "spit"
+      }
+    },
+    "kordrak": {
+      "roar": "roar_kordrak",
+      "music": "boss_kordrak",
+      "attacks": {
+        "ember_fist": "fireball"
+      }
+    },
+    "nyxthar": {
+      "roar": "roar_nyxthar",
+      "music": "boss_nyxthar",
+      "attacks": {
+        "void_rift": "void_pull"
+      }
+    }
+  },
+  "boss_phase2_pitch": 0.85,
+  "music": {
+    "_default": "Müzik: kat başına ambiyans döngüsü, boss'ta boss müziği (çapraz geçişle). Boss kesilince return_delay_sec sonra katın ambiyansına dönülür; run bitince müzik söner ve zafer/yenilgi vurgusu çalar.",
+    "tracks": {
+      "floor_1": {
+        "file": "floor_1.ogg",
+        "db": 0.0
+      },
+      "floor_2": {
+        "file": "floor_2.ogg",
+        "db": 0.0
+      },
+      "floor_3": {
+        "file": "floor_3.ogg",
+        "db": 0.0
+      },
+      "floor_4": {
+        "file": "floor_4.ogg",
+        "db": 0.0
+      },
+      "boss_morvath": {
+        "file": "boss_morvath.ogg",
+        "db": -1.0
+      },
+      "boss_mycela": {
+        "file": "boss_mycela.ogg",
+        "db": -1.0
+      },
+      "boss_kordrak": {
+        "file": "boss_kordrak.ogg",
+        "db": -1.0
+      },
+      "boss_nyxthar": {
+        "file": "boss_nyxthar.ogg",
+        "db": -1.0
+      }
+    },
+    "floors": {
+      "1": "floor_1",
+      "2": "floor_2",
+      "3": "floor_3",
+      "4": "floor_4"
+    },
+    "crossfade_sec": 2.5,
+    "boss_crossfade_sec": 0.8,
+    "return_delay_sec": 5.0,
+    "end_fade_sec": 1.5
+  },
+  "low_hp": {
+    "_default": "Can bu oranın altındayken kalp atışı duyulur",
+    "threshold": 0.25,
+    "interval_sec": 0.95
+  }
+}

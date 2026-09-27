@@ -13,6 +13,8 @@ signal room_cleared(room_id: int)
 signal combat_state_changed(in_combat: bool)   ## oda kilitlenince true, temizlenince false (slot değişimi kuralı)
 signal secret_found(room_id: int)
 signal boss_defeated(floor_index: int)
+## Aşama 9: boss dövüşü başladı (boss sahneye girdi) — boss müziği ve kükreme.
+signal boss_fight_started(boss_id: String)
 
 # Savaş
 signal damage_dealt(source: Node, target: Node, amount: float, is_crit: bool, element: String)

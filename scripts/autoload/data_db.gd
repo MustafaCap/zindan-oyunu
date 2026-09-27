@@ -147,7 +147,29 @@ const SCHEMA := {
 		"interact_range_tiles": "number",
 		"templates": {"_each": {"name": "string", "rows": "array"}},
 	},
+	"audio": {
+		"buses": {"Master": "number", "Music": "number", "SFX": "number", "UI": "number"},
+		"limiter_ceiling_db": "number",
+		"positional": {"max_distance": "number", "attenuation": "number", "panning_strength": "number"},
+		"pool": {"world": "number", "flat": "number"},
+		"defaults": {"db": "number", "pitch": "number", "poly": "number", "gap": "number", "bus": "string", "positional": "bool"},
+		"sounds": {"_each": {"variants": "number"}},
+		"weapons": {"_each": {"light": "string", "heavy": "string"}},
+		"ground_effects": "dict", "projectile_explosion": "string", "abilities": "dict", "elements": "dict", "combos": "dict",
+		"body": {"default": "string", "enemies": "dict", "materials": "dict", "bosses": "dict"},
+		"hits": "dict", "deaths": "dict",
+		"enemy_attacks": {"projectiles": "dict"}, "projectile_impacts": "dict", "enemy_abilities": "dict",
+		"hazards": {"telegraph": "string", "telegraph_min_warn": "number", "labels": "dict", "burst": "dict", "zone": "dict", "death": "dict"},
+		"bosses": {"_each": {"roar": "string", "music": "string", "attacks": "dict"}},
+		"boss_phase2_pitch": "number",
+		"music": {"tracks": {"_each": {"file": "string", "db": "number"}}, "floors": "dict", "crossfade_sec": "number",
+			"boss_crossfade_sec": "number", "return_delay_sec": "number", "end_fade_sec": "number"},
+		"low_hp": {"threshold": "number", "interval_sec": "number"},
+	},
 }
+## Aşama 9: ses kanalları ve gövde türleri (audio.json).
+const AUDIO_BUSES := ["SFX", "UI", "Music"]
+const AUDIO_BODIES := ["flesh", "bone", "stone", "metal", "ghost"]
 ## Zindanın oda tipleri (floors.json > room_types ile aynı olmalı) ve şablon karakterleri.
 const ROOM_TYPES := ["start", "combat", "elite", "merchant", "blacksmith", "chest", "secret", "boss"]
 const TEMPLATE_CHARS := [".", "o", " "]
@@ -490,6 +512,7 @@ func _cross_check() -> void:
 
 	_check_dungeon(enemy_ids)
 	_check_loot(rarity_ids, element_ids)
+	_check_audio(enemy_ids, element_ids)
 
 	var mastery: Dictionary = tables["progression"]["mastery"]
 	if (mastery["xp_to_next"] as Array).size() != int(mastery["max_level"]) - 1:
@@ -679,6 +702,81 @@ func _require_numbers(d: Dictionary, fields: Array, where: String) -> void:
 			errors.append("%s: eksik alan '%s'" % [where, f])
 		elif not _type_ok(d[f], "number"):
 			errors.append("%s.%s: 'number' tipinde olmalı, bulunan: %s" % [where, f, _type_name(d[f])])
+
+
+## Aşama 9: her eşleme var olan bir sese gider; her silah tipi, ırk yeteneği, element, kombo, boss ve kat için ses/müzik
+## tanımlıdır; ses ayarları geçerli aralıktadır.
+func _check_audio(enemy_ids: Array, element_ids: Array) -> void:
+	var a: Dictionary = tables["audio"]
+	var sounds: Dictionary = a["sounds"]
+	for sid: String in _records(sounds):
+		var e: Dictionary = sounds[sid]
+		if int(e["variants"]) < 1:
+			errors.append("audio.sounds.%s.variants: en az 1 olmalı" % sid)
+		if e.has("bus") and not str(e["bus"]) in AUDIO_BUSES:
+			errors.append("audio.sounds.%s.bus: bilinmeyen kanal '%s'" % [sid, e["bus"]])
+		for k: String in ["db", "pitch", "poly", "gap"]:
+			if e.has(k) and not _type_ok(e[k], "number"):
+				errors.append("audio.sounds.%s.%s: 'number' tipinde olmalı" % [sid, k])
+	for b: String in (a["buses"] as Dictionary).keys():
+		if not b.begins_with("_") and (float(a["buses"][b]) < 0.0 or float(a["buses"][b]) > 1.0):
+			errors.append("audio.buses.%s: 0-1 arasında olmalı" % b)
+	var refs: Array = []   # [yol, ses id]
+	for wt: String in _records(tables["weapon_types"]):
+		if not (a["weapons"] as Dictionary).has(wt):
+			errors.append("audio.weapons: '%s' silah tipi için ses yok" % wt)
+	for wt2: String in _records(a["weapons"]):
+		refs.append(["weapons.%s.light" % wt2, a["weapons"][wt2]["light"]])
+		refs.append(["weapons.%s.heavy" % wt2, a["weapons"][wt2]["heavy"]])
+	for race_id: String in _records(tables["races"]):
+		for slot: String in ["q", "e"]:
+			var aid := str(tables["races"][race_id]["abilities"][slot]["id"])
+			if not (a["abilities"] as Dictionary).has(aid):
+				errors.append("audio.abilities: '%s' yeteneği için ses yok" % aid)
+	for el: String in element_ids:
+		if not (a["elements"] as Dictionary).has(el):
+			errors.append("audio.elements: '%s' elementi için ses yok" % el)
+	for c: Variant in tables["elements"]["combos"]:
+		if typeof(c) == TYPE_DICTIONARY and not (a["combos"] as Dictionary).has(str(c["id"])):
+			errors.append("audio.combos: '%s' kombosu için ses yok" % c["id"])
+	for bid: String in _records(tables["bosses"]["bosses"]):
+		if not (a["bosses"] as Dictionary).has(bid):
+			errors.append("audio.bosses: '%s' boss'u için ses yok" % bid)
+		elif not (a["music"]["tracks"] as Dictionary).has(str(a["bosses"][bid]["music"])):
+			errors.append("audio.bosses.%s.music: bilinmeyen parça '%s'" % [bid, a["bosses"][bid]["music"]])
+	for fid: String in _records(tables["floors"]["floors"]):
+		if not (a["music"]["floors"] as Dictionary).has(fid) or not (a["music"]["tracks"] as Dictionary).has(str(a["music"]["floors"][fid])):
+			errors.append("audio.music.floors: %s. kat için müzik yok" % fid)
+	for eid: String in (a["body"]["enemies"] as Dictionary).keys():
+		if not eid in enemy_ids:
+			errors.append("audio.body.enemies: bilinmeyen düşman '%s'" % eid)
+	for grp: String in ["enemies", "materials", "bosses"]:
+		for k: String in (a["body"][grp] as Dictionary).keys():
+			if not str(a["body"][grp][k]) in AUDIO_BODIES:
+				errors.append("audio.body.%s.%s: bilinmeyen gövde '%s'" % [grp, k, a["body"][grp][k]])
+	for body: String in AUDIO_BODIES:
+		refs.append(["hits." + body, (a["hits"] as Dictionary).get(body, "")])
+		refs.append(["deaths." + body, (a["deaths"] as Dictionary).get(body, "")])
+	for sec: String in ["ground_effects", "abilities", "elements", "combos", "hits", "deaths", "projectile_impacts", "enemy_abilities"]:
+		for k2: String in _records(a[sec]):
+			refs.append([sec + "." + k2, a[sec][k2]])
+	for k3: String in _records(a["enemy_attacks"]):
+		if k3 != "projectiles":
+			refs.append(["enemy_attacks." + k3, a["enemy_attacks"][k3]])
+	for k4: String in _records(a["enemy_attacks"]["projectiles"]):
+		refs.append(["enemy_attacks.projectiles." + k4, a["enemy_attacks"]["projectiles"][k4]])
+	for sec2: String in ["labels", "burst", "zone", "death"]:
+		for k5: String in _records(a["hazards"][sec2]):
+			refs.append(["hazards.%s.%s" % [sec2, k5], a["hazards"][sec2][k5]])
+	refs.append(["hazards.telegraph", a["hazards"]["telegraph"]])
+	refs.append(["projectile_explosion", a["projectile_explosion"]])
+	for bid2: String in _records(a["bosses"]):
+		refs.append(["bosses.%s.roar" % bid2, a["bosses"][bid2]["roar"]])
+		for at: String in _records(a["bosses"][bid2]["attacks"]):
+			refs.append(["bosses.%s.attacks.%s" % [bid2, at], a["bosses"][bid2]["attacks"][at]])
+	for r: Array in refs:
+		if typeof(r[1]) != TYPE_STRING or not sounds.has(str(r[1])) or str(r[1]).begins_with("_"):
+			errors.append("audio.%s: bilinmeyen ses '%s'" % [r[0], r[1]])
 
 
 ## Sözlüğün "_" ile başlamayan (not olmayan) anahtarları.

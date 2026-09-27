@@ -437,6 +437,10 @@ func _execute_action() -> void:
 			_do_summon()
 		_:
 			_attack_cd = attack_cd_max
+			if attack_type == "projectile":
+				Audio.play(Audio.sound_for("enemy_attacks.projectiles." + str(attack.get("look", "arrow"))), global_position)
+			else:
+				Audio.play(Audio.sound_for("enemy_attacks." + attack_type), global_position)
 			match attack_type:
 				"arc":
 					_strike_arc(attack_range, attack_arc, 1.0)
@@ -524,6 +528,7 @@ func _try_ability(dist: float) -> bool:
 			"heal":
 				if _do_heal(ab):
 					ab["cd"] = float(ab["cooldown"])
+					Audio.play(Audio.sound_for("enemy_abilities.heal"), global_position)
 			"summon":
 				summons = summons.filter(func(s: Variant) -> bool: return is_instance_valid(s) and not (s as Node2D).get("dead"))
 				if summons.size() < int(ab["max_alive"]):
@@ -533,12 +538,14 @@ func _try_ability(dist: float) -> bool:
 						pts.append(_free_point_near(global_position, 1.5, 2.5))
 					_action = {"kind": "summon", "id": str(ab["id"]), "points": pts, "warn": float(ab["warn"])}
 					_set_state(State.WINDUP)
+					Audio.play(Audio.sound_for("enemy_abilities.summon"), global_position)
 					return true
 			"pull":
 				if dist <= float(ab["radius"]) and dist >= float(ab["min_dist"]) and has_los_to(target.global_position):
 					ab["cd"] = float(ab["cooldown"])
 					_action = {"kind": "pull", "radius": float(ab["radius"]), "tiles": float(ab["pull_tiles"]), "warn": float(ab["warn"])}
 					_set_state(State.WINDUP)
+					Audio.play(Audio.sound_for("enemy_abilities.pull"), global_position)
 					return true
 			"stealth":
 				if dist <= 7.0 and dist >= float(ab["min_dist"]):
@@ -626,6 +633,7 @@ func _free_point_near(center: Vector2, min_r: float, max_r: float) -> Vector2:
 
 func _enter_stealth() -> void:
 	_set_state(State.STEALTH)
+	Audio.play(Audio.sound_for("enemy_abilities.stealth"), global_position)
 	untargetable = true
 	remove_from_group("enemies")
 	collision_layer = 0
@@ -647,6 +655,7 @@ func _reappear() -> void:
 				break
 		facing_cart = Iso.to_cart(target.global_position - global_position).normalized()
 		Events.area_pulse.emit(global_position, 0.7, Color(0.4, 0.3, 0.6))
+		Audio.play(Audio.sound_for("enemy_abilities.reappear"), global_position)
 		_begin_attack()
 	else:
 		_set_state(State.CHASE)
@@ -700,6 +709,7 @@ func on_blocked(dir: Vector2) -> void:
 	if _block_text_cd <= 0.0:
 		_block_text_cd = 0.5
 		Events.floating_text.emit(global_position + Vector2(0, -60), "ENGELLENDİ", Color(0.7, 0.8, 0.95), 20)
+	Audio.play(Audio.sound_for("hits.blocked"), global_position)
 	Events.hit_landed.emit(global_position + Vector2(0, -20), 0.0, false, false, dir)
 
 
@@ -746,6 +756,7 @@ func apply_damage(amount: float, info: Dictionary) -> void:
 		if _immune_text_cd <= 0.0:
 			Events.floating_text.emit(global_position + Vector2(0, -56), _zero_damage_text(), Color(0.75, 0.75, 0.78), 20)
 			_immune_text_cd = 0.5
+		Audio.play(Audio.sound_for("hits.immune"), global_position)
 		Events.hit_landed.emit(global_position + Vector2(0, -20), 0.0, false, false, dir)
 		return
 	hp = maxf(hp - amount, 0.0)
@@ -760,6 +771,7 @@ func apply_damage(amount: float, info: Dictionary) -> void:
 	if heavy and state == State.WINDUP and not is_boss:
 		_set_state(State.RECOVER)  # güçlü vuruş hazırlığı böler
 	if not secondary:
+		Audio.enemy_hit(self, crit, heavy)
 		Events.hit_landed.emit(global_position + Vector2(0, -20), amount, crit, heavy, dir)
 		Events.blood_spilled.emit(global_position, dir, float(DataDB.get_value("progression", "blood.heavy_mult")) if (heavy or crit) else 1.0, blood_color)
 	var off := Vector2(randf_range(-14, 14), -44 if not secondary else -58)

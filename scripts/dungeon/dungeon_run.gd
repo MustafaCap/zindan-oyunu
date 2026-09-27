@@ -199,11 +199,11 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
-	hud.stage_text = "Aşama 7 · düşmanlar ve boss'lar"
+	hud.stage_text = "Aşama 9 · ses"
 	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
-		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · Esc çık",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · O ses · Esc çık",
 		"M: HATA AYIKLAMA MENÜSÜ (ırk, level, kat, loot testi, ölümsüz, test odası) · Çatlak duvarlara vur: gizli oda! · R: yeni run (ölünce)",
 	]))
 
@@ -298,6 +298,7 @@ func new_run(from_floor: int = 1) -> void:
 	victory = false
 	_spawn_player(TestRoom.config, false)
 	enter_floor(from_floor)
+	Audio.play("floor_enter")
 	if _loot_rain:
 		loot_rain(8)
 	if _fill_bag:
@@ -629,6 +630,8 @@ func _wall_cell_near(cell: Vector2i) -> Vector2i:
 
 func on_wave_started(room_id: int, index: int, total: int) -> void:
 	var r := layout.rooms[room_id]
+	if r.type != "boss":
+		Audio.play("wave_start")   # boss'ta kükreme ve boss müziği çalar (Audio: boss_fight_started)
 	if r.type == "boss":
 		hud.show_message(str(_boss_node.get("display_name")) if _boss_node else "Boss")
 	elif total > 1:
@@ -789,6 +792,7 @@ func _on_room_cleared(room_id: int) -> void:
 	var r := layout.rooms[room_id]
 	if r.has_enemies() and r.type != "boss":
 		hud.show_message("Oda temizlendi!")
+		Audio.play("room_clear")
 		get_tree().create_timer(1.2).timeout.connect(func() -> void:
 			if is_instance_valid(hud) and not finished:
 				hud.show_message(""))
@@ -966,6 +970,7 @@ func try_interact() -> bool:
 	var p := n as RoomProp
 	match p.kind:
 		"stairs":
+			Audio.play("stairs")
 			enter_floor(GameState.floor_index + 1)
 		"chest":
 			p.use()
@@ -1010,6 +1015,7 @@ func _open_chest(p: RoomProp) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([layout.seed_value, p.room_id, "chest"])
 	loot_stats["chests"] = int(loot_stats["chests"]) + 1
+	Audio.play("chest_open", p.global_position)
 	var owned := GameState.inventory.owned_talismans()
 	for d: Dictionary in LootGenerator.chest_drops(GameState.floor_index, p.secret, rng, owned):
 		_spawn_drop(d, p.global_position, 1.0)
@@ -1019,6 +1025,7 @@ func _open_chest(p: RoomProp) -> void:
 		world.add_child(trap)
 		trap.global_position = p.global_position
 		hud.flash_note("Sandık tuzaklı! Kırmızı alandan çık!")
+		Audio.play("trap_arm", p.global_position)
 	else:
 		hud.flash_note("Sandık açıldı")
 
@@ -1038,6 +1045,10 @@ func _spawn_drop(d: Dictionary, origin: Vector2, scatter_mult: float = 1.0) -> L
 	world.add_child(drop)
 	drop.toss(origin, _scatter_point(origin, float(DataDB.table("economy")["pickup"]["scatter_tiles"]) * scatter_mult))
 	drops.append(drop)
+	if drop.item is Weapon:
+		Audio.play("loot_" + (drop.item as Weapon).rarity_id, origin)
+	elif drop.item is Talisman:
+		Audio.play("loot_epic", origin)
 	return drop
 
 
@@ -1079,11 +1090,13 @@ func _update_drops() -> void:
 					loot_stats["gold"] = int(loot_stats["gold"]) + amount
 					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+%d altın" % amount, LootDrop.GOLD_COLOR, 16)
 					Events.gold_changed.emit(inv.gold)
+					Audio.play("coin", d.global_position)
 					_remove_drop(d)
 			"potion":
 				if can_potion and dist <= float(pk["potion_pickup_tiles"]) and inv.add_potion():
 					loot_stats["potions"] = int(loot_stats["potions"]) + 1
 					Events.floating_text.emit(d.global_position + Vector2(0, -30), "+1 iksir", LootDrop.POTION_COLOR, 18)
+					Audio.play("potion_pickup")
 					_remove_drop(d)
 		if autoplay and d.is_item() and is_instance_valid(d) and not d.picked and dist <= 1.2:
 			pick_up(d, false)
@@ -1106,6 +1119,7 @@ func pick_up(d: LootDrop, swap: bool = true) -> bool:
 		return false
 	if GameState.in_combat:
 		hud.flash_note("Savaş sürerken eşya alınamaz (oda temizlenince al)")
+		Audio.play("deny")
 		return false
 	var inv := GameState.inventory
 	var name := d.label_text()
@@ -1121,6 +1135,7 @@ func pick_up(d: LootDrop, swap: bool = true) -> bool:
 			msg = " (yere bıraktın: %s)" % (old as Object).call("display_name")
 	loot_stats["weapons" if d.kind == "weapon" else "talismans"] = int(loot_stats["weapons" if d.kind == "weapon" else "talismans"]) + 1
 	hud.flash_note("%s → %s%s" % [name, "çanta" if where == "bag" else Inventory.SLOT_TITLES[where], msg])
+	Audio.play("item_pickup")
 	_remove_drop(d)
 	_on_inventory_changed()
 	return true
@@ -1309,6 +1324,7 @@ func _check_secret_wall() -> void:
 		if _secret_hits >= int(_dg["secret_wall"]["hits_to_break"]):
 			open_secret()
 		else:
+			Audio.play("wall_crack", mid)
 			Events.floating_text.emit(mid + Vector2(0, -60), "Çatlak!", Color(0.85, 0.8, 0.7), 22)
 
 
@@ -1321,6 +1337,7 @@ func open_secret() -> void:
 	nav = DungeonNav.new(layout, true)
 	_walk_cache = layout.walkable(true)
 	var mid := cell_to_world(layout.secret_wall_cells[1])
+	Audio.play("wall_break")
 	Events.enemy_died_fx.emit(mid + Vector2(0, -20), player.facing_cart)
 	Events.secret_found.emit(layout.secret_id)
 	print("[Zindan] Gizli oda bulundu (%d. kat)" % GameState.floor_index)

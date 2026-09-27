@@ -16,14 +16,50 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 8 | Sanat | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 9 | Ses | — |
+| 9 | Ses | ✅ Bitti (test bekliyor) |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 8 (sürüm 0.8.0) bitti, kullanıcı test edip onayladı; `asama-8` GitHub'a push edildi ve `main`'e birleştirildi (derleme:
-`ZindanOyunu-Derlemeler\asama-8\`). Sırada Aşama 9 (ses)
-`main`'den açılan `asama-9` dalında yapılır.
+**Kalınan yer:** Aşama 9 (ses, sürüm 0.9.0) bitti; `main`'den açılan `asama-9` dalında yalnızca yerelde commit edildi (derleme:
+`ZindanOyunu-Derlemeler\asama-9\`). Kullanıcı test edip onaylayınca push edilir ve `main`'e birleştirilir; sonra sırada Aşama 10
+(menüler, denge ve teslim) `main`'den açılan `asama-10` dalında yapılır. Aşama 8 (sanat) onaylandı, push edildi ve `main`'e birleştirildi.
 
 **Test süresi (kullanıcı kararı):** geliştirme sırasında `make quick` (birim + smoke, ~1 dk); tam `make test` (~3,5 dk) aşama sonunda bir kez.
+
+**Aşama 9'da yapılanlar (ses):**
+- **Ses yönü görselle aynı: karanlık, kanlı, vahşi.** Islak et ve kemik kırılması, paslı demir, gırtlak gürlemeleri ve ulumalar, taş
+  zindan yankısı; uğultulu, uyumsuz ambiyanslar ve savaş davullu boss müzikleri. Hepsi numpy ile sentezlendi (dosya indirilmedi).
+- **Ses sentezleyici (`make sfx`):** `tools/audio/` (dsp.py araçlar, sfx.py efekt tarifleri, music.py müzik, sfx_synth.py giriş);
+  Blender 5.2'nin Python'uyla (numpy + OGG kodlayıcı `aud`) çalışır, ~15 dk (yalnızca efektler ~30 sn).
+- **137 ses efekti (264 varyant, WAV):** her silah tipinin sol/sağ tık sesi, 8 ırk yeteneği, düşmana isabet gövdeye göre (et, kemik,
+  taş, metal, hayalet; güçlü vuruş, kritik, kalkana engellenme, bağışıklık), 6 element, 7 kombo, İnfaz, donma, gövdeye göre ölüm (+ elit ve
+  boss ölümü), düşman saldırıları/mermileri/yetenekleri, boss tehlikeleri (işaret uyarısı + patlama/alan sesleri), 4 boss kükremesi ve
+  mekanik sesleri (göz kapağı, plakalar, "BULDUN!", meşale), oyuncu (atılma, hasar, ölüm, iksir, silah değiştirme, level, İkinci şans, "olmaz",
+  düşük canda kalp atışı), zindan (kapı parmaklıkları, dalga davulu, oda temizlendi çanı, sandık, tuzak, altın, eşya, nadirliğe göre loot
+  sesi, çatlak duvar, gizli oda, merdiven) ve arayüz (düğmeler, envanter, sürükle-bırak, tüccar, demirci, ödül ekranı).
+- **Müzik (OGG, dikişsiz döngü):** 4 kat ambiyansı (48 sn: damar ve nabız · mantar ve damla · dökümhane ve uzak örs · boşluk ve koro) ve
+  her boss'a kendi müziği (Morvath 100 bpm, Mycela 6/8, Kordrak 132 bpm endüstriyel, Nyx'thar 150 bpm). Kata girince ambiyans, boss
+  dövüşünde kükreme + boss müziği, boss ölünce 5 sn sonra ambiyansa dönüş, run bitince zafer/yenilgi vurgusu.
+- **`Audio` autoload'u:** Master → Müzik, Efektler, Arayüz kanalları (Master'da sınırlayıcı), 32 konumlu (dünyadaki yerinden duyulur) +
+  12 konumsuz oynatıcı, her ses için perde oynaması / aynı anda sınırı / tekrar aralığı, oyun durunca dünya sesleri de durur.
+- **Ses ayarları (O tuşu, her ekranda):** ana ses, müzik, efektler, arayüz kaydırıcıları ve "Sessiz"; açıkken oyun durur, O/Esc kapatır;
+  `%APPDATA%\Godot\app_userdata\Zindan Oyunu\settings.json`'a kaydedilir (bozuk dosyaya dayanıklı).
+- Testler: 14 yeni birim testi (toplam 220): dosyalar, döngü, koddaki her ses çağrısı, eşlemeler, veri hatası, kanallar, çalma sınırları,
+  gövde sesleri, tehlike sesleri, olaylar, müzik akışı, ayar kaydı ve panel.
+
+**Aşama 9'da GDD'de olmayan ayrıntılar için verilen kararlar** (sayılar `data/audio.json` içinde `_default` notuyla; tam liste GDD >
+Uygulamada Verilen Kararlar > Ses):
+- Müzik de sentezlendi (kullanıcıdan dosya istenmedi). Beğenilmezse ücretsiz lisanslı müzikle değiştirilebilir: dosyayı
+  `assets/audio/music/`'e koymak ve `audio.json > music.tracks`'te adını yazmak yeter.
+- Her boss'a ayrı müzik (GDD "boss müziği" diyordu); 2. fazda boss daha kalın sesle yeniden kükrer.
+- Efektler WAV (gecikmesiz; Godot QOA ile sıkıştırır), müzik OGG; sentez Blender'ın Python'uyla (MSYS2 `python3`'ünde numpy yok).
+- 4 kanal ve varsayılan düzeyler (%80 / %55 / %85 / %70); ayar paneli O tuşunda (Aşama 10'daki duraklatma menüsüne de girecek);
+  ayarlar `user://settings.json`'da (ustalık kaydından ayrı).
+- Konumlu ses: 2.200 ekran pikseline kadar, doğrusal sönüm (ekran kenarı ~−5 dB), %60 sağ-sol; oyuncu, arayüz, kapı, dalga ve boss
+  kükremesi ortadan.
+- Düşmanın vuruş/ölüm sesi gövdesine göre (et, kemik, taş, metal, hayalet); Taş ve Hayalet varyantları gövdeyi değiştirir.
+- Boss'un ≥ 0,5 sn uyarılı tehlikelerinde işaret belirince alçak bir uyarı uğultusu (okunurluk için).
+- Can %25'in altındayken kalp atışı (0,95 sn'de bir). Başarısız işlemde (kaynak/bekleme yok, iksir yok, satın alınamıyor) "olmaz" sesi.
+- Test odasında müzik yok (yalnızca zindanda).
 
 **Aşama 8'de yapılanlar (sanat):**
 - **Görsel yön (kullanıcı kararı): karanlık, kanlı, vahşi.** İlk Warrior (çelik zırhlı, mavi tabardlı şövalye) reddedildi; referans
@@ -157,7 +193,7 @@ notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
   oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür; silah XP eğrisi oyuncununkiyle aynı; Rezonans ek hasarı element durumu
   bırakmaz ve kombo yapmaz; 12 efsanevi silah önerildi (kullanıcı değiştirebilir).
 
-Aşama 0-8'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
+Aşama 0-9'da verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
 
 **Bilinen durumlar / notlar:**
 - Denge (düşman ve boss sayıları, kat ölçeklemesi) ilk değerlerdir; Aşama 10'da simülasyon ve oyun testleriyle ayarlanır. Boss testi
@@ -170,7 +206,11 @@ Aşama 0-8'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
   "Loot (test)" satırı loot yağdırır, altın ve silah XP'si verir.
 - Hata ayıklama menüsünden level düşürülürse aktif slottaki yüksek levelli silah kullanılmaya devam eder (yalnızca test durumu).
 - `bpy` ayrıca kurulmadı: sprite'lar Blender'ın kendisiyle (`C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`) komut satırından üretilir.
-- Aşama 8'den beri .exe ~210 MB (zip ~138 MB): sprite'lar kayıpsız saklanıyor; gerekirse Aşama 10'da sıkıştırılır.
+- Aşama 8'den beri .exe ~210 MB (zip ~138 MB): sprite'lar kayıpsız saklanıyor; gerekirse Aşama 10'da sıkıştırılır. Sesler .exe'ye ~9 MB ekler.
+- Sesler `make sfx` ile yeniden üretilir (Blender 5.2, ~15 dk); yalnızca efektler için `SFX_ARGS=--sfx`, tek ses/parça için
+  `SFX_ARGS=--only=hit_flesh,floor_1`. Ses ayarları `%APPDATA%\Godot\app_userdata\Zindan Oyunu\settings.json` dosyasındadır; silinirse
+  varsayılanlara döner.
+- Başsız (headless) testlerin sonunda "resources still in use at exit" uyarısı çıkabilir: kapanışta hâlâ çalan seslerdendir, zararsızdır.
 - .exe imzasız olduğu için Windows SmartScreen "Windows bilgisayarınızı korudu" uyarısı gösterebilir: **Ek bilgi → Yine de çalıştır**.
 - Ghost iksir kullanamaz (Aşama 3'te onaylandı); iksir toplamaz, tüccar ona iksir satmaz, Yedek iksir ödülü sunulmaz.
 - Hata ayıklama menüsü ve test odası geçicidir; Aşama 10'da gerçek menüler gelir.
@@ -195,6 +235,7 @@ Aşama 0-8'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 | F | Etkileşim: yerdeki silah/tılsım, sandık, tüccar, demirci, merdiven |
 | I | Envanter: 4 slot (sürükle-bırak, sağ tık aktif ↔ Rezonans; açıkken oyun durur) |
 | 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seç (kartlara tıklamak da olur; açıkken oyun durur) |
+| O | Ses ayarları: ana ses, müzik, efektler, arayüz, sessiz (her ekranda; açıkken oyun durur, O ya da Esc kapatır) |
 | M | Hata ayıklama menüsü: ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, ilerleme testi (+level, boss ödülü, ustalık sıfırla, boss odasına ışınlan), test odası ↔ zindan; test odasında düşman türü (her tür ya da eliti) |
 | R | Zindan: ölünce ya da kazanınca (özet ekranında) yeni run · Test odası: odayı yeniden başlat |
 | 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
@@ -206,16 +247,16 @@ Aşama 0-8'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 
 Aşama 6'dan itibaren geliştirme bu klasörde yapılıyor; kurallar [`GELISTIRME.md`](GELISTIRME.md) dosyasında.
 
-Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, Python 3. Sprite üretimi için Blender (Aşama 8; bu bilgisayarda 5.2). `zip` yoksa `make export-windows`
+Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, Python 3. Sprite (Aşama 8) ve ses (Aşama 9) üretimi için Blender (bu bilgisayarda 5.2; kendi Python'u numpy içerir). `zip` yoksa `make export-windows`
 PowerShell'in `Compress-Archive`'ini kullanır. Bu bilgisayarda Godot `C:\Users\mcap5\Godot\` klasöründe
 (`Godot_v4.7.2-stable_win64_console.exe` komut satırı için), şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\` içinde.
 
 ```bash
 make quick           # geliştirirken hızlı kontrol: birim testleri + test odası smoke (~1 dk)
-make test            # aşama sonunda bir kez: birim testleri (206) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
+make test            # aşama sonunda bir kez: birim testleri (220) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
 make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"   # tüm sprite'lar (~35 dk); SPRITE_ARGS=--only=warrior,tiles1,icons
-make sfx             # ses efektlerini üretir (Aşama 9)
+make sfx BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"      # ses efektleri (WAV) + müzik (OGG), ~15 dk; SFX_ARGS=--sfx (yalnızca efektler, ~30 sn) · --music · --only=hit_flesh,floor_1
 make all             # hepsi
 ```
 
@@ -243,11 +284,11 @@ Geliştirme bayrakları (oyunu `godot --path . -- <bayrak>` ile çalıştırırk
 project.godot          proje ayarları (1920×1080, canvas_items, input map, autoload'lar)
 export_presets.cfg     Windows Desktop ön ayarı
 data/                  tüm denge sayıları (JSON) — koda sayı yazılmaz
-scripts/autoload/      Events, DataDB, GameState, SaveManager
+scripts/autoload/      Events, DataDB, GameState, SaveManager, Audio (Aşama 9: ses)
 scripts/...            combat, player, enemies (Enemy, EnemyHazard, EnemyProjectile), bosses (Boss, Morvath, Mycela, Kordrak, Nyxthar…), dungeon, loot, progression, ui
 scenes/                sahneler
-assets/                sprites (characters/, weapons/, tiles/, props/, icons/: renk + normal + ışıma), shader, ses, font
-tools/                 blender/ (sprite üretici: modeller, animasyonlar, karolar, ikonlar; make_preview.py), ses sentezleyici
+assets/                sprites (characters/, weapons/, tiles/, props/, icons/: renk + normal + ışıma), shader, audio (sfx/: 264 efekt WAV, music/: 8 OGG), font
+tools/                 blender/ (sprite üretici: modeller, animasyonlar, karolar, ikonlar; make_preview.py), audio/ (ses ve müzik sentezleyici)
 tests/                 headless birim testleri (run_tests.gd çalıştırıcı)
 docs/GDD.md            tasarım dokümanı
 ```

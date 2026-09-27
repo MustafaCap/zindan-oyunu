@@ -55,6 +55,7 @@ func _close() -> void:
 	closed = true
 	_closed_t = 0.0
 	Events.floating_text.emit(global_position + Vector2(0, -150), "GÖZ KAPANDI", Color(0.9, 0.7, 0.7), 26)
+	Audio.play("eyelid")
 	var back := -arena.door_dir
 	var r := arena.radius - 1.3
 	for deg: float in [-65.0, 65.0, 150.0]:
@@ -64,6 +65,7 @@ func _close() -> void:
 
 func _open(with_bonus: bool) -> void:
 	closed = false
+	Audio.play("eyelid", Vector2.INF, 1.25)
 	_open_t = 0.0
 	if with_bonus:
 		bonus_t = float(mech()["open_duration"])

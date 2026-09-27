@@ -86,6 +86,7 @@ func _ready() -> void:
 	overlay.boss = self
 	get_parent().add_child.call_deferred(overlay)
 	start_fight()
+	Events.boss_fight_started.emit(boss_id)
 
 
 ## Dövüş başında (mekaniklerin kurulumu). Alt sınıflar geçersiz kılar.
@@ -133,6 +134,7 @@ func _physics_process(delta: float) -> void:
 		_phase_banner_t = float(DataDB.get_value("bosses", "phase2_banner_sec"))
 		Events.floating_text.emit(global_position + Vector2(0, -140), "2. FAZ!", Color(1.0, 0.35, 0.3), 34)
 		Events.area_pulse.emit(global_position, 3.0, Color(1.0, 0.3, 0.3))
+		Audio.boss_roar(boss_id, true)
 		enter_phase2()
 	tick_mechanic(delta)
 	var acting := status.can_act() and state != State.SPAWN
@@ -148,6 +150,7 @@ func _physics_process(delta: float) -> void:
 					_last_attack = id
 					(attack_log[id] as Array)[phase - 1] = int((attack_log[id] as Array)[phase - 1]) + 1
 					_busy_t = start_attack(id)
+					Audio.boss_attack(boss_id, id, global_position)
 					visual.play_attack()
 				_gap_t = float(bdata["attack_gap"])
 		move = move_dir(delta)
