@@ -15,12 +15,12 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 5 | Loot ve envanter | ✅ Bitti (onaylandı) |
 | 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 8 | Sanat | ✅ Bitti (yerelde commit edildi; test ve onay bekleniyor) |
+| 8 | Sanat | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 8 (sürüm 0.8.0) bitti ve `asama-8` dalında **yalnızca yerelde** commit edildi (derleme:
-`ZindanOyunu-Derlemeler\asama-8\`). Kullanıcı test edip onaylayınca push edilir ve `main`'e birleştirilir; sonra Aşama 9 (ses)
+**Kalınan yer:** Aşama 8 (sürüm 0.8.0) bitti, kullanıcı test edip onayladı; `asama-8` GitHub'a push edildi ve `main`'e birleştirildi (derleme:
+`ZindanOyunu-Derlemeler\asama-8\`). Sırada Aşama 9 (ses)
 `main`'den açılan `asama-9` dalında yapılır.
 
 **Test süresi (kullanıcı kararı):** geliştirme sırasında `make quick` (birim + smoke, ~1 dk); tam `make test` (~3,5 dk) aşama sonunda bir kez.
