@@ -3,7 +3,8 @@
 ## Q/E ırk yetenekleri (RaceAbilities), Tab iki aktif silah arasında geçiş, 1 iksir.
 ## Irk statları RaceStats'tan (ırk-silah matrisi dahil, aktif silahın ailesine göre), kaynak ve bekleme süreleri
 ## RaceKit'ten gelir. Bütün vuruşlar deal_hit → HitResolver'dan geçer. Tüm sayılar DataDB'den okunur.
-## Girdi üç kaynaktan gelir: klavye/fare, autoplay botu (smoke testi) ya da external_intent (matris testi).
+## Girdi dört kaynaktan gelir: klavye/fare, dokunmatik kontroller (Android; TouchControls), autoplay botu (smoke testi)
+## ya da external_intent (matris testi).
 ## Aşama 5: zindanda silahlar, Rezonans/Esnek slot ve iksirler Inventory'den gelir (load_loadout); eşya etkileri
 ## (Rezonans ek hasarı, Esnek slot, tılsımlar, efsanevi pasif ve sağ tık ekleri) ItemEffects'te işlenir.
 ## Aşama 6: statlara run ödülleri, silah tipi ustalığı ve boss ilk kesiş bonusu eklenir (RunBonuses → RaceStats); ustalığın
@@ -75,6 +76,8 @@ var bot_nav: Callable
 var bot_los: Callable
 ## Doluysa girdi buradan okunur (matris testi her karede doldurur). Anahtarlar _read_input ile aynı.
 var external_intent: Dictionary = {}
+## Dokunmatik mod (Android): girdi joystick ve ekran düğmelerinden gelir (fare tıklamaları saldırı sayılmaz).
+var touch: TouchControls
 
 # Yetenek durumları
 var rush_t: float = 0.0                   ## Warrior Kalkan Hücumu sürüyor (kalan süre)
@@ -354,6 +357,8 @@ func _read_input(delta: float) -> Dictionary:
 		return d
 	if autoplay:
 		return _bot_think(delta)
+	if touch and is_instance_valid(touch):
+		return touch.read_intent(self)
 	return {
 		"move": Input.get_vector("move_left", "move_right", "move_up", "move_down"),
 		"aim": get_global_mouse_position(),

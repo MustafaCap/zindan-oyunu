@@ -6,6 +6,7 @@
 ## v0.10.1: her kartın altında ırkın silah ailesindeki 3 tipin düğmesi — başlangıç silahı (Yaygın,
 ## level 1) bunlardan seçilir; ↑/↓ (W/S) seçili ırkın silahını değiştirir. Irk ve silah seçimleri user://menu.json'a
 ## kaydedilir, oyun yeniden açılınca da hatırlanır (prefs_path; testler ayrı dosya kullanır).
+## Android: ekran kısaysa (telefonda arayüz büyütülünce mantıksal yükseklik < 1000) kartlar ve karakterler küçülür.
 class_name RaceSelect
 extends Control
 
@@ -25,6 +26,9 @@ var bodies: Dictionary = {}         ## ırk -> PlaceholderBody (SpriteBody)
 var start_button: Button
 var _fade: ColorRect
 var _leaving := false
+## Kısa ekran (telefon): kart yüksekliği ve karakter sahnesi küçük (stage_k oranında).
+var compact := false
+var stage_k := 1.0
 
 
 func _ready() -> void:
@@ -47,6 +51,8 @@ func _ready() -> void:
 	for id: String in ORDER:
 		if not LootGenerator.family_types(id).has(str(start_choice.get(id, ""))):
 			start_choice[id] = str(DataDB.table("economy")["start_weapons"][id])
+	compact = get_viewport_rect().size.y < 1000.0
+	stage_k = 0.62 if compact else 1.0
 	_build()
 	_fade = ColorRect.new()
 	_fade.color = Color.BLACK
@@ -67,13 +73,14 @@ func _ready() -> void:
 func _build() -> void:
 	var col := VBoxContainer.new()
 	col.set_anchors_preset(Control.PRESET_FULL_RECT)
-	col.offset_top = 40
-	col.offset_bottom = -40
-	col.add_theme_constant_override("separation", 18)
+	col.offset_top = 12 if compact else 40
+	col.offset_bottom = -12 if compact else -40
+	col.add_theme_constant_override("separation", 8 if compact else 18)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(col)
-	col.add_child(UiTheme.title("Irkını seç", 52, Color(0.82, 0.66, 0.52)))
-	var hint := UiTheme.label("←/→ ya da 1-4: ırk  ·  ↑/↓: başlangıç silahı  ·  Enter: zindana in", 17, UiTheme.ASH)
+	col.add_child(UiTheme.title("Irkını seç", 40 if compact else 52, Color(0.82, 0.66, 0.52)))
+	var hint := UiTheme.label("Irka dokun: seç  ·  Silaha dokun: başlangıç silahı  ·  Zindana in: başla" if Mobile.enabled else
+		"←/→ ya da 1-4: ırk  ·  ↑/↓: başlangıç silahı  ·  Enter: zindana in", 17, UiTheme.ASH)
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	col.add_child(hint)
 	var row := HBoxContainer.new()
@@ -92,12 +99,12 @@ func _build() -> void:
 	bar.alignment = BoxContainer.ALIGNMENT_CENTER
 	bar.add_theme_constant_override("separation", 24)
 	col.add_child(bar)
-	var back := UiTheme.menu_button("Geri  (Esc)", 260)
+	var back := UiTheme.menu_button("Geri" + Mobile.keys("  (Esc)"), 260)
 	back.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	back.focus_mode = Control.FOCUS_NONE
 	back.pressed.connect(func() -> void: _leave(MENU_SCENE))
 	bar.add_child(back)
-	start_button = UiTheme.menu_button("Zindana in  (Enter)", 360)
+	start_button = UiTheme.menu_button("Zindana in" + Mobile.keys("  (Enter)"), 360)
 	start_button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	start_button.focus_mode = Control.FOCUS_NONE
 	start_button.pressed.connect(start_run)
@@ -107,7 +114,7 @@ func _build() -> void:
 func _card(id: String) -> Button:
 	var r: Dictionary = DataDB.table("races")[id]
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(390, 650)
+	b.custom_minimum_size = Vector2(390, 650 - 300 * (1.0 - stage_k))
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_stylebox_override("normal", UiTheme.panel_box())
 	b.add_theme_stylebox_override("hover", UiTheme.panel_box(UiTheme.BLOOD))
@@ -119,11 +126,11 @@ func _card(id: String) -> Button:
 	# Karakter: sprite alanının ortasında, yere basar gibi; hafif kızıl zemin ışığı
 	var stage := Control.new()
 	stage.position = Vector2(0, 10)
-	stage.size = Vector2(390, 300)
+	stage.size = Vector2(390, 300 * stage_k)
 	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage.draw.connect(func() -> void:
 		var c := Color(0.45, 0.06, 0.04, 0.3)
-		stage.draw_set_transform(Vector2(195, 280), 0.0, Vector2(1.0, 0.42))
+		stage.draw_set_transform(Vector2(195, 280 * stage_k), 0.0, Vector2(1.0, 0.42) * stage_k)
 		for i: int in 6:
 			stage.draw_circle(Vector2.ZERO, 150.0 - i * 20.0, Color(c, c.a * (0.2 + i * 0.1)))
 		stage.draw_circle(Vector2.ZERO, 62.0, Color(0, 0, 0, 0.6))
@@ -133,23 +140,23 @@ func _card(id: String) -> Button:
 	body.body_color = Color(str(r["placeholder_color"]))
 	var start_type := str(start_choice.get(id, DataDB.table("economy")["start_weapons"][id]))
 	body.weapon_style = str(DataDB.table("weapon_types")[start_type]["visual"])
-	body.position = Vector2(195, 280)
-	body.scale = Vector2(3.3, 3.3)
+	body.position = Vector2(195, 280 * stage_k)
+	body.scale = Vector2(3.3, 3.3) * stage_k
 	body.light_mask = 2
 	stage.add_child(body)
 	# Sprite'ın normal haritasını sol üst önden aydınlatan sıcak meşale ışığı (yalnızca karakteri aydınlatır)
 	var light := PointLight2D.new()
 	light.texture = _light_texture()
-	light.texture_scale = 2.6
+	light.texture_scale = 2.6 * stage_k
 	light.color = Color(1.0, 0.68, 0.4)
 	light.energy = 1.5
 	light.range_item_cull_mask = 2
-	light.position = Vector2(90, 150)
+	light.position = Vector2(90, 150 * stage_k)
 	stage.add_child(light)
 	body.set_facing(Vector2(1, 1).normalized())
 	bodies[id] = body
 	var info := VBoxContainer.new()
-	info.position = Vector2(26, 316)
+	info.position = Vector2(26, 316 - 300 * (1.0 - stage_k))
 	info.size = Vector2(338, 320)
 	info.add_theme_constant_override("separation", 6)
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE

@@ -53,7 +53,7 @@ func _ready() -> void:
 	_main.add_theme_constant_override("separation", 12)
 	_main.alignment = BoxContainer.ALIGNMENT_CENTER
 	inner.add_child(_main)
-	for spec: Array in [["Devam  (Esc)", close], ["Ses ayarları", func() -> void: Audio.toggle_settings()],
+	for spec: Array in [["Devam" + Mobile.keys("  (Esc)"), close], ["Ses ayarları", func() -> void: Audio.toggle_settings()],
 			["Ana menüye dön", func() -> void: _ask(false)], ["Oyundan çık", func() -> void: _ask(true)]]:
 		var b := UiTheme.menu_button(str(spec[0]), 440)
 		b.pressed.connect(spec[1])
@@ -73,7 +73,7 @@ func _ready() -> void:
 	_confirm_yes.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_yes.pressed.connect(_confirmed)
 	_confirm.add_child(_confirm_yes)
-	var no := UiTheme.menu_button("Vazgeç  (Esc)", 440)
+	var no := UiTheme.menu_button("Vazgeç" + Mobile.keys("  (Esc)"), 440)
 	no.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	no.pressed.connect(_cancel_confirm)
 	_confirm.add_child(no)

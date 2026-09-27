@@ -1,0 +1,26 @@
+{
+  "_note": "Mobil (Android) dokunmatik kontroller ve arayüz ölçeği. Mobile autoload'u ve TouchControls okur.",
+  "ui": {
+    "_default": "Telefonda yazılar okunsun diye arayüz büyütülür: ekranın kısa kenarı (inç) min_inches'ta mantıksal yükseklik min_height, her fazladan inç için +height_per_inch, en fazla 1080 (masaüstüyle aynı). Ölçek = 1080 / mantıksal yükseklik.",
+    "min_inches": 2.7,
+    "min_height": 780,
+    "height_per_inch": 130,
+    "_camera": "Arayüz büyüyünce dünya da büyür; kamera yakınlığı 1 / ölçek^camera_comp ile kısmen geri alınır (0: dünya arayüzle aynı büyür, 1: dünya masaüstündeki kadar alan gösterir).",
+    "camera_comp": 0.5
+  },
+  "joystick": {
+    "_default": "Sol yarıda yüzen joystick: dokunulan yerde belirir. radius mantıksal piksel, deadzone 0-1.",
+    "radius": 120,
+    "deadzone": 0.15,
+    "zone_width": 0.42
+  },
+  "aim": {
+    "_default": "Saldırı ve yetenek düğmesinden sürükleyince nişan o yöne gider (drag_deadzone pikselden sonra); sürükleme uzunluğu drag_full pikselde max_tiles karoya ulaşır. Sürüklenmezse auto_range karo içindeki en yakın düşmana nişan alınır (görüş hattındakiler önce).",
+    "drag_deadzone": 28,
+    "drag_full": 150,
+    "min_tiles": 1.5,
+    "max_tiles": 9.0,
+    "auto_range": 11.0,
+    "idle_tiles": 3.0
+  }
+}

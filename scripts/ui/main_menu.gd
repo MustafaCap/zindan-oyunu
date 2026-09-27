@@ -38,7 +38,9 @@ var _intro_fading := false
 
 
 func _ready() -> void:
-	var args := OS.get_cmdline_user_args()
+	# Dokunmatik deneme bayrakları (--touch, --ui-scale=X; Mobile) oyun bayrağı sayılmaz: menü açılır
+	var args := Array(OS.get_cmdline_user_args()).filter(func(a: String) -> bool:
+		return a != "--touch" and not a.begins_with("--ui-scale="))
 	if not args.is_empty() and not "--menu" in args:
 		get_tree().change_scene_to_file.call_deferred(GAME_SCENE)
 		return

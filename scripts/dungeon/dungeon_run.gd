@@ -7,6 +7,8 @@
 ## menüsünü açar (PauseMenu: devam, ses, ana menüye dön / çık — run'ı bırakmak ölüm sayılır). Run sonu ekranından
 ## (RunSummary) yeni run ya da ana menü. Irk ve level hata ayıklama menüsünden de seçilebilir; savaş sırasında değiştirilemez (GDD: slot değişimi yalnızca
 ## oda dışında). Tab ile iki aktif silah arasında geçiş her zaman serbest.
+## Android (Mobile.enabled): dokunmatik kontroller (TouchControls; joystick, saldırı/yetenek düğmeleri, Çanta, Menü,
+## etkileşim), HUD dokunmatik yerleşimde, kamera arayüz ölçeğine göre biraz uzaklaşır (Mobile.camera_zoom_mult).
 ## Aşama 5: run ırkın başlangıç silahıyla başlar; düşmanlar, sandıklar ve boss'lar loot düşürür (LootGenerator →
 ## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: 4 slotluk envanter
 ## (InventoryUI; sürükle-bırak), F: tüccar ve demirci panelleri. Silahlar, Rezonans ve Esnek slot GameState.inventory'den.
@@ -63,6 +65,7 @@ var bag_ui: InventoryUI
 var reward_ui: RewardUI
 var summary: RunSummary
 var pause: PauseMenu
+var touch: TouchControls              ## dokunmatik kontroller (yalnızca Mobile.enabled)
 var reward_rng := RandomNumberGenerator.new()
 var run_time: float = 0.0
 var last_summary: Dictionary = {}     ## son run sonu bilgisi (testler için)
@@ -220,7 +223,7 @@ func _ready() -> void:
 	add_child(world)
 
 	camera = Camera2D.new()
-	camera.zoom = Vector2(1.6, 1.6)
+	camera.zoom = Vector2(1.6, 1.6) * Mobile.camera_zoom_mult()
 	camera.position_smoothing_enabled = true
 	camera.position_smoothing_speed = 8.0
 	add_child(camera)
@@ -238,6 +241,18 @@ func _ready() -> void:
 		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · O ses · Esc menü",
 		"Çatlak duvarlara vur: gizli oda!",
 	]))
+	if Mobile.enabled:
+		hud.touch_mode = true
+		touch = TouchControls.new()
+		touch.run = self
+		add_child(touch)
+		touch.inventory_pressed.connect(func() -> void:
+			if not bag_ui.visible and not menu.visible and not finished:
+				bag_ui.open_ui("bag", player))
+		touch.pause_pressed.connect(func() -> void:
+			if not finished and not (bag_ui.visible or reward_ui.visible or menu.visible):
+				pause.open())
+		touch.interact_pressed.connect(try_interact)
 
 	minimap = Minimap.new()
 	minimap.reveal_all = reveal
@@ -247,6 +262,12 @@ func _ready() -> void:
 	minimap.offset_right = -32.0
 	minimap.offset_top = 60.0
 	minimap.offset_bottom = 310.0
+	if Mobile.enabled:
+		# Dokunmatik modda küçük ve köşede: solunda Menü ve Çanta düğmeleri, altında yetenek düğmeleri
+		minimap.offset_left = -290.0
+		minimap.offset_right = -20.0
+		minimap.offset_top = 16.0
+		minimap.offset_bottom = 206.0
 	hud.add_child(minimap)
 
 	menu = DebugMenu.new()
@@ -800,6 +821,7 @@ func _spawn_player(cfg: Dictionary, keep_state: bool = true) -> void:
 		player.hp = player.max_hp * hp_ratio
 		player.health_changed.emit(player.hp, player.max_hp)
 	player.died.connect(_on_player_died)
+	player.touch = touch
 	hud.player = player
 	_attach_xray(player, Color(0.6, 0.85, 1.0))
 
@@ -1344,7 +1366,7 @@ func _try_open_reward() -> void:
 	else:
 		choices = Rewards.level_offer(reward_rng, totals)
 		title = "Level %d ödülü" % n
-		sub = "Birini seç (1 / 2 ya da tıkla) — tavana ulaşan statlar çıkmaz"
+		sub = ("Birini seç (dokun)" if Mobile.enabled else "Birini seç (1 / 2 ya da tıkla)") + " — tavana ulaşan statlar çıkmaz"
 	if choices.is_empty():
 		return
 	if autoplay:
@@ -1575,9 +1597,10 @@ func _update_hud() -> void:
 			room_txt += " · Dalga %d / %d · Kalan düşman %d" % [maxi(rc.wave_index + 1, 1), rc.info.waves.size(), rc.alive_count()]
 		elif rc.state == RoomController.State.CLEARED and rc.has_enemies():
 			room_txt += " · temizlendi"
-	var slot_txt := "Savaş dışı: slot değişimi serbest (I: envanter)"
+	var bag_key := "Çanta" if Mobile.enabled else "I"
+	var slot_txt := "Savaş dışı: slot değişimi serbest (%s: envanter)" % bag_key
 	if GameState.in_combat:
-		slot_txt = "SAVAŞ: slot değişimi kapalı" if GameState.slots_locked() else "SAVAŞ: I ile silah değiştirebilirsin · yerden eşya alınmaz"
+		slot_txt = "SAVAŞ: slot değişimi kapalı" if GameState.slots_locked() else "SAVAŞ: %s ile silah değiştirebilirsin · yerden eşya alınmaz" % bag_key
 	hud.wave_text = "%d. Kat — %s   ·   %s\n%s   ·   Seed %d%s" % [GameState.floor_index, fl["name"], room_txt, slot_txt,
 		GameState.run_seed, "   ·   ÖLÜMSÜZ (test)" if player.invulnerable else ""]
 

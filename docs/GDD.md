@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (Aşama 10, oyun testi düzeltmeleri v0.10.1 ve v0.10.2)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (Aşama 11, Android v0.11.0)
 
 Bu doküman oyunun tam tasarımı ve yapım planıdır. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -13,7 +13,7 @@ Tamamen emekle ilerlenen, öl-baştan-başla (roguelike) bir 2D izometrik zindan
 | Motor | Godot 4 |
 | Kamera | İzometrik |
 | Görsel | Blender'da modellenip 8 yönden render edilen 3D görünümlü sprite'lar, normal map ile dinamik ışık. Görsel yön: karanlık, kanlı, vahşi (Aşama 8) |
-| Platform | Windows .exe ve Linux (x86_64; v0.10.3'ten beri) |
+| Platform | Windows .exe, Linux (x86_64; v0.10.3'ten beri) ve Android (APK, arm64, Android 7+; v0.11.0'dan beri, dokunmatik kontrollerle) |
 | Hedef içerik | \~100 silah, 4 ırk, 55 sıradan düşman, 20 boss, 4 etap |
 
 100 silah ve 55 düşman veri odaklı üretilir: \~12 temel silah tipi ve \~15-18 temel düşman modeli, element, özellik ve varyantlarla çoğaltılır. Yeni içerik eklemek bir tabloya satır eklemek kadar kolay olmalıdır.
@@ -62,6 +62,13 @@ WASD ile yürünür, saldırılar farenin gösterdiği yöne gider. Oyuncunun 4 
 | O | Ses ayarları: ana ses, müzik, efektler, arayüz, sessiz (Aşama 9; açıkken oyun durur, O ya da Esc kapatır) |
 | Esc | Duraklatma menüsü: devam, ses ayarları, ana menüye dön, oyundan çık (Aşama 10; açıkken oyun durur) |
 | F5 | Geliştirici (hata ayıklama) menüsü — gizli kısayol (Aşama 10; eskiden M). v0.10.1: kat düğmeleri ve "Bu kata ışınlan" |
+
+**Dokunmatik (Android, Aşama 11):** ekranın sol tarafı yüzen joystick (dokunulan yerde belirir; parmağın gösterdiği ekran
+yönüne yürür), sağ altta Saldırı (basılı tut), güçlü saldırı (basınca; Yay'da basılı tutup bırakınca atar), Q ve E (bırakınca),
+Atıl (joystick yönüne), İksir ve Silah değiştir (silah paneline dokunmak da değiştirir); sağ üstte Menü (Esc) ve Çanta (I);
+yakında etkileşimli bir şey varsa "Al / Aç / İn…" düğmesi (F). Nişan: saldırı ya da yetenek düğmesinden sürüklenen yöne
+(sürükleme uzunluğu = uzaklık, en fazla 9 karo); sürüklenmezse 11 karo içindeki en yakın düşmana (görüş hattındakiler önce),
+düşman yoksa yürünen yöne. Android'in geri tuşu Esc gibidir. Sayılar `data/touch.json`'da.
 
 | Slot | Ne konur | Etkisi |
 | --- | --- | --- |
@@ -1153,11 +1160,39 @@ Kod: `scripts/ui/` (MainMenu, RaceSelect, PauseMenu, RunSummary, UiTheme, BloodD
 
 **Oyun testi düzeltmeleri (v0.10.1, 27 Eyl 2026):** oyun baştan sona oynandı (Archer ile 3 run, biri zafer) ve 10 değişiklik yapıldı; hepsi "Oyun testinden sonra yapılan değişiklikler" tablosunda (10 (v0.10.1) satırları) ve ilgili bölümlerde. Kısaca: Mycela totemleri tek sefer (%20 canda) · Kordrak 21.000 can, plaka %50 · envanter savaşta düzenlenir · bağışıklık: ana vuruş %75, ek etkiler 0 · F5 kat ışınlaması düzeltildi · ödül ekranında 1,2 sn giriş kilidi · Kordrak ödülü %65 1 Efsanevi / %35 2 Destansı (Lv ≥ 40) · 4. kat düşman canı ×6 · ırk seçiminde başlangıç silahı seçimi (kalıcı) · sandık nadirlik tablosu (4. kat %100 Efsanevi). Kod: `DamageCalc` (Hit.secondary, immune/immune_secondary), `HitResolver`, `ItemEffects.after_hit`, `Enemy.apply_damage`, `Mycela`, `GameState.can_change_slots/slots_locked`, `InventoryUI`, `DebugMenu`, `DungeonRun.teleport_to_floor`, `RewardUI` (is_locked/unlock), `LootGenerator` (chest_rarity_weights, boss_special_weapons, start_weapon, family_types), `RaceSelect` (weapon_buttons, prefs_path); `DataDB` sandık tablosu ve boss ödüllerini denetler. Testler kodla birlikte güncellendi (bağışıklık, Mycela, Kordrak, envanter, ödül kilidi, sandık/boss ödülü, ırk seçimi) ama **çalıştırılmadı**; yalnızca .exe derlendi ve değişen script'ler derleme için yüklendi (hata yok).
 
+### Android (Aşama 11)
+
+Kod: `scripts/autoload/mobile.gd` (Mobile), `scripts/ui/touch_controls.gd` (TouchControls), `data/touch.json`, `tools/android/`
+(imza anahtarı, simge üretimi, SDK'sız ortam için imzalayıcı), `assets/icon/`, `export_presets.cfg` > Android, `make export-android`.
+Masaüstü oyun değişmedi: dokunmatik mod yalnızca Android'de (ya da `--touch` ile) açılır.
+
+- **Dağıtım:** hazır APK şablonuyla (Gradle'sız) imzalı APK, yalnızca arm64-v8a (güncel telefonların hepsi; 32 bit ve x86
+  dışarıda, ~70 MB). Paket `com.mustafacap.zindanoyunu`; `version/code` oyun sürümünden türetilir (0.11.0 → 1100). Yan yükleme
+  için sabit anahtar (`tools/android/zindan-oyunu.keystore`, repoda) ki yeni APK eskisinin üstüne kurulsun ve ilerleme kalsın.
+  Sprite'lar zaten kayıpsız/kayıplı WebP (VRAM sıkıştırması yok), Android için ayrı doku gerekmedi (`import_etc2_astc` yalnızca
+  Godot'nun Android şartı için açık). Ekran yatay (sensör), ekran açık kalır, tam ekran (immersive).
+- **Girdi:** `Player._read_input` dokunmatik modda girdiyi `TouchControls.read_intent`'ten alır (klavye/fareyle aynı anahtarlar),
+  dokunmalar fareye de çevrildiği için (menüler ve sürükle-bırak için) fare tıklamaları saldırı sayılmaz. Çoklu dokunma: her
+  parmak dokunduğu yere göre joystick'e ya da bir düğmeye bağlanır. Joystick ekran yönünü zemin yönüne çevirir (parmak
+  sağ yukarıyı gösterirse karakter ekranda sağ yukarı yürür). Oyun durunca (envanter, ödül, duraklatma) düğmeler gizlenir ve
+  basılı parmaklar bırakılmış sayılır. Q/E bırakınca çalışır ki sürükleyerek nişan alınabilsin; güçlü saldırı basınca çalışır
+  ki Yay doldurulabilsin.
+- **Arayüz ölçeği:** telefonda 1080p arayüz yazıları ~1 mm kalıyordu. `Mobile` ekranın kısa kenarından (dpi ile inç) mantıksal
+  yüksekliği seçer: 2,7 inçte 780, her fazla inçte +130, en fazla 1080 (tablet = masaüstü). Ölçek = 1080 / yükseklik (6,5 inç
+  telefonda ×1,385); `content_scale_factor` ile bütün arayüz büyür. Kamera yakınlığı ölçeğin karekökü kadar geri alınır
+  (dünya ×1,18 büyür, alan %85 kalır). Ekranlar 1733×780 mantıksal çözünürlükte denendi; ırk seçimi kısa ekranda kartları ve
+  karakterleri küçültür (`RaceSelect.compact`), zindan HUD'unda yetenek kutuları ve tuş ipuçları gizlenir, silah paneli alt ortaya,
+  mini harita küçülüp sağ üst köşeye taşınır.
+- **Menüler:** envantere "Kapat" düğmesi (dokunmatik ekranda tek yol), tuş ipuçları (`(Esc)`, `[1]`, "Sağ tık") dokunmatik
+  modda gizlenir ya da "dokun / çift dokun" olur (`Mobile.keys`). Sağ tık yerine çift dokunma (aktif ↔ Rezonans, tezgâhtan satın alma).
+- **Bilinen / denenmedi:** gerçek telefonda henüz oynanmadı (bulut ortamında emülatör yok); kare hızı, ışıklar ve ses telefonda
+  ölçülmedi. Geliştirici menüsü (F5) ve test odası dokunmatik modda açılmaz. Google Play için AAB ve ayrı yükleme anahtarı gerekir.
+
 **Boyut:** ışıma katmanlarında (`_e.png`) saydam piksellerin altındaki gereksiz renk verisi temizlendi (`make clean-alpha`; 38,7 → 2,4 MB, görüntü aynı; sprite hattı artık temiz yazar): .exe 220 → ~189 MB. **Doku sıkıştırması**: renk ve normal sayfaları %85 kaliteli kayıplı WebP olarak içe aktarılır, ışıma katmanları kayıpsız (`make textures`, `tools/dev/texture_compress.py`: yalnızca `.import` dosyalarındaki `compress/mode` ve `compress/lossy_quality`; kaynak PNG'ler kayıpsız kalır; `make sprites` sonunda kendisi çalışır). Menü videosu ve müziği ~5,3 MB ekler. **.exe ~153 MB, zip ~80 MB.**
 
 ## Uygulama Rehberi
 
-Oyun 11 aşamada (0-10) yapıldı; her aşama oynanabilir ya da test edilebilir bir sonuçla bitti ve oyun testinden sonra bir sonrakine geçildi. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
+Oyun 11 aşamada (0-10) yapıldı, Aşama 11'de Android'e taşındı; her aşama oynanabilir ya da test edilebilir bir sonuçla bitti ve oyun testinden sonra bir sonrakine geçildi. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
 
 ### Proje Durumu ve Çalışma Düzeni
 
@@ -1175,6 +1210,7 @@ Bu bölüm her aşama sonunda güncellenir. Kısa durum README'nin "Durum" böl�
 | 7 — Düşmanlar ve boss'lar | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-7` dalı, sürüm 0.7.0) |
 | 8 — Sanat | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-8` dalı, sürüm 0.8.0) |
 | 9 — Ses | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-9` dalı, sürüm 0.9.0) |
+| 11 — Android | 🔄 Yapıldı, telefonda oyun testi bekliyor (`claude/mobile-game-release-wh9lmf` dalı, sürüm 0.11.0; APK `make export-android`) |
 | 10 — Menüler, denge ve teslim | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-10` dalı; Linux sürümü 0.10.3 `linux` dalında yapıldı, main'e birleştirildi ve v0.1 sürüm sayfasına eklendi; 0.10.0 → oyun testi düzeltmeleri 0.10.1 ve 0.10.2). GitHub'da `v0.1` etiketi ve sürüm sayfasında `oyun.indir.zip` |
 
 - **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-8\`), onaylandı ve main'e birleştirildi. Aşama 9 `main`'den açılan `asama-9` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-9\`), onaylandı ve main'e birleştirildi. Aşama 10 `main`'den açılan `asama-10` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-10\`: `ZindanOyunu-v0.10.0` ve oyun testi düzeltmeleriyle `ZindanOyunu-v0.10.1`, `ZindanOyunu-v0.10.2` + zip'leri); 0.10.2 onaylandı (27 Eyl 2026), push edildi ve main'e birleştirildi; `main` üzerinde `v0.1` etiketi ve GitHub sürümü (Release) oluşturuldu.
@@ -1202,7 +1238,7 @@ Bu bölüm her aşama sonunda güncellenir. Kısa durum README'nin "Durum" böl�
 ```
 zindan-oyunu/
   project.godot
-  export_presets.cfg      # Windows Desktop ön ayarı
+  export_presets.cfg      # Windows Desktop, Linux ve Android ön ayarları
   Makefile
   README.md               # nasıl derlenir, nasıl oynanır
   docs/GDD.md             # bu doküman
@@ -1210,7 +1246,7 @@ zindan-oyunu/
   data/                   # tüm denge sayıları (JSON)
   scenes/                 # main_menu, race_select, game, player, enemies, bosses, rooms, ui
   scripts/
-    autoload/             # Events, DataDB, GameState, SaveManager, Audio (Aşama 9)
+    autoload/             # Events, DataDB, GameState, SaveManager, Audio (Aşama 9), Mobile (Aşama 11: dokunmatik mod, arayüz ölçeği)
     combat/               # DamageCalc, StatusEffects, Combos
     player/
     enemies/              # Enemy (17 düşman, elit, aura), EnemyHazard (işaretli yer tehlikeleri), EnemyProjectile
@@ -1218,7 +1254,7 @@ zindan-oyunu/
     dungeon/              # DungeonRun (oyun sahnesi), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, DungeonAutopilot (bot),
                           # PerfProbe (Aşama 10: FPS ölçümü), test odası
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
-    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary, AudioSettingsUI (Aşama 9),
+    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary, AudioSettingsUI (Aşama 9), TouchControls (Aşama 11),
                           # MainMenu, RaceSelect, PauseMenu, UiTheme, BloodDrips (Aşama 10)
     progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı)
     core/                 # Iso, Shapes, PlaceholderBody, SpriteBody (Aşama 8: 8 yönlü sprite gövdesi), XRayMarker
@@ -1237,6 +1273,8 @@ zindan-oyunu/
     dev/print_dungeon.gd  # bir katın haritasını ASCII olarak basar (geliştirme aracı)
     dev/balance.py        # Aşama 10: denge simülasyonu (paralel bot run'ları → build/balance/balance.md)
     dev/texture_compress.py # Aşama 10: sprite içe aktarma sıkıştırması (renk/normal %85 WebP, ışıma kayıpsız)
+    android/              # Aşama 11: zindan-oyunu.keystore (yan yükleme imzası), make_icons.gd (uygulama simgeleri),
+                          # setup_sdk_lite.sh + ApkSignerLite.java (Android SDK indirilemeyen ortamda imzalama)
   tests/                  # headless birim testleri
   build/                  # export çıktıları (git'e girmez)
 ```
@@ -1254,6 +1292,8 @@ zindan-oyunu/
 | `make textures` | Aşama 10: sprite sıkıştırma ayarı — renk/normal sayfaları %85 kayıplı WebP, ışıma (`_e`) kayıpsız; `make sprites` sonunda kendisi çalışır |
 | `make clean-alpha` | Aşama 10: sprite ışıma katmanlarında saydam piksellerin rengini sıfırlar (`BLENDER=...`; dosya küçülür, görüntü aynı) |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
+| `make export-linux` | `build/linux/` içine Linux sürümünü üretir, tar.gz'ler |
+| `make export-android` | Aşama 11: `build/android/` içine imzalı APK (arm64, Android 7+); Java 17+ ve Android SDK gerekir |
 | `make all` | Hepsini sırayla çalıştırır |
 
 ### Mimari ve Veri
@@ -1278,9 +1318,10 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu (enemy_pool: elitler), dalga havuzu (spawn_pool: düşman ve varyant ağırlıkları), placeholder renk paleti, ışık (Aşama 8: ortam ve meşale rengi); oda tipleri | Zindan, Run Süresi, Ekonomi |
 | `economy.json` | Çanta boyu (0: yalnızca 4 slot), başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si (geçici kat level kuralı Aşama 6'da silindi) | Ekonomi, Uygulamada Verilen Kararlar |
 | `audio.json` | Aşama 9: kanal düzeyleri, konumlu ses ve havuz, 137 sesin varyant sayısı ve ayarları (düzey, perde, aynı anda, aralık, kanal, konumlu), olay → ses eşlemeleri (silahlar, yetenekler, elementler, kombolar, gövdeye göre vuruş/ölüm, düşman saldırıları, mermiler, tehlikeler, boss'lar), müzik parçaları ve akışı, düşük can kalp atışı | Görsel Stil (Ses), Uygulamada Verilen Kararlar |
+| `touch.json` | Aşama 11 (Android): arayüz ölçeği (ekran boyutuna göre mantıksal yükseklik, kamera telafisi), joystick (yarıçap, ölü bölge, bölge genişliği), nişan (sürükleme ölü bölgesi ve tam uzunluk, en yakın/uzak nişan, otomatik nişan menzili) | Kontroller ve Slotlar, Android (Aşama 11) |
 | `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, duvara gömülü boss yerleşimi, gizli duvar (prototip düşmanlar ve yer tutucu elit/boss Aşama 7'de kaldırıldı); ışık (Aşama 8: oyuncu ışığı, meşale sıklığı/ışığı, mermi ışığı) | Zindan, Uygulamada Verilen Kararlar |
 
-**Autoload'lar:** `Audio` (Aşama 9: ses kanalları, efektler, müzik, ses ayarları; `user://settings.json`), `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular; ödül havuzundaki statları ve özel etkileri de denetler), `GameState` (aktif run: level ve XP — `add_xp` —, envanter — `Inventory`: 4 slot, altın, iksir —, ödül buff'ları ve özel etkiler, bekleyen ödül ekranları, kesilen boss'lar, silah tipine göre hasar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`; bozuk kayda dayanıklı).
+**Autoload'lar:** `Mobile` (Aşama 11: dokunmatik mod — Android'de ya da `--touch` —, telefonda arayüz ölçeği, geri tuşu = Esc), `Audio` (Aşama 9: ses kanalları, efektler, müzik, ses ayarları; `user://settings.json`), `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular; ödül havuzundaki statları ve özel etkileri de denetler), `GameState` (aktif run: level ve XP — `add_xp` —, envanter — `Inventory`: 4 slot, altın, iksir —, ödül buff'ları ve özel etkiler, bekleyen ödül ekranları, kesilen boss'lar, silah tipine göre hasar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`; bozuk kayda dayanıklı).
 
 **Hasar formülü:** Tüm hasar tek bir `DamageCalc` fonksiyonundan geçer ve birim testleriyle korunur.
 
@@ -1429,6 +1470,15 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 4. Final .exe, README ve GitHub'da `v0.1` sürüm etiketi.
 
 **Kabul:** Oyun baştan sona oynanır.
+
+#### Aşama 11 — Android
+
+1. Android dışa aktarma ön ayarı, imzalı APK (`make export-android`), uygulama simgesi.
+2. Dokunmatik kontroller: joystick, saldırı/yetenek düğmeleri, sürükleyerek ve otomatik nişan, etkileşim, envanter ve menü düğmeleri.
+3. Telefonda okunur arayüz: ekran boyutuna göre ölçek; bütün ekranlar 780 mantıksal yükseklikte sığar.
+4. Menülerde klavyesiz kullanım (Kapat düğmesi, geri tuşu, dokunma ipuçları).
+
+**Kabul:** Oyun bir Android telefonda baştan sona oynanır.
 
 ### Çalışma Kuralları ve Teslim
 

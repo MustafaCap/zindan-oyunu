@@ -78,11 +78,11 @@ func _ready() -> void:
 	bar.alignment = BoxContainer.ALIGNMENT_CENTER
 	bar.add_theme_constant_override("separation", 24)
 	box.add_child(bar)
-	_new_btn = UiTheme.menu_button("Yeni run  (R)", 300)
+	_new_btn = UiTheme.menu_button("Yeni run" + Mobile.keys("  (R)"), 300)
 	_new_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_new_btn.pressed.connect(func() -> void: new_run_requested.emit())
 	bar.add_child(_new_btn)
-	_menu_btn = UiTheme.menu_button("Ana menü  (Esc)", 300)
+	_menu_btn = UiTheme.menu_button("Ana menü" + Mobile.keys("  (Esc)"), 300)
 	_menu_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_menu_btn.pressed.connect(func() -> void: main_menu_requested.emit())
 	bar.add_child(_menu_btn)

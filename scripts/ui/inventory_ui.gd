@@ -1,6 +1,7 @@
 ## InventoryUI — 4 slotluk envanter arayüzü (çanta yok; economy.bag_size > 0 olursa çanta ızgarası da
 ## görünür); tüccar ve demirci panelleri (GDD: Görsel Stil > Arayüz: envanter ızgarası,
-## sürükle-bırak, stat karşılaştırmalı tooltip). I ile açılır (tüccar/demirci F ile), açıkken oyun duraklar.
+## sürükle-bırak, stat karşılaştırmalı tooltip). I ile açılır (tüccar/demirci F ile), açıkken oyun duraklar. "Kapat" düğmesi,
+## I ya da Esc kapatır (Android'de düğme ya da geri tuşu).
 ##   Sürükle-bırak: eşyayı taşı ya da yer değiştir; "Yere bırak" alanına bırakınca yere düşer.
 ##   Sağ tık / çift tık: aktif slottaki silah Rezonans'la yer değiştirir; Rezonans/Esnek'teki açık silah boş aktif slota
 ##   (yoksa kullanılan aktif silahla yer değiştirir).   Sol tık: seç (tüccarda satmak, demircide işlemek için).
@@ -511,7 +512,7 @@ func _build() -> void:
 	_merchant_box.add_theme_constant_override("separation", 10)
 	side.add_child(_merchant_box)
 	_merchant_box.add_child(_label("Tüccar", 28, Color(1, 0.85, 0.4)))
-	_merchant_box.add_child(_label("Tezgâhtaki eşyaya sağ tık ya da 'Satın al'. Satmak için eşyanı seç ya da 'Sat' alanına sürükle.", 14, Color(0.7, 0.7, 0.75), true))
+	_merchant_box.add_child(_label("%s ya da 'Satın al'. Satmak için eşyanı seç ya da 'Sat' alanına sürükle." % ("Tezgâhtaki eşyaya çift dokun" if Mobile.enabled else "Tezgâhtaki eşyaya sağ tık"), 14, Color(0.7, 0.7, 0.75), true))
 	_stock_rows = VBoxContainer.new()
 	_stock_rows.add_theme_constant_override("separation", 8)
 	_merchant_box.add_child(_stock_rows)
@@ -596,10 +597,19 @@ func _build() -> void:
 	_drop_slot = _make_slot("drop", {}, Vector2(140, 56))
 	_drop_slot.title = "Yere bırak"
 	drop_row.add_child(_drop_slot)
-	drop_row.add_child(_label("Sürükle-bırak: slotlar arası taşı / yer değiştir\nSağ tık ya da çift tık: aktif ↔ Rezonans · Sol tık: seç\nI ya da Esc: kapat", 13, Color(0.65, 0.65, 0.7)))
+	var help := "Sürükle-bırak: slotlar arası taşı / yer değiştir\nÇift dokun: aktif ↔ Rezonans · Dokun: seç" if Mobile.enabled else \
+		"Sürükle-bırak: slotlar arası taşı / yer değiştir\nSağ tık ya da çift tık: aktif ↔ Rezonans · Sol tık: seç\nI ya da Esc: kapat"
+	drop_row.add_child(_label(help, 13, Color(0.65, 0.65, 0.7)))
 	box.add_child(drop_row)
 	_status = _label("", 16, Color(0.6, 1.0, 0.65), true)
 	box.add_child(_status)
+	# Kapatma düğmesi (dokunmatik ekranda tek yol; masaüstünde I / Esc da kapatır)
+	var close_btn := Button.new()
+	close_btn.text = "Kapat" + Mobile.keys("  (I / Esc)")
+	close_btn.custom_minimum_size = Vector2(220, 56)
+	close_btn.size_flags_horizontal = Control.SIZE_SHRINK_END
+	close_btn.pressed.connect(close)
+	box.add_child(close_btn)
 
 	_tooltip = PanelContainer.new()
 	var tsb := StyleBoxFlat.new()

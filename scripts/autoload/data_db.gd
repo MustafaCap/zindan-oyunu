@@ -168,6 +168,12 @@ const SCHEMA := {
 			"boss_crossfade_sec": "number", "return_delay_sec": "number", "end_fade_sec": "number"},
 		"low_hp": {"threshold": "number", "interval_sec": "number"},
 	},
+	"touch": {
+		"ui": {"min_inches": "number", "min_height": "number", "height_per_inch": "number", "camera_comp": "number"},
+		"joystick": {"radius": "number", "deadzone": "number", "zone_width": "number"},
+		"aim": {"drag_deadzone": "number", "drag_full": "number", "min_tiles": "number", "max_tiles": "number",
+			"auto_range": "number", "idle_tiles": "number"},
+	},
 }
 ## Aşama 9: ses kanalları ve gövde türleri (audio.json).
 const AUDIO_BUSES := ["SFX", "UI", "Music"]
