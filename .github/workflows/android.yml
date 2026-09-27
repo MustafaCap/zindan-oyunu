@@ -1,0 +1,42 @@
+# Android APK — GitHub'ın bulut makinesinde imzalı APK derler (make export-android) ve çalıştırmanın "Artifacts"
+# bölümüne koyar: Actions → "Android APK" → son çalıştırma → ZindanOyunu-apk (zip; içinde APK).
+# main'e, claude/ dallarına ve v* etiketlerine push'ta çalışır; Actions sekmesinden elle de çalıştırılabilir (Run workflow).
+# Runner'da Android SDK ve Java hazır; Godot 4.7.2 ve Android şablonları GitHub'dan indirilir (~2-3 dk).
+name: Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, 'claude/**']
+    tags: ['v*']
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Godot 4.7.2 ve Android şablonları
+        run: |
+          curl -sSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
+          unzip -q godot.zip && sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot && rm godot.zip
+          curl -sSL -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
+          unzip -q templates.tpz 'templates/android_*' 'templates/version.txt' -d /tmp && rm templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates
+          mv /tmp/templates ~/.local/share/godot/export_templates/4.7.2.stable
+          godot --version
+
+      # Godot Linux'ta Android SDK'yı ~/Android/Sdk'da arar (Editör Ayarları'nın varsayılanı)
+      - name: Android SDK yolu
+        run: mkdir -p ~/Android && ln -s "$ANDROID_HOME" ~/Android/Sdk && ls ~/Android/Sdk/build-tools
+
+      - name: APK
+        run: make export-android GODOT=godot
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZindanOyunu-apk
+          path: build/zindan-oyunu-android-v*.apk
+          retention-days: 30
+          if-no-files-found: error

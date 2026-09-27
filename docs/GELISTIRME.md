@@ -85,6 +85,10 @@ minor*100 + patch`) ve sürüm her değiştiğinde elle güncellenir; artmazsa t
 **Telefonda denemek:** APK'yı telefona at (USB, Drive) ve dokun; ya da USB hata ayıklama açıkken `adb install -r build/android/ZindanOyunu.apk`.
 Log: `adb logcat -s godot`. Performans ölçümü (`--perf`) telefonda yok; kare hızı sorunu olursa önce ışık sayısı ve çözünürlük denenir.
 
+**GitHub Actions (`.github/workflows/android.yml`):** `main`'e, `claude/` dallarına ve `v*` etiketlerine push'ta APK'yı GitHub'ın
+makinesinde derler (Android SDK orada hazır); Actions → "Android APK" → çalıştırma → Artifacts → `ZindanOyunu-apk` (zip, içinde
+APK). Actions sekmesinden "Run workflow" ile elle de çalışır. Bu bilgisayara Android SDK kurmadan APK almanın yolu.
+
 **Bulut oturumu (Claude Code):** dl.google.com kapalı olduğu için Android SDK indirilemez. `tools/android/setup_sdk_lite.sh`
 Godot'nun baktığı en küçük SDK'yı kurar (`~/Android/Sdk`: boş `adb` ve Maven Central'daki apksig ile çalışan `apksigner`;
 yalnızca v2 imzası, Android 7+ için yeterli). Godot 4.7.2 ve şablonlar GitHub'dan indirilir.
