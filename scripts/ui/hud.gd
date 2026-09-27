@@ -4,6 +4,8 @@
 ## Aşama 4: kat/oda bilgisi, etkileşim ipucu ("F: ..."), boss can barı; tuş ipuçları sahneye göre değişir.
 ## Aşama 5: altın, iksir (x / maks), silah levelleri (kilitliyse işaret), Rezonans ve Esnek slot kutuları.
 ## Aşama 6: XP barı (level, XP / sonraki level), alınan run ödülleri satırı, bekleyen ödül uyarısı.
+## Dokunmatik mod (Android, touch_mode): yetenek kutuları çizilmez (düğmeler TouchControls'ta), silah paneli alt ortaya
+## taşınır (dokununca silah değişir; weapon_panel_rect), tuş ipuçları gizlenir.
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu yalnızca test için.
 class_name Hud
 extends CanvasLayer
@@ -14,6 +16,7 @@ var prompt_text: String = ""          ## etkileşim ipucu (ekranın ortasının 
 var boss: Node2D                      ## doluysa üstte boss can barı
 var stage_text: String = "Aşama 3 · ırklar ve silahlar"
 var show_economy: bool = false        ## zindanda: altın, iksir sınırı, Rezonans ve Esnek slot
+var touch_mode: bool = false          ## dokunmatik kontroller açık (Android)
 var _panel: Control
 var _center: Label
 var _info: Label
@@ -136,7 +139,7 @@ func _draw_panel() -> void:
 		var bt := rewards_text()
 		if bt != "":
 			_text(Vector2(32, vp_bonus_y()), bt, 15, Color(0.75, 0.85, 1.0))
-	# Yetenek göstergeleri (alt orta): Sağ tık, Q, E, Space
+	# Yetenek göstergeleri (alt orta): Sağ tık, Q, E, Space (dokunmatik modda yok: bekleme süreleri düğmelerde)
 	var vp := _panel.size
 	var w := player.weapon()
 	var fam := w.family()
@@ -147,32 +150,39 @@ func _draw_panel() -> void:
 		["E", str(race["abilities"]["e"]["name"]), "e"],
 	]
 	var bx := vp.x * 0.5 - 2.0 * 112.0
-	for b: Array in boxes:
+	for b: Array in boxes if not touch_mode else []:
 		var slot: String = b[2]
 		var cost := kit.cost(slot, fam)
 		_cooldown_box(Vector2(bx, vp.y - 190), str(b[0]), str(b[1]), float(kit.cooldowns[slot]), float(kit.cooldown_totals[slot]), kit.resource + 0.001 >= cost, cost)
 		bx += 112.0
-	_cooldown_box(Vector2(bx, vp.y - 190), "Space", "Atılma", player.dash_cd, player.dash_cd_max, true, 0.0)
-	# Silah paneli (sol alt): iki aktif silah
-	var wy := vp.y - 250.0
+	if not touch_mode:
+		_cooldown_box(Vector2(bx, vp.y - 190), "Space", "Atılma", player.dash_cd, player.dash_cd_max, true, 0.0)
+	# Silah paneli (sol alt; dokunmatik modda alt orta): iki aktif silah
+	var wr := weapon_panel_rect()
+	var wx := wr.position.x
+	var wy := wr.position.y
 	for i: int in player.weapons.size():
-		_weapon_box(Vector2(32, wy + i * 52.0), player.weapons[i], i == player.active_index, i + 1)
-	_panel.draw_string_outline(ThemeDB.fallback_font, Vector2(32, wy - 12), "Tab: silah değiştir", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 4, Color.BLACK)
-	_panel.draw_string(ThemeDB.fallback_font, Vector2(32, wy - 12), "Tab: silah değiştir", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.8, 0.8, 0.85))
+		_weapon_box(Vector2(wx, wy + i * 52.0), player.weapons[i], i == player.active_index, i + 1, wr.size.x)
+	var swap_txt := "Dokun: silah değiştir" if touch_mode else "Tab: silah değiştir"
+	if player.weapons.size() > 1 or not touch_mode:
+		_panel.draw_string_outline(ThemeDB.fallback_font, Vector2(wx, wy - 12), swap_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, 4, Color.BLACK)
+		_panel.draw_string(ThemeDB.fallback_font, Vector2(wx, wy - 12), swap_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0.8, 0.8, 0.85))
 	# Rezonans ve Esnek slot (zindanda)
 	if show_economy and player.effects:
-		_mini_slot(Vector2(32, wy - 84.0), "Rezonans", player.effects.resonance)
-		_mini_slot(Vector2(32 + 278.0, wy - 84.0), "Esnek", player.effects.flex)
-	# Alt satırlar: tuş ipuçları
-	for i: int in _hint_lines.size():
+		var ms := (wr.size.x - 16.0) * 0.5
+		_mini_slot(Vector2(wx, wy - 84.0), "Rezonans", player.effects.resonance, ms)
+		_mini_slot(Vector2(wx + ms + 16.0, wy - 84.0), "Esnek", player.effects.flex, ms)
+	# Alt satırlar: tuş ipuçları (dokunmatik modda yok)
+	for i: int in _hint_lines.size() if not touch_mode else 0:
 		var hp := Vector2(32, vp.y - 44 + i * 24)
 		_panel.draw_string_outline(ThemeDB.fallback_font, hp, _hint_lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, 4, Color.BLACK)
 		_panel.draw_string(ThemeDB.fallback_font, hp, _hint_lines[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 17, Color(0.62, 0.62, 0.68))
-	# Etkileşim ipucu
+	# Etkileşim ipucu (dokunmatik modda "F: " olmadan; düğmesi TouchControls'ta)
 	if prompt_text != "":
 		var pp := Vector2(0, vp.y * 0.5 + 90)
-		_panel.draw_string_outline(ThemeDB.fallback_font, pp, prompt_text, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, 7, Color.BLACK)
-		_panel.draw_string(ThemeDB.fallback_font, pp, prompt_text, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, Color(1, 0.95, 0.7))
+		var pt := prompt_text.trim_prefix("F: ") if touch_mode else prompt_text
+		_panel.draw_string_outline(ThemeDB.fallback_font, pp, pt, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, 7, Color.BLACK)
+		_panel.draw_string(ThemeDB.fallback_font, pp, pt, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 26, Color(1, 0.95, 0.7))
 	# Boss can barı (üst orta)
 	if boss != null and is_instance_valid(boss) and not boss.get("dead"):
 		var bw := 600.0
@@ -200,8 +210,17 @@ func _draw_panel() -> void:
 		_panel.draw_string(ThemeDB.fallback_font, np, _note_text, HORIZONTAL_ALIGNMENT_CENTER, vp.x, 28, Color(1, 0.95, 0.8, a))
 
 
-func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int) -> void:
-	var s := Vector2(540, 44)
+## Silah panelinin (iki silah kutusu) alanı: masaüstünde sol alt, dokunmatik modda alt orta (joystick ve düğmelerin arası).
+func weapon_panel_rect() -> Rect2:
+	var vp := _panel.size
+	if touch_mode:
+		var w := 440.0
+		return Rect2(Vector2(vp.x * 0.5 - w * 0.5, vp.y - 128.0), Vector2(w, 96.0))
+	return Rect2(Vector2(32, vp.y - 250.0), Vector2(540, 96.0))
+
+
+func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int, width: float = 540.0) -> void:
+	var s := Vector2(width, 44)
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.92 if active else 0.6))
 	_panel.draw_rect(Rect2(p, s), w.rarity_color() if active else Color(0.35, 0.35, 0.4), false, 3.0 if active else 1.0)
 	# Aşama 8: silah ikonu (element rozeti köşede)
@@ -222,13 +241,13 @@ func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int) -> void:
 
 
 ## Rezonans / Esnek slot kutusu: eşyanın adı ve etkisi.
-func _mini_slot(p: Vector2, title: String, it: Variant) -> void:
-	var s := Vector2(262, 44)
+func _mini_slot(p: Vector2, title: String, it: Variant, width: float = 262.0) -> void:
+	var s := Vector2(width, 44)
 	var font := ThemeDB.fallback_font
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.6))
 	var border := Color(0.35, 0.35, 0.4)
 	var line1 := "%s: boş" % title
-	var line2 := "I: envanteri aç"
+	var line2 := "Çanta: envanteri aç" if touch_mode else "I: envanteri aç"
 	if it is Weapon:
 		var w := it as Weapon
 		border = w.rarity_color()

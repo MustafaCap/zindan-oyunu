@@ -55,7 +55,7 @@ func _ready() -> void:
 	_mute.add_theme_font_size_override("font_size", 18)
 	_mute.toggled.connect(func(on: bool) -> void: Audio.set_muted(on))
 	box.add_child(_mute)
-	var close_btn := UiTheme.menu_button("Kapat  (O / Esc)", 300)
+	var close_btn := UiTheme.menu_button("Kapat" + Mobile.keys("  (O / Esc)"), 300)
 	close_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	close_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	close_btn.pressed.connect(close)

@@ -104,27 +104,46 @@ func test_pause_menu_pauses_and_confirms_abandon() -> void:
 	_tree().root.add_child(pm)
 	var got: Array = []
 	pm.abandon_requested.connect(func(q: bool) -> void: got.append(q))
+	var saved: Array = []
+	pm.save_exit_requested.connect(func(q: bool) -> void: saved.append(q))
 	pm.open()
 	assert_true(pm.visible and _tree().paused, "açıkken oyun durur")
-	assert_eq(pm.buttons.map(func(b: Button) -> String: return b.text), ["Devam  (Esc)", "Ses ayarları", "Ana menüye dön", "Oyundan çık"])
+	assert_eq(pm.buttons.map(func(b: Button) -> String: return b.text),
+		["Devam  (Esc)", "Ses ayarları", "Kaydet ve ana menüye dön", "Kaydet ve oyundan çık", "Run'ı bırak"])
 	pm._ask(false)
-	assert_true(pm.is_confirming(), "ana menüye dönmeden önce onay sorulur")
+	assert_true(pm.is_confirming(), "run'ı bırakmadan önce onay sorulur")
 	pm._unhandled_input(_key(KEY_ESCAPE))
 	assert_true(not pm.is_confirming() and pm.visible, "Esc onaydan vazgeçer")
 	pm._unhandled_input(_key(KEY_ESCAPE))
 	assert_true(not pm.visible and not _tree().paused, "Esc menüyü kapatır, oyun sürer")
 	pm.open()
-	pm._ask(true)
-	pm._confirmed()
-	assert_eq(got, [true], "oyundan çık onaylandı")
-	# Test odasında run yok: onaysız
-	var got2: Array = []
-	pm.in_run = false
-	pm.leave_requested.connect(func(q: bool) -> void: got2.append(q))
-	pm.open()
 	pm._ask(false)
-	assert_eq(got2, [false])
+	pm._confirmed()
+	assert_eq(got, [false], "run'ı bırak onaylandı")
+	# v0.11.1: savaş dışında "Kaydet ve …" sormadan çıkar; savaşta önce sorar (kaydedilemez)
+	pm.open()
+	pm._save_exit(false)
+	assert_eq(saved, [false], "kaydet ve ana menüye dön: onaysız")
+	GameState.set_in_combat(true)
+	pm.open()
+	pm._save_exit(true)
+	assert_true(pm.is_confirming() and saved.size() == 1, "savaşta kaydedilemez: önce sorulur")
+	pm._confirmed()
+	assert_eq(saved, [false, true], "onaydan sonra çıkılır")
+	assert_eq(got, [false], "run bırakılmaz")
+	GameState.set_in_combat(false)
 	pm.free()
+	# Test odasında run yok: onaysız, eski düğmeler
+	var tr := PauseMenu.new()
+	tr.in_run = false
+	_tree().root.add_child(tr)
+	assert_eq(tr.buttons.map(func(b: Button) -> String: return b.text), ["Devam  (Esc)", "Ses ayarları", "Ana menüye dön", "Oyundan çık"])
+	var got2: Array = []
+	tr.leave_requested.connect(func(q: bool) -> void: got2.append(q))
+	tr.open()
+	tr._ask(false)
+	assert_eq(got2, [false])
+	tr.free()
 
 
 func test_abandon_run_counts_as_death() -> void:

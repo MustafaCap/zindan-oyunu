@@ -39,7 +39,7 @@ func test_mouse_actions() -> void:
 
 func test_autoloads_exist() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
-	for n: String in ["Events", "DataDB", "GameState", "SaveManager", "Audio"]:
+	for n: String in ["Events", "DataDB", "GameState", "SaveManager", "Audio", "Mobile"]:
 		assert_true(root.has_node(n), "autoload yok: " + n)
 
 
@@ -51,3 +51,24 @@ func test_game_state_start_run() -> void:
 	assert_eq(GameState.slots.size(), 4, "4 slot")
 	GameState.reset_run()
 	assert_true(not GameState.in_run)
+
+
+## Android: sürüm kodu oyun sürümünden türetilir (0.11.0 → 1100); her sürümde artmazsa telefon güncellemeyi kurmaz.
+## Ekran yatay, geri tuşu oyundan çıkarmaz (Mobile Esc gibi işler).
+func test_android_export_preset() -> void:
+	var cfg := ConfigFile.new()
+	assert_eq(cfg.load("res://export_presets.cfg"), OK, "export_presets.cfg okunur")
+	var android := ""
+	for sec: String in cfg.get_sections():
+		if not sec.ends_with(".options") and str(cfg.get_value(sec, "platform", "")) == "Android":
+			android = sec
+	assert_true(android != "", "Android ön ayarı var")
+	if android == "":
+		return
+	var v := str(ProjectSettings.get_setting("application/config/version")).split(".")
+	var code := int(v[0]) * 10000 + int(v[1]) * 100 + int(v[2])
+	assert_eq(int(cfg.get_value(android + ".options", "version/code")), code, "version/code = sürümden türetilmiş")
+	for key: String in ["launcher_icons/main_192x192", "launcher_icons/adaptive_foreground_432x432", "launcher_icons/adaptive_background_432x432"]:
+		assert_true(ResourceLoader.exists(str(cfg.get_value(android + ".options", key))), "simge var: " + key)
+	assert_eq(int(ProjectSettings.get_setting("display/window/handheld/orientation")), DisplayServer.SCREEN_SENSOR_LANDSCAPE, "yatay ekran")
+	assert_true(not bool(ProjectSettings.get_setting("application/config/quit_on_go_back")), "geri tuşu oyundan çıkmaz")

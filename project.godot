@@ -7,9 +7,10 @@ config_version=5
 
 config/name="Zindan Oyunu"
 config/description="2D izometrik roguelike zindan oyunu"
-config/version="0.10.3"
+config/version="0.11.1"
 run/main_scene="res://scenes/main_menu.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+config/quit_on_go_back=false
 
 [autoload]
 
@@ -18,6 +19,7 @@ DataDB="*res://scripts/autoload/data_db.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
 Audio="*res://scripts/autoload/audio.gd"
+Mobile="*res://scripts/autoload/mobile.gd"
 
 [debug]
 
@@ -32,6 +34,7 @@ window/size/window_width_override=1600
 window/size/window_height_override=900
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/handheld/orientation=4
 
 [input]
 
@@ -102,4 +105,5 @@ renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 
 textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
 environment/defaults/default_clear_color=Color(0.07, 0.06, 0.08, 1)

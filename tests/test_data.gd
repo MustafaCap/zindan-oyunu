@@ -6,7 +6,7 @@ const DataDBScript := preload("res://scripts/autoload/data_db.gd")
 
 func test_all_files_load_without_errors() -> void:
 	assert_true(DataDB.loaded, "DataDB hatasız yüklenmeli: %s" % ", ".join(DataDB.errors))
-	assert_eq(DataDB.tables.size(), 17, "17 veri dosyası")
+	assert_eq(DataDB.tables.size(), 18, "18 veri dosyası (touch.json: Android)")
 
 
 func test_content_counts() -> void:

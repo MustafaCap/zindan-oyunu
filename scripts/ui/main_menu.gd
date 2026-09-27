@@ -3,9 +3,11 @@
 ## (menu_intro.ogv), sonunda çapraz geçişle kansız sakin döngüye (menu_loop.ogv, ileri-geri, sıçramasız) geçer; menüye sonraki
 ## dönüşlerde yalnızca döngü oynar. Müzik videonun sesidir (audio.json > music.tracks.menu → menu.ogg).
 ## Videoda menü yazıları gömülüdür (YENİ OYUN / YÜKLE / AYARLAR / ÇIKIŞ): düğmeler bu yazıların üstüne oturan görünmez tıklama
-## alanlarıdır; üzerine gelince yazı kızıl parlar ve solunda kan izi belirir. YÜKLE soluk ve tıklanmaz (kayıtlı run yok).
+## alanlarıdır; üzerine gelince yazı kızıl parlar ve solunda kan izi belirir.
+## v0.11.1: YÜKLE kayıtlı run varsa (SaveManager.read_run) tıklanır ve yanında "Irk · kat · Level" yazar; kayıt yoksa soluk
+## ve tıklanmaz. Kayıtlı run varken YENİ OYUN önce sorar: o run bırakılır ve ölüm sayılır (RunSave.discard_saved).
 ## Klavyeyle yukarı/aşağı ve Enter. Video yoksa koyu, korlu yedek arka plan ve kendi düğmeleri
-## (Başla, Ses ayarları, Çık).
+## (Başla, Devam et (kayıt varsa), Ses ayarları, Çık).
 ## Komut satırında oyun bayrağı verilmişse (--autoplay, --seed=…, --race=… gibi test ve geliştirme bayrakları) menü atlanır ve
 ## zindan doğrudan açılır: make dungeon / make bosses / denge simülasyonu eskisi gibi çalışır. "--menu" menüde kalır.
 class_name MainMenu
@@ -20,7 +22,7 @@ const INTRO_XFADE := 1.4            ## giriş videosunun son saniyelerinde döng
 ## Videodaki gömülü yazılar (1280×720 video pikseli): [yazı, tıklama alanı, eylem]; eylemi boş olan soluk ve tıklanmaz.
 const VIDEO_ITEMS := [
 	["YENİ OYUN", Rect2(70, 243, 210, 48), "start"],
-	["YÜKLE", Rect2(70, 305, 132, 48), ""],
+	["YÜKLE", Rect2(70, 305, 132, 48), "load"],
 	["AYARLAR", Rect2(70, 366, 180, 48), "settings"],
 	["ÇIKIŞ", Rect2(70, 427, 114, 48), "quit"],
 ]
@@ -35,16 +37,21 @@ var _overlay: Control               ## video yazılarının üstündeki tıklama
 var _fade: ColorRect
 var _leaving := false
 var _intro_fading := false
+var _saved: Dictionary = {}         ## kayıtlı run (yoksa boş): YÜKLE açık
+var _confirm: Control               ## "kayıtlı run bırakılsın mı?" (YENİ OYUN; ilk kez sorulunca kurulur)
 
 
 func _ready() -> void:
-	var args := OS.get_cmdline_user_args()
+	# Dokunmatik deneme bayrakları (--touch, --ui-scale=X; Mobile) oyun bayrağı sayılmaz: menü açılır
+	var args := Array(OS.get_cmdline_user_args()).filter(func(a: String) -> bool:
+		return a != "--touch" and not a.begins_with("--ui-scale="))
 	if not args.is_empty() and not "--menu" in args:
 		get_tree().change_scene_to_file.call_deferred(GAME_SCENE)
 		return
 	get_tree().paused = false
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = UiTheme.theme()
+	_saved = SaveManager.read_run()
 	_build_backdrop()
 	if video != null:
 		_build_video_menu()
@@ -213,7 +220,10 @@ func _build_menu() -> void:
 	box.offset_right = 560.0
 	box.offset_bottom = 260.0
 	add_child(box)
-	for spec: Array in [["Başla", _on_start], ["Ses ayarları", func() -> void: Audio.toggle_settings()], ["Çık", _on_quit]]:
+	var specs: Array = [["Başla", _on_start], ["Ses ayarları", func() -> void: Audio.toggle_settings()], ["Çık", _on_quit]]
+	if not _saved.is_empty():
+		specs.insert(1, ["Devam et  (%s)" % RunSave.describe(_saved), _on_load])
+	for spec: Array in specs:
 		var b := UiTheme.menu_button(str(spec[0]))
 		b.pressed.connect(spec[1])
 		box.add_child(b)
@@ -225,15 +235,26 @@ func _build_menu() -> void:
 
 
 ## Video menüsü: gömülü yazıların üstüne görünmez düğmeler. Odaklanan (fare ya da klavye) yazı kızıl parlar (toplamalı
-## karışımlı ışıma) ve solunda kan izi belirir; YÜKLE karartılır ve düğmesi yoktur.
+## karışımlı ışıma) ve solunda kan izi belirir. Kayıtlı run yoksa YÜKLE karartılır ve düğmesi yoktur; varsa yanında
+## kaydın kısa bilgisi yazar.
 func _build_video_menu() -> void:
 	_overlay = Control.new()
 	_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_overlay)
-	var actions := {"start": _on_start, "settings": func() -> void: Audio.toggle_settings(), "quit": _on_quit}
+	var actions := {"start": _on_start, "load": _on_load, "settings": func() -> void: Audio.toggle_settings(), "quit": _on_quit}
 	for item: Array in VIDEO_ITEMS:
 		var action := str(item[2])
-		if action.is_empty():
+		if action == "load" and not _saved.is_empty():
+			var info := UiTheme.label(RunSave.describe(_saved), 20, UiTheme.BONE)
+			info.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			info.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+			info.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.9))
+			info.add_theme_constant_override("shadow_offset_x", 2)
+			info.add_theme_constant_override("shadow_offset_y", 2)
+			var r: Rect2 = item[1]
+			info.set_meta("video_rect", Rect2(r.end.x + 14, r.position.y, 420, r.size.y))
+			_overlay.add_child(info)
+		if action.is_empty() or (action == "load" and _saved.is_empty()):
 			var g := Gradient.new()   # kenarlara doğru sönen karartma: yazı soluk görünür, duvarda kutu belli olmaz
 			g.set_color(0, Color(0, 0, 0, 0.72))
 			g.add_point(0.6, Color(0, 0, 0, 0.66))
@@ -328,8 +349,94 @@ func _add_version_label() -> void:
 	add_child(ver)
 
 
+## Yeni oyun: kayıtlı run varsa önce sorulur (o run bırakılır, ölüm sayılır).
 func _on_start() -> void:
+	if _leaving:
+		return
+	if _saved.is_empty():
+		_leave(RACE_SCENE)
+		return
+	_open_confirm()
+
+
+## Kayıtlı run'ı yükler: ırk ve başlangıç silahı ayara, kayıt DungeonRun'a; zindan açılır.
+func _on_load() -> void:
+	if _leaving or _saved.is_empty():
+		return
+	var cfg := TestRoom.default_config()
+	cfg["race"] = str(_saved["state"]["race"])
+	cfg["start_weapon"] = str(_saved.get("start_weapon", ""))
+	TestRoom.config = cfg
+	DungeonRun.load_request = _saved
+	print("[Menü] Kayıt yükleniyor: %s" % RunSave.describe(_saved))
+	_leave(GAME_SCENE)
+
+
+func is_confirming() -> bool:
+	return _confirm != null and _confirm.visible
+
+
+func _open_confirm() -> void:
+	if _confirm == null:
+		_confirm = Control.new()
+		_confirm.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(_confirm)
+		var dim := ColorRect.new()
+		dim.color = Color(0.02, 0.0, 0.0, 0.7)
+		dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_confirm.add_child(dim)
+		var panel := PanelContainer.new()
+		panel.set_anchors_preset(Control.PRESET_CENTER)
+		panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		panel.grow_vertical = Control.GROW_DIRECTION_BOTH
+		panel.custom_minimum_size = Vector2(560, 0)
+		_confirm.add_child(panel)
+		var box := VBoxContainer.new()
+		box.add_theme_constant_override("separation", 14)
+		panel.add_child(box)
+		box.add_child(UiTheme.title("Kayıtlı run var", 38, Color(0.82, 0.66, 0.52)))
+		var text := UiTheme.label("%s\nYeni oyun başlarsa bu run bırakılır ve ölüm sayılır: ustalık XP'si o kattaki ölüm çarpanıyla işlenir, kayıt silinir." % RunSave.describe(_saved), 20, UiTheme.BONE)
+		text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		text.custom_minimum_size = Vector2(500, 0)
+		box.add_child(text)
+		var yes := UiTheme.menu_button("Evet, yeni oyun", 480)
+		yes.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		yes.pressed.connect(_confirm_new_game)
+		box.add_child(yes)
+		var no := UiTheme.menu_button("Vazgeç" + Mobile.keys("  (Esc)"), 480)
+		no.name = "No"
+		no.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		no.pressed.connect(_close_confirm)
+		box.add_child(no)
+		for b: Button in [yes, no]:   # ok tuşları arkadaki menüye kaçmasın
+			var other: Button = no if b == yes else yes
+			b.focus_neighbor_top = b.get_path_to(other)
+			b.focus_neighbor_bottom = b.get_path_to(other)
+	_confirm.visible = true
+	Audio.play("ui_open")
+	(_confirm.find_child("No", true, false) as Button).grab_focus.call_deferred()
+
+
+func _close_confirm() -> void:
+	if not is_confirming():
+		return
+	_confirm.visible = false
+	Audio.play("ui_close")
+	buttons[0].grab_focus.call_deferred()
+
+
+func _confirm_new_game() -> void:
+	RunSave.discard_saved()
+	_saved = {}
+	_confirm.visible = false
 	_leave(RACE_SCENE)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_confirming() and event is InputEventKey and event.pressed and not event.echo and (event as InputEventKey).keycode == KEY_ESCAPE:
+		_close_confirm()
+		get_viewport().set_input_as_handled()
 
 
 func _on_quit() -> void:

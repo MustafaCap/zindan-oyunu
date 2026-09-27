@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Zindan Oyunu — derleme ve test komutları
-# Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make export-linux | make all
+# Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make export-linux | make export-android | make all
 #           make balance (Aşama 10 denge simülasyonu) | make perf (60 FPS ölçümü, pencerede) | make clean-alpha (sprite PNG temizliği)
 #           make menu-video VIDEO=... (ana menü videosu: giriş + döngü + müzik) | make textures (sprite sıkıştırma ayarı)
 
@@ -12,6 +12,13 @@ WIN_DIR := build/windows
 WIN_ZIP := build/zindan-oyunu-windows-v$(VERSION).zip
 LINUX_DIR := build/linux
 LINUX_TGZ := build/zindan-oyunu-linux-v$(VERSION).tar.gz
+ANDROID_DIR := build/android
+ANDROID_APK := build/zindan-oyunu-android-v$(VERSION).apk
+# Yan yükleme (sideload) imza anahtarı: aynı anahtarla imzalanan yeni APK eskisinin üstüne kurulur (ilerleme korunur).
+# Google Play'e yüklenecekse repoda olmayan ayrı bir anahtar verilir: make export-android ANDROID_KEYSTORE=... ANDROID_KEY_USER=... ANDROID_KEY_PASS=...
+ANDROID_KEYSTORE ?= tools/android/zindan-oyunu.keystore
+ANDROID_KEY_USER ?= zindan
+ANDROID_KEY_PASS ?= zindan-oyunu
 
 TEST_ROOM := res://scenes/test_room.tscn
 # Zindan smoke testi: sabit seed, ölümsüz bot, düşman sayısı ×0,2 ve canı ×0,25 (haritanın yürünebilirliği denenir)
@@ -19,7 +26,7 @@ DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2 --enemy-hp=0.25
 # Aşama 7 boss testi: bot her katta doğrudan boss'a gider, katın beklenen level ve silah gücüyle (ateş + buz kılıç)
 BOSS_ARGS ?= --autoplay --god --boss-test --seed=7 --weapons=sword:fire,sword:ice
 
-.PHONY: all import test quick unit smoke matrix dungeon bosses balance perf clean-alpha menu-video textures sprites sfx export-windows export-linux clean
+.PHONY: all import test quick unit smoke matrix dungeon bosses balance perf clean-alpha menu-video textures sprites sfx export-windows export-linux export-android android-icons clean
 
 all: sprites sfx test export-windows export-linux
 
@@ -135,6 +142,21 @@ export-linux: import
 	$(GODOT) --headless --path . --export-release "Linux" $(LINUX_DIR)/ZindanOyunu.x86_64
 	$(PYTHON) tools/dev/pack_linux.py $(LINUX_DIR)/ZindanOyunu.x86_64 $(LINUX_TGZ)
 	@echo "Hazır: $(LINUX_TGZ)"
+
+# Android (arm64, Android 7+): imzalı APK. Godot'nun Android SDK yolu (Editör Ayarları > Export > Android) ve Java 17+
+# gerekir; bulut oturumunda SDK yerine tools/android/setup_sdk_lite.sh. Keystore yolu Windows'ta (MSYS) cygpath ile çevrilir.
+export-android: import
+	rm -rf $(ANDROID_DIR) && mkdir -p $(ANDROID_DIR)
+	GODOT_ANDROID_KEYSTORE_RELEASE_PATH="$$(cygpath -m "$(abspath $(ANDROID_KEYSTORE))" 2>/dev/null || echo "$(abspath $(ANDROID_KEYSTORE))")" \
+	GODOT_ANDROID_KEYSTORE_RELEASE_USER="$(ANDROID_KEY_USER)" GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD="$(ANDROID_KEY_PASS)" \
+		$(GODOT) --headless --path . --export-release "Android" $(ANDROID_DIR)/ZindanOyunu.apk
+	@test -s $(ANDROID_DIR)/ZindanOyunu.apk || (echo "ANDROID: APK üretilemedi (SDK yolu / keystore?)"; exit 1)
+	cp $(ANDROID_DIR)/ZindanOyunu.apk $(ANDROID_APK)
+	@echo "Hazır: $(ANDROID_APK)"
+
+# Android uygulama simgeleri (assets/icon/): assets/icon/source/emblem.jpg'deki amblemden
+android-icons:
+	$(GODOT) --headless --path . -s tools/android/make_icons.gd
 
 clean:
 	rm -rf build .godot

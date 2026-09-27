@@ -1,16 +1,20 @@
-## PauseMenu — Aşama 10 duraklatma menüsü (Esc): Devam, Ses ayarları, Ana menüye dön, Oyundan çık. Açıkken oyun durur;
-## Esc ya da "Devam" kapatır. Zindanda "Ana menüye dön" run'ı bırakır ve ölüm sayılır: önce onay sorulur,
-## sonra DungeonRun ustalık XP'sini o kattaki ölüm çarpanıyla işler ve özet ekranını açar. "Oyundan çık" da run'ı aynı
-## şekilde işleyip kaydeder, sonra oyunu kapatır. Test odasında (run yok) ikisi de onaysız, doğrudan çalışır.
+## PauseMenu — Aşama 10 duraklatma menüsü (Esc). Açıkken oyun durur; Esc ya da "Devam" kapatır.
+## Zindanda (v0.11.1): Devam, Ses ayarları, Kaydet ve ana menüye dön, Kaydet ve oyundan çık, Run'ı bırak. "Kaydet ve …"
+## run'ı bitirmez (ana menüdeki YÜKLE kaldığı yerden sürdürür); savaş sürerken kaydedilemediği için önce sorulur (son kayıt
+## geçerli: en geç bu odaya girmeden önceki an). "Run'ı bırak" ölüm sayılır: onaydan sonra DungeonRun ustalık XP'sini o
+## kattaki ölüm çarpanıyla işler, kaydı siler ve özet ekranını açar.
+## Test odasında (run yok): Devam, Ses ayarları, Ana menüye dön, Oyundan çık — onaysız, doğrudan.
 class_name PauseMenu
 extends CanvasLayer
 
 ## Zindan: run'ı bırak (ölüm sayılır). quit: sonra oyunu kapat.
 signal abandon_requested(quit: bool)
+## Zindan: kaydet (savaş dışındaysa) ve ana menüye dön / oyundan çık; run sürer.
+signal save_exit_requested(quit: bool)
 ## Test odası: ana menüye dön / çık.
 signal leave_requested(quit: bool)
 
-## Zindanda true (run var): çıkışlar onay ister ve run'ı işler.
+## Zindanda true (run var): çıkışlar kaydeder ya da onay ister.
 var in_run: bool = true
 var buttons: Array[Button] = []
 var _main: VBoxContainer
@@ -18,6 +22,7 @@ var _confirm: VBoxContainer
 var _confirm_text: Label
 var _confirm_yes: Button
 var _confirm_quit: bool = false
+var _confirm_save: bool = false       ## onaylanan: kaydedip çık (true) ya da run'ı bırak (false)
 
 
 func _ready() -> void:
@@ -53,8 +58,13 @@ func _ready() -> void:
 	_main.add_theme_constant_override("separation", 12)
 	_main.alignment = BoxContainer.ALIGNMENT_CENTER
 	inner.add_child(_main)
-	for spec: Array in [["Devam  (Esc)", close], ["Ses ayarları", func() -> void: Audio.toggle_settings()],
-			["Ana menüye dön", func() -> void: _ask(false)], ["Oyundan çık", func() -> void: _ask(true)]]:
+	var specs: Array = [["Devam" + Mobile.keys("  (Esc)"), close], ["Ses ayarları", func() -> void: Audio.toggle_settings()]]
+	if in_run:
+		specs += [["Kaydet ve ana menüye dön", func() -> void: _save_exit(false)],
+			["Kaydet ve oyundan çık", func() -> void: _save_exit(true)], ["Run'ı bırak", func() -> void: _ask(false)]]
+	else:
+		specs += [["Ana menüye dön", func() -> void: _ask(false)], ["Oyundan çık", func() -> void: _ask(true)]]
+	for spec: Array in specs:
 		var b := UiTheme.menu_button(str(spec[0]), 440)
 		b.pressed.connect(spec[1])
 		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -73,7 +83,7 @@ func _ready() -> void:
 	_confirm_yes.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	_confirm_yes.pressed.connect(_confirmed)
 	_confirm.add_child(_confirm_yes)
-	var no := UiTheme.menu_button("Vazgeç  (Esc)", 440)
+	var no := UiTheme.menu_button("Vazgeç" + Mobile.keys("  (Esc)"), 440)
 	no.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	no.pressed.connect(_cancel_confirm)
 	_confirm.add_child(no)
@@ -101,15 +111,34 @@ func is_confirming() -> bool:
 	return _confirm.visible
 
 
+## Run'ı bırakma onayı (zindan) ya da doğrudan çıkış (test odası).
 func _ask(quit: bool) -> void:
 	if not in_run:
 		visible = false
 		leave_requested.emit(quit)
 		return
 	_confirm_quit = quit
-	_confirm_text.text = ("Run bırakılır ve ölüm sayılır: ustalık XP'si bu kattaki ölüm çarpanıyla işlenip kaydedilir, sonra oyun kapanır." if quit
-		else "Run bırakılır ve ölüm sayılır: ustalık XP'si bu kattaki ölüm çarpanıyla işlenir, özet ekranından ana menüye dönülür.")
-	_confirm_yes.text = "Evet, oyundan çık" if quit else "Evet, run'ı bırak"
+	_confirm_save = false
+	_show_confirm("Run bırakılır ve ölüm sayılır: ustalık XP'si bu kattaki ölüm çarpanıyla işlenip kaydedilir, run kaydı silinir, sonra oyun kapanır." if quit
+		else "Run bırakılır ve ölüm sayılır: ustalık XP'si bu kattaki ölüm çarpanıyla işlenir, run kaydı silinir, özet ekranından ana menüye dönülür.",
+		"Evet, oyundan çık" if quit else "Evet, run'ı bırak")
+
+
+## Kaydet ve çık: savaş dışındaysa doğrudan; savaş sürerken kaydedilemez, önce sorulur (son kayıt geçerli).
+func _save_exit(quit: bool) -> void:
+	if not GameState.in_combat:
+		visible = false
+		save_exit_requested.emit(quit)
+		return
+	_confirm_quit = quit
+	_confirm_save = true
+	_show_confirm("Savaş sürerken kaydedilemez. Çıkarsan YÜKLE seni bu odaya girmeden önceki son kayda götürür; bu savaştaki ilerleme gider.",
+		"Evet, oyundan çık" if quit else "Evet, ana menüye dön")
+
+
+func _show_confirm(text: String, yes: String) -> void:
+	_confirm_text.text = text
+	_confirm_yes.text = yes
 	_main.visible = false
 	_confirm.visible = true
 	_confirm_yes.grab_focus.call_deferred()
@@ -126,7 +155,10 @@ func _confirmed() -> void:
 	visible = false
 	_confirm.visible = false
 	_main.visible = true
-	abandon_requested.emit(_confirm_quit)
+	if _confirm_save:
+		save_exit_requested.emit(_confirm_quit)
+	else:
+		abandon_requested.emit(_confirm_quit)
 
 
 ## Esc: onay açıksa vazgeçer, değilse menüyü kapatır. (Ses paneli açıksa Esc'i o alır: _input'ta işler.)

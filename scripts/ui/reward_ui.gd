@@ -157,7 +157,8 @@ func _card(i: int, c: Dictionary, totals: Dictionary) -> Button:
 	v.add_theme_constant_override("separation", 10)
 	b.add_child(v)
 	var key := _label(16, Color(0.7, 0.7, 0.76))
-	key.text = "[%d]  %s" % [i + 1, "Özel etki (run başına bir kez)" if special else ("Büyük stat" if str(c["source"]) == "boss" else "Stat")]
+	var kind := "Özel etki (run başına bir kez)" if special else ("Büyük stat" if str(c["source"]) == "boss" else "Stat")
+	key.text = kind if Mobile.enabled else "[%d]  %s" % [i + 1, kind]
 	v.add_child(key)
 	var name := _label(30, Color(1.0, 0.8, 0.45) if special else Color(0.8, 0.9, 1.0))
 	name.text = str(c["name"])
