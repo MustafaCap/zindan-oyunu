@@ -89,7 +89,8 @@ Log: `adb logcat -s godot`. Performans ölçümü (`--perf`) telefonda yok; kare
 **GitHub Actions (`.github/workflows/android.yml`, "Derlemeler"; v0.11.1'den beri üç sürüm):** her dala ve `v*` etiketlerine
 push'ta Windows zip'ini, Linux tar.gz'sini ve APK'yı GitHub'ın makinesinde derler (`make export-windows export-linux
 export-android`; Android SDK orada hazır), zip ve tar.gz'nin içini ve APK imzasını denetler. Actions → "Derlemeler" → çalıştırma
-→ Artifacts → `ZindanOyunu-windows`, `ZindanOyunu-linux`, `ZindanOyunu-apk` (her biri zip, içinde dosya; 30 gün durur).
+→ Artifacts → `ZindanOyunu-windows`, `ZindanOyunu-linux`, `ZindanOyunu-apk` (her biri zip, içinde dosya; 30 gün durur;
+indirmek için GitHub'a giriş gerekir, repo açık olsa da).
 `v*` etiketi push'lanınca üç dosya o etiketin sürümüne `oyun.indir.zip`, `oyun.indir.linux.tar.gz` ve `oyun.indir.apk` adlarıyla
 eklenir (sürüm yoksa açılır, aynı adlı dosya varsa yenisi konur). Actions sekmesinden "Run workflow" ile elle de çalışır.
 Derlemeler 30 MB'tan büyük olduğu için dosyaları sohbet ya da e-postayla göndermek yerine bu yol kullanılır.

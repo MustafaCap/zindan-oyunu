@@ -5,7 +5,7 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md)'de, derleme ve araç notları [
 
 ## Oyunu indir
 
-Bağlantılar her zaman son sürümü indirir (oyun sürümü 0.10.3; Android 0.11.0'dan itibaren). Repo özel, o yüzden önce tarayıcıda GitHub hesabınla giriş yap.
+Bağlantılar her zaman son sürümü indirir (oyun sürümü 0.10.3; Android 0.11.0'dan itibaren). Repo herkese açık, indirmek için GitHub hesabı gerekmez.
 Bağlantılar yerine sağdaki **Releases** bölümünden [son sürümü](https://github.com/MustafaCap/zindan-oyunu/releases/latest) açıp dosyayı oradan da indirebilirsin. Sürüm
 sayfasındaki "Source code" arşivlerinde oyun yok, yalnızca kaynak kod var.
 
@@ -81,9 +81,9 @@ Telefonda yazılar ve düğmeler ekran boyutuna göre büyür. Masaüstünde den
 
 ## Durum
 
-GDD'deki 11 aşamanın hepsi bitti. Son sürüm **v0.1** (oyun sürümü 0.10.2), `main` dalında. Aşama 11 (Android, 0.11.0)
-`claude/mobile-game-release-wh9lmf` dalında; 0.11.1 (Mycela değişikliği ve kayıt sistemi) bu dalın üstüne `mycela-kayit`
-dalında, oyun testi bekliyor.
+GDD'deki 11 aşamanın hepsi bitti ve `main` dalında: Aşama 11 (Android, 0.11.0) ve 0.11.1 (Mycela değişikliği, kayıt sistemi,
+yeni uygulama simgesi) 27 Eyl 2026'da `mycela-kayit` dalından main'e birleştirildi. Son yayımlanan sürüm hâlâ **v0.1** (oyun
+sürümü 0.10.2, Linux 0.10.3); 0.11.1 için sürüm etiketi henüz açılmadı.
 
 | Aşama | Konu | Sürüm |
 | --- | --- | --- |
