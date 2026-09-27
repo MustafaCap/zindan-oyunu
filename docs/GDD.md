@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (Aşama 9)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (Aşama 10)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -60,6 +60,8 @@ WASD ile yürünür, saldırılar farenin gösterdiği yöne gider. Oyuncunun 4 
 | I | Envanter: 4 slot (Aşama 5; açıkken oyun durur) |
 | 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seçme (Aşama 6; kartlara tıklamak da olur, açıkken oyun durur) |
 | O | Ses ayarları: ana ses, müzik, efektler, arayüz, sessiz (Aşama 9; açıkken oyun durur, O ya da Esc kapatır) |
+| Esc | Duraklatma menüsü: devam, ses ayarları, ana menüye dön, oyundan çık (Aşama 10; açıkken oyun durur) |
+| F5 | Geliştirici (hata ayıklama) menüsü — gizli kısayol (Aşama 10 kullanıcı kararı; eskiden M) |
 
 | Slot | Ne konur | Etkisi |
 | --- | --- | --- |
@@ -511,6 +513,8 @@ Tam bir run (4 kat, zafer) hedefi 30-45 dakikadır. Harita boyutu ve düşman sa
 
 İlk sürümde yalnızca iki ekran var: Başla tuşu olan ana menü ve ırk seçim ekranı. Ustalık levelleri ve boss ilk kesiş bonusları otomatik kaydedilir. 4. kat boss'u kesilince "Kazandın" ekranı çıkar ve ana menüye dönülür. Ayrıntılı arayüz tasarımı ve hikâye sonraya bırakıldı.
 
+**Yapıldı (Aşama 10):** Oyun ana menüyle açılır: **oyunun adı yazılmaz** (henüz ad yok; kullanıcı kararı), arka plan kullanıcının videosudur (açılışta kanlı giriş bir kez, sonra kansız sakin döngü; müzik videonun sesi); düğmeler videoya gömülü YENİ OYUN, AYARLAR, ÇIKIŞ yazılarıdır (YÜKLE soluk, kayıtlı run yok). Başla → ırk seçimi (4 kart: animasyonlu sprite, statlar, Q/E, pasif, silah ailesi, başlangıç silahının ustalığı) → zindan. Esc duraklatma menüsünü açar; "Ana menüye dön" run'ı bırakır ve **ölüm sayılır** (kullanıcı kararı). Run bitince önce büyük "KAZANDIN" / "ÖLDÜN" başlığı (altından kan damlar), sonra run özeti; oradan yeni run ya da ana menü. Görünüş oyunun karanlık, kanlı tarzındadır (ayrıntılar: Uygulamada Verilen Kararlar > Menüler, denge ve teslim).
+
 ## Görsel Stil ve Efektler
 
 Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
@@ -576,6 +580,14 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 8 | Warrior'ın tarzı bu değişikliklerle onaylandı; diğer ırklara ve sanatın geri kalanına geçildi. |
 | 8 | Aşama 8 (sanat) kullanıcı testinden sonra olduğu gibi onaylandı ve main'e birleştirildi |
 | 9 | Aşama 9 (ses) kullanıcı testinden sonra olduğu gibi onaylandı ve main'e birleştirildi (sentezlenen müzik kabul edildi) |
+| 10 | Menü mockup'ı (ana menü, ırk seçimi, duraklatma, Kazandın/özet) ve karanlık-kanlı görsel dil onaylandı; **ana menüde oyunun adı yazmaz** (henüz ad yok) ve **ana menünün arka planı kullanıcının göndereceği videodur** (menü ona göre: düğmeler solda, video tüm ekranı kaplar) |
+| 10 | Geçici hata ayıklama menüsü ve test odası kaldırılmadı: **F5 ile açılan gizli geliştirici menüsü** olarak kaldı (M artık bir şey yapmaz) |
+| 10 | Duraklatma menüsündeki **"Ana menüye dön" run'ı bırakır ve ölüm sayılır** (ustalık XP'si o kattaki ölüm çarpanıyla işlenir, özet ekranı açılır) |
+| 10 | **Menü videosu:** 10 sn'lik videoda kan ~1,4. sn'de başladığı için sürekli döngü sıçrıyordu → videonun tamamı oyun açılışında **bir kez** oynar, sonra çapraz geçişle **kansız ilk 1,3 sn'nin yavaşlatılmış, ileri-geri döngüsüne** geçer; menüye sonraki dönüşlerde yalnızca döngü. **Menü müziği videonun sesi.** |
+| 10 | Videoya gömülü **YENİ OYUN / YÜKLE / AYARLAR / ÇIKIŞ** yazıları menü düğmesi oldu (Başla / Ses ayarları / Çık düğmelerinin yerine); **YÜKLE soluk ve tıklanmaz** (kayıtlı run yok) |
+| 10 | **Denge sayılarına dokunulmadı** (simülasyon sonuçları gösterildi; kullanıcı oynayarak karar verecek, bot süreleri onun için önemli değil). Bunun yerine **bot hızlandırması:** zindan botunda düşman (boss dahil) 4 hasarlı vuruşta ölür |
+| 10 | **Doku sıkıştırması:** renk ve normal sayfaları %85 kayıplı WebP (ışıma katmanları kayıpsız); .exe ~189 → ~153 MB |
+| 10 | **Test çalıştırılmaz** (27 Eyl 2026; 26 Eyl kuralının yerine): `make test`, `make quick`, bot testleri ve `make balance` geliştirici tarafından çalıştırılmaz; kullanıcı oyunu kendisi test eder, en fazla .exe derlenir |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -639,7 +651,7 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | Asa | Küre (hız 14) | Element küresi: yavaş büyük küre, ilk düşmana ya da duvara çarpınca 2 karo alanda patlar, ×2,0 |
 | Rün | Farenin gösterdiği yerde 0,3 sn sonra 1,1 karo patlama | Rün tuzağı: 5 karoya kadar kurulur, 0,5 sn'de hazır olur, 1 karo içine düşman girince 2,2 karo alanda patlar (×2,5), 10 sn sonra söner; aynı anda tek tuzak |
 
-- **Hata ayıklama odası** (geçici, Aşama 10'da kalkar): M ile menü açılır; ırk, level, iki silahın tipi/elementi/özelliği ve düşman türü (1. kat dalgaları ya da saldırmayan kuklalar) seçilir. 2-7 / 0 aktif silahın elementini, 8 özelliğini değiştirir; N yeni dalga, R yeniden başlatır. Aşama 4'ten beri oyun zindanla açılır; test odasına M menüsündeki "Test odasına git" düğmesiyle geçilir (geri dönüş: "Zindana git").
+- **Hata ayıklama odası** (Aşama 10'dan beri gizli geliştirici aracı; kullanıcı kararı): F5 ile (Aşama 3-9: M) menü açılır; ırk, level, iki silahın tipi/elementi/özelliği ve düşman türü (1. kat dalgaları ya da saldırmayan kuklalar) seçilir. 2-7 / 0 aktif silahın elementini, 8 özelliğini değiştirir; N yeni dalga, R yeniden başlatır. Aşama 4'ten beri oyun zindanla, Aşama 10'dan beri ana menüyle açılır; test odasına F5 menüsündeki "Test odasına git" düğmesiyle geçilir (geri dönüş: "Zindana git"; Esc → duraklatma menüsü → ana menü).
 
 ### Zindan (Aşama 4)
 
@@ -761,7 +773,7 @@ Sayıların hepsi `data/economy.json`, `data/legendaries.json`, `data/talismans.
 - Demirci: **Level atlat** silahı bir sonraki 5'in katına çıkarır (stat artışı her 5 levelde), en fazla oyuncunun leveline; bedeli kazanılan level × 8. **Elementi yeniden çek** (Ender ve üstü; efsanevide element sabit) 60; **özellikleri yeniden çek** (Destansı ve üstü; aynı sayıda, öncekinden farklı set) 90. Aynı silahta her yeniden çekme sonrakini ×1,5 pahalılaştırır.
 - Silah örse sürüklenerek ya da slotta tıklanarak seçilir.
 
-**Hata ayıklama (geçici)**
+**Hata ayıklama (Aşama 10'dan beri F5'teki gizli geliştirici menüsü)**
 
 - Zindanda "Uygula" yalnızca ırk ve leveli değiştirir (silahlar envanterde kalır). "Loot (test)" satırı: menüdeki iki silahı oyuncunun levelinde boş slotlara ekle, loot yağdır (katın loot'undan 8 silah + altın + iksir + tılsım), +500 altın, slottaki silahlara +1000 XP.
 - Geliştirme bayrakları: `--loot-rain`, `--fill-bag` (boş slotları doldurur), `--open-bag` (envanteri açar), `--open-ui=merchant|blacksmith`; `--weapons=` verilirse aktif slotlara o silahlar konur.
@@ -1037,7 +1049,7 @@ Kod: `tools/audio/` (sentez: `dsp.py` araçlar, `sfx.py` efekt tarifleri, `music
 **Oyunda (`Audio`)**
 
 - **Kanallar:** Master → Music, SFX, UI; Master'ın sonunda tepe sınırlayıcı (−0,5 dB; çok ses üst üste binince bozulmasın). Varsayılan düzeyler: Ana ses %80, Müzik %55, Efektler %85, Arayüz %70.
-- **Ses ayarları (O):** her ekranda açılır; 4 kaydırıcı (değişiklik hemen duyulur, efekt/arayüz kaydırıcısı örnek ses çalar) ve "Sessiz" kutusu; açıkken oyun durur, O ya da Esc kapatır (Esc oyundan çıkmaz). Kapatınca `user://settings.json`'a (Windows: `%APPDATA%\Godot\app_userdata\Zindan Oyunu\settings.json`) kaydedilir. Bozuk dosyada varsayılanlar; yanlış tipteki değerler atlanır, aralık dışı değerler 0-1'e sıkıştırılır. Aşama 10'daki duraklatma menüsü de bu paneli kullanacak.
+- **Ses ayarları (O):** her ekranda açılır; 4 kaydırıcı (değişiklik hemen duyulur, efekt/arayüz kaydırıcısı örnek ses çalar) ve "Sessiz" kutusu; açıkken oyun durur, O ya da Esc kapatır (Esc oyundan çıkmaz). Kapatınca `user://settings.json`'a (Windows: `%APPDATA%\Godot\app_userdata\Zindan Oyunu\settings.json`) kaydedilir. Bozuk dosyada varsayılanlar; yanlış tipteki değerler atlanır, aralık dışı değerler 0-1'e sıkıştırılır. Aşama 10: ana menüdeki ve duraklatma menüsündeki "Ses ayarları" da bu paneli açar; panel menülerle aynı temadadır.
 - **Konumlu sesler:** dünyadaki sesler 32 oynatıcılık konumlu havuzdan (AudioStreamPlayer2D; dinleyici kamera) çalar: 2.200 ekran pikseline kadar duyulur, doğrusal söner (ekran kenarı ~−5 dB), sağ-sol kaydırma %60. Oyuncunun kendi sesleri, arayüz, kapılar, dalga, boss kükremesi ve müzik vurguları ortadan (12 oynatıcı). Havuz dolarsa en eski ses kesilir.
 - **Sınırlar (her ses için, varsayılanlar):** ±%6 rastgele perde, aynı anda en fazla 4 tane, aynı sesin iki çalınması arası en az 0,03 sn, düzey düzeltmesi (dB). Varyantlar art arda aynısı gelmeyecek şekilde seçilir. Oyun durunca (envanter, ödül, menü) dünya sesleri de durur; arayüz sesleri ve müzik sürer.
 - **Müzik akışı:** kata girince katın ambiyansı (2,5 sn çapraz geçiş); boss dövüşü başlayınca boss'un kükremesi ve kendi müziği (0,8 sn); boss kesilince 5 sn sonra kat ambiyansına dönülür; run bitince müzik 1,5 sn'de söner ve zafer ya da yenilgi vurgusu çalar (Müzik kanalında). Test odasında müzik yoktur.
@@ -1058,6 +1070,55 @@ Kod: `tools/audio/` (sentez: `dsp.py` araçlar, `sfx.py` efekt tarifleri, `music
 | Arayüz | Tüm düğmelerde tıklama ve üzerine gelme (Audio yeni eklenen her düğmeye bağlanır); envanter açma/kapama, sürükleme/bırakma, satın alma/satma, demircide örs ve yeniden çekme, ödül ekranı açılışı ve seçimi |
 
 - **Veri denetimi:** `DataDB` her eşlemenin var olan bir sese gittiğini, her silah tipi, ırk yeteneği, element, kombo, boss ve kat için ses/müzik tanımlı olduğunu ve düzeylerin 0-1 aralığında olduğunu denetler; eksikse dosyayı ve alanı söyler.
+
+### Menüler, denge ve teslim (Aşama 10)
+
+Kod: `scripts/ui/` (MainMenu, RaceSelect, PauseMenu, RunSummary, UiTheme, BloodDrips), `scenes/main_menu.tscn` (ana sahne), `scenes/race_select.tscn`, `scripts/dungeon/perf_probe.gd`, `tools/dev/balance.py`, `tools/dev/texture_compress.py`, `tools/blender/menu_video.py`, `tools/blender/clean_alpha.py`, `assets/video/` (menu_intro.ogv, menu_loop.ogv), `assets/audio/music/menu.ogg`. Görsel yön yine kullanıcı kararıdır: karanlık, kanlı, vahşi.
+
+**Akış:** Oyun ana menüyle açılır → Başla → ırk seçimi → zindan (0,8 sn kararmadan açılır) → run sonu ekranı → Yeni run (aynı ırk) ya da Ana menü. Komut satırında oyun bayrağı verilmişse (`--autoplay`, `--seed=…`, `--race=…` gibi test/geliştirme bayrakları) ana menü atlanır ve zindan doğrudan açılır: `make dungeon`, `make bosses` ve denge simülasyonu eskisi gibi çalışır (`--menu` menüde tutar).
+
+**Görünüş (`UiTheme`, `BloodDrips`):** kömür karası zemin, pas-kan kırmızısı çerçeveler, kemik beyazı serif yazı. Yazı tipi Windows'un kendi serif fontlarından (Palatino Linotype → Book Antiqua → Georgia; `SystemFont`): .exe'ye font dosyası eklenmez, lisans sorunu yoktur; hiçbiri yoksa Godot'nun varsayılan fontu. Düğmenin üzerine gelince (ya da klavye odağında) çerçeve kan kırmızısına döner, solunda kalın kan izi ve kızıl gölge belirir; üzerine gelme ve tıklama sesleri (Aşama 9) çalar, klavyeyle odak değişince de. Büyük başlıkların altından yavaşça kan damlar (`BloodDrips`: damlalar uzar, uçlarındaki damla kopup düşer; oyun dururken de akar). Ses ayarları paneli (O) de aynı temaya geçti.
+
+**Ana menü (`MainMenu`):**
+- **Oyunun adı yazılmaz** (kullanıcı kararı: henüz ad yok); yalnızca sol altta küçük sürüm yazısı.
+- **Arka plan kullanıcının videosu** (kullanıcı kararı): 1280×720, 24 fps, 10 sn, sesli; zindan koridoru, ~1,4. sn'den sonra tavandan kan damlar, kamera yavaşça ilerler. Videolar ekranı en-boy oranı korunarak kaplar (taşan kısım kırpılır).
+- **Giriş + sakin döngü** (kullanıcı kararı; sürekli döngüde kan bir anda kaybolup kamera sıçradığı için): oyun açılışında `menu_intro.ogv` (videonun tamamı) **bir kez** oynar; son 1,4 sn'sinde altta `menu_loop.ogv` başlar ve giriş sönerek kaybolur (kanlı sahne → temiz koridor çapraz geçişi). Döngü videonun **kansız ilk 1,3 sn'sidir** (32 kare): yarı hıza yavaşlatılır (ara kareler komşu karelerin karışımı), ileri + geri dizilir (uç kareler tekrarlanmaz) → 124 kare, 5,2 sn, başı ve sonu aynı kareye bağlı, sıçramasız (`VideoStreamPlayer.loop`). Giriş oyun başına bir kez (`MainMenu.intro_seen`); ırk seçiminden ya da run sonundan menüye dönünce yalnızca döngü.
+- **Menü müziği videonun sesidir** (kullanıcı kararı; `audio.json > music.tracks.menu` → `menu.ogg`): videodaki ses sessiz bir ambiyans + 3., 6., 8., 9. sn'lerde damla sesleri ve ~-38'den -27 dB'e yükseliyor. 1 sn'lik RMS zarfı yumuşakça dengelenir (üs 0,8; kazanç ×0,5-×4), sonu başına 1,5 sn eşit güçte çapraz geçişle bağlanır (8,5 sn sıçramasız döngü), düzeyi 1. kat ambiyansının RMS'ine eşitlenir (-20,3 dB, tepe -2,8 dB). Videolar sessizdir; müzik ırk seçiminde de kesilmeden sürer, zindana girince kat ambiyansına çapraz geçer.
+- `make menu-video VIDEO=… BLENDER=…` (`tools/blender/menu_video.py`, ~1 dk) üç dosyayı da Blender'ın kendi FFmpeg'i ve `aud` modülüyle üretir (ffmpeg kurmak gerekmez; Godot 4 yalnızca Ogg Theora oynatır): Theora ~5 Mb/sn, en fazla 1080p, renkler "Standard" görünüm dönüşümüyle (AgX soldurmasın). Kanın başladığı an `MENU_CALM_END` (varsayılan 1,3 sn). Giriş 4,3 MB, döngü 0,9 MB, müzik 0,12 MB.
+- **Düğmeler videonun gömülü yazılarıdır** (kullanıcı kararı): videoda solda "YENİ OYUN / YÜKLE / AYARLAR / ÇIKIŞ" yazıları var; `VIDEO_ITEMS` bu yazıların 1280×720'deki yerlerini tutar ve üstlerine görünmez düğmeler konur (videoyla birlikte ölçeklenir). Odaklanan (fare ya da ↑/↓; sarar) yazı kızıl parlar (toplamalı karışımlı ışıma) ve solunda aşağı sızan kan izi belirir; üzerine gelme/tıklama sesleri çalar. YENİ OYUN → ırk seçimi, AYARLAR → ses ayarları paneli, ÇIKIŞ → çık. **YÜKLE soluk** (kenarlara doğru sönen karartma) **ve düğmesi yok**: oyunda kayıtlı run yok. Video modunda soldaki karartma yok, hafif vinyet var.
+- Video dosyaları yoksa yedek: koyu zemin, sağ altta yavaşça nabız gibi atan uzak bir kızıllık ve yukarı savrulan korlar; düğmeler solda: **Başla**, **Ses ayarları**, **Çık** (arkalarında soldan karartma ve vinyet). Açılışta 0,9 sn'de kararmadan açılır; Çık 0,4 sn'de kararıp kapatır. Klavye: ↑/↓, Enter; O ses ayarları.
+
+**Irk seçimi (`RaceSelect`):** "Irkını seç" başlığı ve 4 kart (Warrior, Ghost, Archer, Magical). Her kartta ırkın animasyonlu sprite'ı (bekleme animasyonu, elinde başlangıç silahı, izleyiciye dönük, ×3,3 büyük, sol üst önden sıcak meşale ışığı normal haritasıyla aydınlatır, ayağının altında kızıl ışık halkası), ırkın adı ve arayüz rengi çizgisi, can (level başına artış), zırh, hız, kaynak, Q ve E yetenekleri (ad + açıklama), pasif, silah ailesi, başlangıç silahı ve onun kalıcı ustalık leveli. Tıklayınca ya da ←/→, A/D, 1-4 ile seçilir (seçilen kart kan kırmızısı çerçeveli ve parlak, diğerleri soluk; seçilen karakter saldırı animasyonu yapar); çift tık, Enter/Space ya da "Zindana in" run'ı başlatır; Esc/"Geri" ana menüye döner. Seçim `TestRoom.config`'e yazılır ve bir sonraki açılışta aynı ırk seçili gelir.
+
+**Duraklatma menüsü (`PauseMenu`, Esc):** oyun durur, sahne kararır; "Duraklatıldı" başlığı altından kan damlar. Düğmeler: **Devam (Esc)**, **Ses ayarları**, **Ana menüye dön**, **Oyundan çık**. Envanter, ödül ekranı ya da geliştirici menüsü açıkken Esc önce onları kapatır.
+- **"Ana menüye dön" run'ı bırakır ve ölüm sayılır** (kullanıcı kararı): önce onay sorulur ("Evet, run'ı bırak" / "Vazgeç"; Esc vazgeçer); onaylanınca ustalık XP'si o kattaki ölüm çarpanıyla işlenip kaydedilir, dünya durur ve run sonu ekranı "RUN BIRAKILDI" başlığıyla açılır (altında "N. kat — kat adı · ölüm sayıldı"); oradan ana menü ya da yeni run.
+- **"Oyundan çık" da aynı şekilde işler** (karar, tutarlılık için): onaydan sonra run ölüm sayılıp kaydedilir, sonra oyun kapanır. Pencereyi kapatmak (X) ise run'ı işlemez (Aşama 6 kuralı değişmedi).
+- Test odasında run olmadığı için ikisi de onaysız, doğrudan ana menüye döner / çıkar.
+
+**Run sonu ekranı (`RunSummary`):** ekran 1 sn'de kararır, 0,25 sn sonra büyük başlık gelir: zaferde altın **KAZANDIN** (altında "<son boss> düştü. Zindan temizlendi."), ölümde kan kırmızısı **ÖLDÜN** ("N. kat — kat adı"), bırakılan run'da **RUN BIRAKILDI**; başlığın altından kan damlar. 1,4 sn sonra (ya da bir tuşa/tıklamaya basınca) Aşama 6'nın özet paneli açılır (kat, level, süre, öldürme, altın, XP, run ödülleri, ustalık payları ve level atlayanlar, ilk kesişler, kayıt durumu) ve iki düğme: **Yeni run (R)** — aynı ırkla, yeni seed — ve **Ana menü (Esc)**. GDD'deki "Kazandın ekranı çıkar ve ana menüye dönülür" böyle karşılandı.
+
+**Geliştirici menüsü (kullanıcı kararı):** Aşama 3'ten beri geçici olan hata ayıklama menüsü ve test odası silinmedi; **F5** ile açılan gizli geliştirici menüsü olarak kaldı (M artık bir şey yapmaz; HUD ve ipuçlarında anılmaz). İçeriği aynı (ırk/level/silah, kat, loot, ilerleme, ölümsüz, boss odasına ışınlan, test odası). Test odasında Esc duraklatma menüsünü açar.
+
+**HUD:** sağ üstte yalnızca sürüm (aşama adı kalktı); alt ipucunda "Esc menü", ikinci satırda "Çatlak duvarlara vur: gizli oda!".
+
+**Denge simülasyonu (`make balance`, `tools/dev/balance.py`):** `--balance` botu tam düşman sayısı ve canıyla, ölümsüz olmadan oynar (ölümcül hasarda ölüm sayılır, run sürer), yerdeki işaretlerden ve saldırı hazırlayan düşmandan kaçar, en güçlü iki silahı takar; her kat sonunda `[Denge]` satırı yazar. 4 ırk × seed paralel çalışır, run başına 30 dk sınır; tablo `build/balance/balance.md`. Bir kez çalıştırıldı (4 ırk × 3 seed = 12 run):
+
+| Kat | Hedef süre | Bot süresi (ort., min–maks) | Boss süresi | Hedef level | Level (ort.) | Ölüm/run | Kata ulaşan run |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 6-8 dk | 9,8 dk (4,7–20,6) | 325 sn | 15 | 15,0 | 6,6 | 12 |
+| 2 | 7-10 dk | 25,9 dk (5,4–30*) | 14 sn | 35 | 29,5 | 76 | 12 (2'si geçti) |
+| 3 | 8-12 dk | 22,0 dk (14,1–30*) | 136 sn | 55 | 56,5 | 40 | 2 |
+| 4 | 9-15 dk | 11,6 dk | 126 sn | 80 | 80,0 | 5 | 1 |
+
+(*) 30 dk sınır. Gözlemler: 1. katın fazlası Morvath'tan (zayıf silahla 5-10 dk); asıl duvar 2. kat (12 run'ın 10'u 30 dk'ya takıldı, level ~30); buz silahı yoksa Kordrak'ın plakaları (%70 hasar azaltma) 3. katta duvar olabiliyor; ganimet şansı süreleri çok değiştiriyor. Bot insandan kötü kaçar ve boss mekaniklerini bilinçli oynamaz. Önerilen ayarlar (Morvath canı 9000 → 6000, 2. kat ölçeği ×2,5/×1,9 → ×2,0/×1,6, plakalar %70 → %50) **uygulanmadı** (kullanıcı kararı): kullanıcı oynayarak karar verecek.
+
+**Bot hızlandırması (kullanıcı kararı):** `Enemy.bot_kill_hits` > 0 ise düşman (boss dahil) oyuncudan o kadar hasarlı vuruş (sıfır hasar ve bağışıklık sayılmaz) alınca hemen ölür. Zindan botunda (`--autoplay`) 4; denge botunda (`--balance`) ve boss testinde (`--boss-test`) 0 (onlar tam savaşı ölçer); `--kill-hits=N` değiştirir. Test odası botu ve matris etkilenmez (kombo denetimleri için). Oyuncunun oyununda her zaman 0.
+
+**Performans (`make perf`, `PerfProbe`):** oyun penceresinde bot 4. katı 90 sn oynar; bu bilgisayarın Intel UHD tümleşik ekran kartında ortalama 59,9 FPS. Yeni dalga doğarken sprite'ların diskten yüklenmesi ~150 ms takılma yapıyordu: katın düşman/boss sprite'ları kata girerken yüklenip kat boyunca tutulur (en düşük saniye 50 → 57 FPS).
+
+**Hata düzeltmeleri:** Mycela'nın totemleri yeniden dikilirken ikinci bir sayaç başlayıp 6 totem olabiliyordu (Mycela hep tam cana dönüyordu); zindan botunun "takıldı" denetimi hedef değişince sıfırlanmıyordu.
+
+**Boyut:** ışıma katmanlarında (`_e.png`) saydam piksellerin altındaki gereksiz renk verisi temizlendi (`make clean-alpha`; 38,7 → 2,4 MB, görüntü aynı; sprite hattı artık temiz yazar): .exe 220 → ~189 MB. **Doku sıkıştırması** (kullanıcı kararı): renk ve normal sayfaları %85 kaliteli kayıplı WebP olarak içe aktarılır, ışıma katmanları kayıpsız (`make textures`, `tools/dev/texture_compress.py`: yalnızca `.import` dosyalarındaki `compress/mode` ve `compress/lossy_quality`; kaynak PNG'ler kayıpsız kalır; `make sprites` sonunda kendisi çalışır). Menü videosu ve müziği ~5,3 MB ekler. **.exe ~153 MB, zip ~80 MB.**
 
 ## Uygulama Rehberi
 
@@ -1094,16 +1155,16 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | 7 — Düşmanlar ve boss'lar | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-7` dalı, sürüm 0.7.0) |
 | 8 — Sanat | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-8` dalı, sürüm 0.8.0) |
 | 9 — Ses | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-9` dalı, sürüm 0.9.0) |
-| 10 | Sırada: Aşama 10 — Menüler, denge ve teslim |
+| 10 — Menüler, denge ve teslim | 🔶 Yapıldı, yerelde commit edildi (`asama-10` dalı, sürüm 0.10.0); kullanıcı testi bekleniyor. Onaydan sonra push, main'e birleştirme ve GitHub'da `v0.1` etiketi |
 
-- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-8\`), onaylandı ve main'e birleştirildi. Aşama 9 `main`'den açılan `asama-9` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-9\`), onaylandı ve main'e birleştirildi. Aşama 10 `main`'den açılan `asama-10` dalında yapılır.
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-8\`), onaylandı ve main'e birleştirildi. Aşama 9 `main`'den açılan `asama-9` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-9\`), onaylandı ve main'e birleştirildi. Aşama 10 `main`'den açılan `asama-10` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-10\`); onaydan sonra push, main'e birleştirme ve `v0.1` etiketi.
 - **Çalışma düzeni (Aşama 6'dan itibaren): geliştirme ortamı.** Kullanıcı devamını kendi bilgisayarında, yerel klonda (`C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler\zindan-oyunu`) geliştirme ortamı ile, aşama aşama yapar. geliştirme ortamı reponun kökündeki `GELISTIRME.md`'yi otomatik okur; kurallar orada da yazılıdır. Her aşama: önceki aşamanın dalından yeni `asama-N` dalı → kod → testler → README Durum + GDD (`docs/GDD.md`) güncellemesi → commit → **push** → kullanıcı onaylayınca PR ile main'e birleştirme. Kullanıcı **Git Bash** kullanır: git komutlarında yol ayıracı `/` olmalıdır.
 - **Push kuralı (kullanıcı kararı, 25 Eyl 2026; Aşama 6 sonunda güncellendi):** geliştirici GitHub'a yazabiliyor: bilgisayardaki geliştirici (geliştirme ortamı ya da bilgisayara bağlı geliştirici) kullanıcının git hesabıyla, bulut oturumu da GitHub bağlantısına yazma izni verildiğinde doğrudan. geliştirici aşama sonunda **yalnızca yerelde commit eder; push'tan önce kullanıcının uygulamayı test edip onaylamasını bekler.** Onaydan sonra push eder, GitHub'a ulaştığını kontrol eder (`git ls-remote origin`) ve `main`'e birleştirir (kullanıcı izin verdi; `gh` kurulu olmadığı için yerel merge + `git push origin main`). Kendisi push edemezse (izin/erişim hatası) kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`; bulut oturumundan ise aşağıdaki bundle yoluyla).
 - **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır; geliştirme ortamı yoksa kurulumunu kullanıcıya adım adım anlatır. **Kullanıcının bilgisayarında (Aşama 6'da kuruldu):** Godot `C:\Users\mcap5\Godot\Godot_v4.7.2-stable_win64.exe` (komut satırı için `..._win64_console.exe`; PATH'te değil, `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`), export şablonları `%APPDATA%\Godot\export_templates\4.7.2.stable\`, `make` MSYS2'den (`C:\msys64\ucrt64\bin\make`), Python `C:\msys64\ucrt64\bin\python3`. `zip` yok: `make export-windows` bu durumda PowerShell `Compress-Archive` kullanır. `make` yoksa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
 - **Yedek teslim yolu (Aşama 0-4'te kullanıldı; push edilemezse hâlâ geçerli):** geliştiricinin GitHub bağlantısı yalnızca okuyabildiğinde kod `git bundle` olarak `ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakıldı (`git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`); 30 MB'tan büyük zip 19 MB'lık parçalara bölünüp `asama-N\` klasörüne `birlestir-ve-ac.bat` ile kondu.
 - **Test:** `make test` beş adımı çalıştırır: birim testleri (220 test; Aşama 9: her sesin dosyaları, müziklerin döngüsü, koddaki her ses çağrısının var olan bir sese gitmesi, silah/yetenek/element/kombo sesleri, bozuk ses eşlemesinde açık hata, kanallar ve sınırlayıcı, çalma sınırları ve havuz, gövdeye göre vuruş sesleri, tehlike sesleri, olay sesleri, müzik akışı, ayar kaydı ve onarımı, ayar paneli; Aşama 7: 55 düşman, kat ölçeklemesi, elit/aura, varyantlar, dalgalar, tehlike şekilleri ve uyarı, kalkan, çağrılanların ödülsüzlüğü, 4 boss'un mekanikleri; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8; Aşama 7'den beri düşman canı ×0,25) ve boss testi (`make bosses`: 4 boss katın beklenen gücüyle 240 sn içinde kesilir, her saldırı kullanılır, 2. faz görülür, her uyarı ≥ 0,4 sn; sorun varsa çıkış kodu 9).
-- **Test süresi (kullanıcı kararı, 26 Eyl 2026):** testler uzun sürmemeli. Geliştirme sırasında yalnızca ilgili birim testleri ya da `make quick` (birim + smoke, ~1 dk); uzun bot testleri (`make dungeon`, `make bosses`, `make matrix`) tekrar tekrar çalıştırılmaz; tam `make test` (~3,5 dk) aşama sonunda bir kez, arka planda.
-- **Boyut (Aşama 8):** sprite'lar (~110 MB PNG) nedeniyle .exe ~210 MB, zip ~138 MB; gerekirse Aşama 10'da doku sıkıştırmasıyla küçültülür. Aşama 9'daki sesler depoda ~26 MB (WAV + OGG), .exe'ye ~9 MB ekler (efektler QOA sıkıştırmalı).
+- **Test (kullanıcı kararı, 27 Eyl 2026; 26 Eyl kuralının yerine):** geliştirici test çalıştırmaz: `make test`, `make quick`, bot testleri (`make dungeon`, `make bosses`, `make matrix`) ve denge simülasyonu (`make balance`) yok — aşama sonunda da. Kullanıcı oyunu kendisi oynayarak test eder ("çok uzun ve boş kalıyor"). En fazla parse/derleme hatasını yakalayacak kadar kısa bir kontrol (.exe export'u). Testler kodla birlikte güncel tutulur. (Eski kural, 26 Eyl: geliştirmede `make quick`, aşama sonunda bir kez `make test`.)
+- **Boyut:** Aşama 8'de sprite'lar (~110 MB PNG) nedeniyle .exe ~210 MB, zip ~138 MB; Aşama 9'daki sesler depoda ~26 MB (WAV + OGG), .exe'ye ~9 MB ekler (efektler QOA sıkıştırmalı). **Aşama 10:** ışıma katmanları temizlendi (220 → ~189 MB) ve renk/normal sayfaları %85 kayıplı WebP (kaynak PNG'ler depoda kayıpsız); menü videosu + müziği ~5,3 MB. **.exe ~153 MB, zip ~80 MB.**
 - **Bilinen:** `bpy` ayrıca kurulmadı: sprite'lar Blender 5.2'nin kendisiyle komut satırından üretilir (`C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`; `make sprites BLENDER=...`, ~35 dk). Sesler de Blender'ın Python'uyla (`make sfx BLENDER=...`, ~15 dk). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır". Başsız (headless) testlerin sonunda "resources still in use at exit" uyarısı çıkabilir: kapanışta hâlâ çalan seslerdendir, zararsızdır.
 
 **Kaldığın yerden devam mesajı (geliştirme ortamı, repo klasöründe):** "Bu repo zindan oyunum. Önce docs/GDD.md'nin tamamını (özellikle 'Uygulamada Verilen Kararlar' ve 'Proje Durumu ve Çalışma Düzeni'), README'deki Durum bölümünü ve GELISTIRME.md'yi oku. Aşama N'den devam et; bu aşamayı bitirince dur ve bana neyi test etmem gerektiğini yaz."
@@ -1139,22 +1200,28 @@ zindan-oyunu/
     player/
     enemies/              # Enemy (17 düşman, elit, aura), EnemyHazard (işaretli yer tehlikeleri), EnemyProjectile
     bosses/               # Boss, BossArena, BossOverlay, Morvath, Mycela, Kordrak, Nyxthar, NyxCopy
-    dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
+    dungeon/              # DungeonRun (oyun sahnesi), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, DungeonAutopilot (bot),
+                          # PerfProbe (Aşama 10: FPS ölçümü), test odası
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
-    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary, AudioSettingsUI (Aşama 9)
+    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary, AudioSettingsUI (Aşama 9),
+                          # MainMenu, RaceSelect, PauseMenu, UiTheme, BloodDrips (Aşama 10)
     progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı)
     core/                 # Iso, Shapes, PlaceholderBody, SpriteBody (Aşama 8: 8 yönlü sprite gövdesi), XRayMarker
     fx/                   # Juice (vuruş hissi, kan), SlashFx, Lighting (Aşama 8: ortam, oyuncu ışığı, meşaleler)
   assets/
     sprites/              # characters/<id>/ (4 ırk, 20 düşman, 4 boss), weapons/, tiles/, props/, icons/ (Aşama 8)
     shaders/              # hit_flash (karakter), lava, liquid, fog, silhouette, noise.gdshaderinc
-    audio/sfx, audio/music  # Aşama 9: 264 efekt (<id>_<n>.wav) ve 8 müzik (<id>.ogg), make sfx üretir
+    audio/sfx, audio/music  # Aşama 9: 264 efekt (<id>_<n>.wav) ve 8 müzik (<id>.ogg), make sfx üretir; menu.ogg (Aşama 10: menü videosunun sesi)
+    video/                # Aşama 10: menu_intro.ogv (kanlı giriş, bir kez), menu_loop.ogv (sakin döngü); make menu-video üretir
     fonts
   tools/
     blender/              # render_sprites.py (giriş), sprite_lib.py, humanoid.py, characters.py, enemies.py,
-                          # weapons.py, tiles.py, props.py, icons.py, make_preview.py (HTML önizleme)
+                          # weapons.py, tiles.py, props.py, icons.py, make_preview.py (HTML önizleme),
+                          # menu_video.py (Aşama 10: menü videosu → Theora + müzik), clean_alpha.py (ışıma katmanı temizliği)
     audio/                # Aşama 9: sfx_synth.py (giriş), dsp.py (sentez araçları), sfx.py (137 efekt tarifi), music.py (8 parça)
     dev/print_dungeon.gd  # bir katın haritasını ASCII olarak basar (geliştirme aracı)
+    dev/balance.py        # Aşama 10: denge simülasyonu (paralel bot run'ları → build/balance/balance.md)
+    dev/texture_compress.py # Aşama 10: sprite içe aktarma sıkıştırması (renk/normal %85 WebP, ışıma kayıpsız)
   tests/                  # headless birim testleri
   build/                  # export çıktıları (git'e girmez)
 ```
@@ -1166,6 +1233,11 @@ zindan-oyunu/
 | `make bosses` | Boss testi: bot her katın boss'unu katın beklenen gücüyle keser; saldırılar, 2. faz ve uyarı süreleri denetlenir (Aşama 7 kabulü) |
 | `make sprites` | Blender'la (komut satırından) tüm sprite, normal map, karo, nesne ve ikonları yeniden üretir (`BLENDER=...`, `SPRITE_ARGS=--only=...`; hepsi ~35 dk) |
 | `make sfx` | Blender'ın Python'uyla ses efektlerini (`assets/audio/sfx`, WAV) ve müziği (`assets/audio/music`, OGG) sentezler (`BLENDER=...`, `SFX_ARGS=--sfx` / `--music` / `--only=...`; hepsi ~15 dk) |
+| `make balance` | Aşama 10 denge simülasyonu: `--balance` botu 4 ırk × seed paralel oynar, kat süresi / level / ölüm tablosu (`build/balance/balance.md`; ~15-25 dk, yalnızca denge ayarlanırken) |
+| `make perf` | Aşama 10: oyun penceresinde bot 4. katı 90 sn oynar, saniyelik FPS ve özet (`--perf=SN`) |
+| `make menu-video` | Aşama 10: ana menü videosu → `menu_intro.ogv` + `menu_loop.ogv` + `music/menu.ogg` (`VIDEO=...`, `BLENDER=...`, `MENU_CALM_END=1.3`; ~1 dk) |
+| `make textures` | Aşama 10: sprite sıkıştırma ayarı — renk/normal sayfaları %85 kayıplı WebP, ışıma (`_e`) kayıpsız; `make sprites` sonunda kendisi çalışır |
+| `make clean-alpha` | Aşama 10: sprite ışıma katmanlarında saydam piksellerin rengini sıfırlar (`BLENDER=...`; dosya küçülür, görüntü aynı) |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
 | `make all` | Hepsini sırayla çalıştırır |
 
@@ -1346,7 +1418,7 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 ### Çalışma Kuralları ve Teslim
 
 - **Tek kaynak bu doküman.** Bir tasarım kararı değişecekse önce kullanıcıya sorulur; onaylanan değişiklik hem `data/` dosyalarına hem `docs/GDD.md`'ye işlenir.
-- **Her aşama sonunda:** `make test` → `make export-windows` → .exe zip'ini kullanıcıya gönder → GitHub'a push → kullanıcıya 3-5 maddelik "şunları test et" listesi.
+- **Her aşama sonunda:** `make test` (27 Eyl 2026'dan beri kullanıcı kararıyla çalıştırılmaz; kullanıcı oynayarak test eder) → `make export-windows` → .exe zip'ini kullanıcıya gönder → GitHub'a push → kullanıcıya 3-5 maddelik "şunları test et" listesi.
 - **Test Windows'ta kullanıcıda yapılır.** Hata raporu için log dosyası `%APPDATA%\Godot\app_userdata\<proje adı>\logs` altındadır.
 - **Önce placeholder, sonra sanat.** Oynanış Aşama 7'ye kadar renkli şekillerle yapılır; sanat Aşama 8'de gelir.
 - **Kod:** GDScript'te statik tipler, her script'in başında kısa bir açıklama, koda gömülü denge sayısı yok.

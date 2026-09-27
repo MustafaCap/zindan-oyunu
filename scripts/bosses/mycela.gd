@@ -2,8 +2,8 @@
 ##   Spor Bulutu: oyuncunun çevresinde işaretlenen yerlerde birkaç saniye kalan zehirli bulutlar.
 ##   Kök Patlaması: oyuncunun o anki yerinin altında sırayla işaretlenip fışkıran kökler (sürekli hareket et).
 ##   Spor Oku: yolları önce çizilen 5 sporluk yelpaze.
-## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir; hepsi kırılınca 25 sn sonra yeniden
-## dikilir. Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
+## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir; hepsi kırılınca replant_sec (30 sn)
+## sonra yeniden dikilir. Aşama 10 hata düzeltmesi: dikilme işareti sürerken ikinci bir sayaç başlamaz (eskiden 6 totem olabiliyordu). Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
 ## olur ve çevredeki düşmanlara (Mycela ve totemler dahil) hasar verir.
 ## 2. faz: arena sporla dolar — yalnızca küçülen temiz hava alanları güvenli; Mycela 6 sn'de bir işaretli yere ışınlanır.
 class_name Mycela
@@ -11,6 +11,7 @@ extends Boss
 
 var _clouds: Array[EnemyHazard] = []
 var _replant_t: float = -1.0
+var _planting: int = 0                ## işaretlenip henüz dikilmemiş totem sayısı
 var _wander: Vector2 = Vector2.INF
 var _wander_t: float = 0.0
 var _clean: Array[Vector2] = []       ## 2. faz temiz hava merkezleri
@@ -34,14 +35,17 @@ func _plant_totems() -> void:
 		var off := Vector2.RIGHT.rotated(base + TAU * i / float(m["totems"])) * float(m["totem_distance"])
 		var pt := arena.clamp_inside(arena.point(off))
 		hazard("totems", pt, "circle", float(m["plant_warn"]), 0.0, {"mode": "visual", "radius": 0.8, "color": Color(0.6, 0.35, 0.9)})
-		schedule(float(m["plant_warn"]), func() -> void: add_minion(str(m["add_id"]), pt))
+		_planting += 1
+		schedule(float(m["plant_warn"]), func() -> void:
+			_planting = maxi(_planting - 1, 0)
+			add_minion(str(m["add_id"]), pt))
 	_replant_t = -1.0
 
 
 func tick_mechanic(delta: float) -> void:
 	var m := mech()
 	var totems := alive_minions(str(m["add_id"]))
-	if totems.is_empty() and _replant_t < 0.0 and _time > 3.0:
+	if totems.is_empty() and _replant_t < 0.0 and _planting == 0 and _time > 3.0:
 		_replant_t = float(m["replant_sec"])
 	if _replant_t > 0.0:
 		_replant_t -= delta

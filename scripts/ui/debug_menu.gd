@@ -8,7 +8,7 @@
 ## Aşama 6: "İlerleme (test)" satırı: +1 / +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve
 ## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
 ## Aşama 7: zindanda "Boss odasına ışınlan" (savaş dışında); test odasında "Düşmanlar" listesinden her tür ya da eliti.
-## Nihai arayüz değildir (ayrıntılı arayüz tasarımı GDD Açık Kararlar'da); Aşama 10'da kaldırılacak.
+## Aşama 10 (kullanıcı kararı): oyunda gizli geliştirici menüsü olarak kalır; F5 açar/kapatır (M artık bir şey yapmaz).
 class_name DebugMenu
 extends CanvasLayer
 
@@ -78,7 +78,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var k := (event as InputEventKey).keycode
-		if k == KEY_M or k == KEY_ESCAPE:
+		if k == KEY_F5 or k == KEY_ESCAPE:
 			close()
 			get_viewport().set_input_as_handled()
 

@@ -475,6 +475,8 @@ def emissive_layer(p):
     if e.max() < 0.05:
         return None
     rgb = linear_to_srgb(p["albedo"] * 1.3)
+    # Aşama 10: ışımayan (saydam) piksellerin rengi sıfırlanır — yoksa PNG/WebP gereksiz renk verisi taşır (~35 kat büyük)
+    rgb = np.where(e[..., None] > 0.5 / 255.0, rgb, 0.0)
     return np.concatenate([rgb, e[..., None]], axis=-1).astype(np.float32)
 
 

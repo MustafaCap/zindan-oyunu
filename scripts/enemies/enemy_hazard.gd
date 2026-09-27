@@ -98,6 +98,16 @@ func is_active() -> bool:
 	return _t >= warn and not _done
 
 
+## Vuruşa kalan süre (uyarı bitince 0). Denge botu kaçarken kullanır.
+func time_to_fire() -> float:
+	return maxf(warn - _t, 0.0)
+
+
+## Genişleyen şok halkasının şu anki yarıçapı (karo; uyarı sürerken 0).
+func ring_radius() -> float:
+	return maxf(_t - warn, 0.0) * wave_speed
+
+
 ## Oyuncu şeklin içinde mi?
 func contains_player() -> bool:
 	var p := _player()

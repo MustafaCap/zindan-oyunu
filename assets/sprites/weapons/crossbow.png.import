@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/crossbow.png-200f1a3d1d3497e9ddac3dde2351f0ad
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

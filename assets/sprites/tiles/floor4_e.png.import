@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/floor4_e.png-795d3a9342223e9c541351ce02aea271
 
 compress/mode=0
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

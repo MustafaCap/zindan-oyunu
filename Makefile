@@ -1,6 +1,8 @@
 SHELL := /bin/bash
 # Zindan Oyunu — derleme ve test komutları
 # Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make all
+#           make balance (Aşama 10 denge simülasyonu) | make perf (60 FPS ölçümü, pencerede) | make clean-alpha (sprite PNG temizliği)
+#           make menu-video VIDEO=... (ana menü videosu: giriş + döngü + müzik) | make textures (sprite sıkıştırma ayarı)
 
 GODOT   ?= godot
 BLENDER ?= blender
@@ -15,7 +17,7 @@ DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2 --enemy-hp=0.25
 # Aşama 7 boss testi: bot her katta doğrudan boss'a gider, katın beklenen level ve silah gücüyle (ateş + buz kılıç)
 BOSS_ARGS ?= --autoplay --god --boss-test --seed=7 --weapons=sword:fire,sword:ice
 
-.PHONY: all import test quick unit smoke matrix dungeon bosses sprites sfx export-windows clean
+.PHONY: all import test quick unit smoke matrix dungeon bosses balance perf clean-alpha menu-video textures sprites sfx export-windows clean
 
 all: sprites sfx test export-windows
 
@@ -29,7 +31,7 @@ test: unit smoke matrix dungeon bosses
 # Geliştirme sırasında hızlı kontrol (~1 dk): birim testleri + test odası smoke. Tam paket (make test) aşama sonunda bir kez.
 quick: unit smoke
 
-# Birim testleri (bir test script hatasıyla yarıda kesilirse de başarısız sayılır)
+# Birim testleri (bir test script hatasıyla yarıda kesilirse de başarısız sayılır). Yalnızca bir dosya: make unit TEST_FILTER=menus
 unit: import
 	@$(GODOT) --headless --path . -s tests/run_tests.gd 2>&1 | tee build/unit.log ; \
 	code=$${PIPESTATUS[0]}; \
@@ -69,12 +71,44 @@ bosses: import
 	if [ $$code -ne 0 ]; then echo "BOSSES: başarısız (kod $$code) — ayrıntı: build/bosses.log"; exit 1; fi; \
 	echo "BOSSES: geçti"
 
+# Aşama 10: denge simülasyonu — bot (--balance) tam düşmanla, ölümsüz olmadan, işaretlerden kaçarak ve en güçlü silahları
+# takarak 4 ırk × seed oynar; kat süreleri, level, ölüm ve alınan hasar GDD hedefleriyle tablo olur (build/balance/balance.md).
+# Uzun sürer (8 paralel run ~25 dk); yalnızca denge ayarı yapılırken çalıştırılır, make test'e girmez.
+BALANCE_ARGS ?= --seeds=11,22 --jobs=8
+balance: import
+	$(PYTHON) tools/dev/balance.py --godot="$(GODOT)" $(BALANCE_ARGS)
+
+# Aşama 10: 60 FPS ölçümü — oyun penceresinde (headless değil) bot 4. katı oynar, PerfProbe saniyelik FPS ve özet yazar
+PERF_ARGS ?= --autoplay --god --floor=4 --seed=3 --perf=90
+perf: import
+	@$(GODOT) --path . -- $(PERF_ARGS) 2>&1 | tee build/perf.log | grep -E "\[Perf\]|SCRIPT ERROR"
+
+# Aşama 10: sprite PNG'lerinde saydam piksellerin rengini sıfırlar (ışıma katmanları 38 MB → 2 MB; görüntü değişmez)
+clean-alpha:
+	"$(BLENDER)" -b --factory-startup --python tools/blender/clean_alpha.py -- --pattern=_e.png
+
+# Aşama 10: ana menü videosu — herhangi bir videoyu (MP4, MOV, WebM…) Godot'nun oynattığı Ogg Theora'ya çevirir (~1 dk):
+# assets/video/menu_intro.ogv (tamamı, bir kez), menu_loop.ogv (kansız ilk MENU_CALM_END sn, yavaşlatılmış, ileri-geri döngü)
+# ve assets/audio/music/menu.ogg (videonun sesi, sıçramasız döngü). make menu-video VIDEO="/c/Users/.../video.mp4" BLENDER=...
+VIDEO ?=
+MENU_CALM_END ?= 1.3
+menu-video:
+	"$(BLENDER)" -b --factory-startup --python tools/blender/menu_video.py -- --in="$(VIDEO)" --calm-end=$(MENU_CALM_END)
+	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
+
+# Aşama 10: sprite sıkıştırması — renk ve normal sayfaları %85 kayıplı WebP, ışıma katmanları (_e) kayıpsız (.exe ~146 MB)
+textures:
+	$(PYTHON) tools/dev/texture_compress.py
+	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
+
 # Aşama 8: tüm sprite'lar Blender'da (arka planda) üretilir: 4 ırk, 12 silah, 20 düşman + 4 boss, 4 katın karoları,
 # oda nesneleri, ikonlar. Yalnızca bazıları: make sprites SPRITE_ARGS=--only=warrior,blade,tiles1,icons,props
 # Bu bilgisayarda: make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" (~35 dk)
 SPRITE_ARGS ?=
 sprites:
 	"$(BLENDER)" -b --factory-startup --python tools/blender/render_sprites.py -- $(SPRITE_ARGS)
+	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
+	@$(PYTHON) tools/dev/texture_compress.py
 	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
 
 # Aşama 9: ses efektleri (WAV) ve müzik (OGG) sentezi. Blender'ın Python'u numpy ve OGG kodlayıcısını içerir:

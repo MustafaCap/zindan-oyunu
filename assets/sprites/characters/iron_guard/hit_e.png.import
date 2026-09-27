@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/hit_e.png-c6548ccc6f17c2f1b519e87c79ebbef6.ct
 
 compress/mode=0
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1
