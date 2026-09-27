@@ -40,12 +40,14 @@ var _t: float = 0.0
 var _tick_t: float = 0.0
 var _done: bool = false
 var _hit_once: bool = false
+var _sounded: bool = false   ## Aşama 9: uyarı bitince tehlikenin sesi bir kez çalar
 
 
 func _ready() -> void:
 	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = -2
 	add_to_group("enemy_hazards")
+	Audio.hazard_warned(self, warn, source is Boss and mode != "visual")
 	if log_enabled:
 		telegraph_log.append({"label": label, "warn": warn, "shape": shape, "mode": mode})
 
@@ -58,6 +60,9 @@ func _physics_process(delta: float) -> void:
 		return
 	_t += delta
 	if _t >= warn:
+		if not _sounded:
+			_sounded = true
+			Audio.hazard_fired(label, mode, kind, global_position)
 		var active_t := _t - warn
 		match mode:
 			"burst":

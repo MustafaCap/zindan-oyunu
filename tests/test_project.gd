@@ -39,7 +39,7 @@ func test_mouse_actions() -> void:
 
 func test_autoloads_exist() -> void:
 	var root := (Engine.get_main_loop() as SceneTree).root
-	for n: String in ["Events", "DataDB", "GameState", "SaveManager"]:
+	for n: String in ["Events", "DataDB", "GameState", "SaveManager", "Audio"]:
 		assert_true(root.has_node(n), "autoload yok: " + n)
 
 

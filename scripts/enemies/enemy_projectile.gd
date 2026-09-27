@@ -70,6 +70,7 @@ func _end() -> void:
 	if _done:
 		return
 	_done = true
+	Audio.play(Audio.sound_for("projectile_impacts." + look), global_position)
 	if not puddle.is_empty() and is_inside_tree():
 		var h := EnemyHazard.new()
 		h.shape = "circle"

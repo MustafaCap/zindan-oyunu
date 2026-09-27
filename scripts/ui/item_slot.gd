@@ -30,6 +30,7 @@ func item() -> Variant:
 
 
 func _get_drag_data(_at: Vector2) -> Variant:
+	Audio.play("ui_drag")
 	var data: Variant = ui.call("drag_data_for", self)
 	if data == null:
 		return null

@@ -68,6 +68,7 @@ func open_ui(p_mode: String, p_player: Player, p_prop: RoomProp = null) -> void:
 	_smith_box.visible = mode == "blacksmith"
 	visible = true
 	get_tree().paused = true
+	Audio.play("ui_open")
 	refresh()
 
 
@@ -77,6 +78,7 @@ func close() -> void:
 	visible = false
 	_tooltip.visible = false
 	get_tree().paused = false
+	Audio.play("ui_close")
 	closed.emit()
 
 
@@ -269,17 +271,17 @@ func buy_stock(i: int) -> void:
 		return
 	var it: Variant = stock()[i] if i >= 0 and i < stock().size() else null
 	var name := _item_name(it)
-	_result(Shop.buy(inv(), stock(), i, floor_i(), player_level()), "Satın alındı: %s" % name, true)
+	_result(Shop.buy(inv(), stock(), i, floor_i(), player_level()), "Satın alındı: %s" % name, true, "buy")
 
 
 func buy_potion() -> void:
-	_result(Shop.buy_potion(inv(), floor_i(), race_id()), "İksir alındı", true)
+	_result(Shop.buy_potion(inv(), floor_i(), race_id()), "İksir alındı", true, "buy")
 
 
 func sell_ref(ref: Dictionary) -> void:
 	var it: Variant = inv().get_item(ref)
 	var price := Shop.sell_price(it, floor_i()) if it != null else 0
-	_result(Shop.sell(inv(), ref, floor_i(), GameState.in_combat), "Satıldı: %s (+%d altın)" % [_item_name(it), price], true)
+	_result(Shop.sell(inv(), ref, floor_i(), GameState.in_combat), "Satıldı: %s (+%d altın)" % [_item_name(it), price], true, "sell")
 	if selected and selected.kind == "inv" and inv().get_item(selected.ref) == null:
 		selected = null
 
@@ -313,14 +315,16 @@ func smith_action(action: String) -> void:
 		"traits":
 			why = Shop.reroll_traits(inv(), w, floor_i(), rng)
 			ok = "Yeni özellik: %s" % ", ".join(w.traits.map(func(t: String) -> String: return str(Traits.data(t)["name"])))
-	_result(why, ok, true)
+	_result(why, ok, true, "anvil" if action == "level" else "reroll")
 
 
 # --- sonuç ve yenileme ---
 
-func _result(why: String, ok_text: String, side: bool = false) -> void:
+## ok_sfx: işlem başarılıysa çalan ses (Aşama 9); başarısızsa "deny".
+func _result(why: String, ok_text: String, side: bool = false, ok_sfx: String = "ui_drop") -> void:
 	if why == "same":
 		why = ""
+	Audio.play(ok_sfx if why == "" else "deny")
 	last_message = why if why != "" else ok_text
 	if why == "":
 		changed.emit()

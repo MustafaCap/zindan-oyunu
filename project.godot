@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Zindan Oyunu"
 config/description="2D izometrik roguelike zindan oyunu"
-config/version="0.8.0"
+config/version="0.9.0"
 run/main_scene="res://scenes/game.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 
@@ -17,6 +17,7 @@ Events="*res://scripts/autoload/events.gd"
 DataDB="*res://scripts/autoload/data_db.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 SaveManager="*res://scripts/autoload/save_manager.gd"
+Audio="*res://scripts/autoload/audio.gd"
 
 [debug]
 

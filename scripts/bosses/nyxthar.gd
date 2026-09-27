@@ -88,6 +88,7 @@ func tick_mechanic(delta: float) -> void:
 				Events.floating_text.emit(t["pos"] + Vector2(0, -60), "Meşale söndü", Color(0.7, 0.6, 0.9), 18)
 		if not bool(t["lit"]) and (fire_near(t["pos"], float(m["relight_reach"])) or (swung and fire_swing_reaches(t["pos"], float(m["relight_reach"])))):
 			t["lit"] = true
+			Audio.play("torch_light", t["pos"])
 			Events.area_pulse.emit(t["pos"], float(m["light_radius"]) * 0.5, Color(1.0, 0.7, 0.3))
 			Events.floating_text.emit(t["pos"] + Vector2(0, -60), "Meşale yandı!", Color(1.0, 0.8, 0.4), 20)
 	# Karanlıkta can erir
@@ -193,6 +194,7 @@ func modify_incoming(amount: float, info: Dictionary) -> float:
 				(c as Node2D).call("dissolve")
 		_copies.clear()
 		Events.floating_text.emit(global_position + Vector2(0, -150), "BULDUN!", Color(1.0, 0.85, 0.4), 24)
+		Audio.play("nyx_found")
 	return amount
 
 

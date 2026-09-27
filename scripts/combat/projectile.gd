@@ -157,6 +157,7 @@ func _end_after_hit() -> void:
 
 func _explode() -> void:
 	Events.area_pulse.emit(global_position, explode_radius, color)
+	Audio.play(Audio.sound_for("projectile_explosion"), global_position)
 	for e: Node2D in player.enemies_in_circle(global_position, explode_radius):
 		var d := Iso.to_cart(e.global_position - global_position)
 		var opts := extra_opts.duplicate()

@@ -18,8 +18,10 @@ static func light(p: Player) -> bool:
 		return false  # mızrak havadayken dürtme yok
 	if not p.kit.can_use("light", fam):
 		p.note("%s yetersiz" % p.kit.resource_name(), Color(0.5, 0.7, 1.0))
+		Audio.play("deny")
 		return false
 	p.kit.use("light", fam)
+	Audio.weapon(w.type_id, "light", p.global_position)
 	p.end_phase()
 	p.attack_cd = p.attack_interval(w)
 	p.uses["light"] = int(p.uses["light"]) + 1
@@ -76,12 +78,14 @@ static func heavy_pressed(p: Player) -> bool:
 	var style := str(hd["style"])
 	if style == "spear_throw" and is_instance_valid(p.spear_out):
 		p.spear_out.recall()
+		Audio.weapon(w.type_id, "heavy", p.global_position)
 		return true
 	if not p.kit.can_use("heavy", fam):
 		if not p.kit.is_ready("heavy"):
 			p.note("Sağ tık bekliyor %.1f sn" % float(p.kit.cooldowns["heavy"]))
 		else:
 			p.note("%s yetersiz" % p.kit.resource_name(), Color(0.5, 0.7, 1.0))
+		Audio.play("deny")
 		return false
 	if style == "charge_shot":
 		p.charging = true
@@ -91,6 +95,7 @@ static func heavy_pressed(p: Player) -> bool:
 	p.kit.use("heavy", fam, style != "spear_throw")
 	p.end_phase()
 	p.uses["heavy"] = int(p.uses["heavy"]) + 1
+	Audio.weapon(w.type_id, "heavy", p.global_position)
 	_do_heavy(p, w, hd, style)
 	p.effects.on_heavy(w)
 	return true
@@ -105,6 +110,7 @@ static func heavy_released(p: Player) -> void:
 	var hd: Dictionary = w.type_data()["heavy"]
 	if not p.kit.use("heavy", w.family()):
 		return
+	Audio.weapon(w.type_id, "heavy", p.global_position)
 	p.end_phase()
 	p.uses["heavy"] = int(p.uses["heavy"]) + 1
 	var k := clampf(p.charge_t / float(hd["charge_time"]), 0.0, 1.0)
@@ -169,6 +175,7 @@ static func _do_heavy(p: Player, w: Weapon, hd: Dictionary, style: String) -> vo
 				var hit_fn := func() -> void:
 					if not is_instance_valid(p) or p.dead:
 						return
+					Audio.weapon(w.type_id, "heavy", p.global_position)
 					var r3 := float(hd["range"])
 					var a3 := float(hd["arc_degrees"])
 					p.slash_fx(r3, a3 * 0.5, false, p.facing_cart.rotated(deg_to_rad(-20.0 if i % 2 == 0 else 20.0)))

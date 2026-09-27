@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Zindan Oyunu — derleme ve test komutları
-# Kullanım: make test | make unit | make smoke | make matrix | make dungeon | make bosses | make export-windows | make all
+# Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make all
 
 GODOT   ?= godot
 BLENDER ?= blender
@@ -77,8 +77,13 @@ sprites:
 	"$(BLENDER)" -b --factory-startup --python tools/blender/render_sprites.py -- $(SPRITE_ARGS)
 	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
 
+# Aşama 9: ses efektleri (WAV) ve müzik (OGG) sentezi. Blender'ın Python'u numpy ve OGG kodlayıcısını içerir:
+# make sfx BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" (~15 dk; efektler ~30 sn).
+# Yalnızca bazıları: SFX_ARGS=--only=hit_flesh,floor_1 · yalnızca efektler: SFX_ARGS=--sfx · yalnızca müzik: SFX_ARGS=--music
+SFX_ARGS ?=
 sfx:
-	$(PYTHON) tools/audio/sfx_synth.py
+	"$(BLENDER)" -b --factory-startup --python tools/audio/sfx_synth.py -- $(SFX_ARGS)
+	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
 
 export-windows: import
 	rm -rf $(WIN_DIR) && mkdir -p $(WIN_DIR)

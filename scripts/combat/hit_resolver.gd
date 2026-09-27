@@ -70,8 +70,10 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	# Element durumu
 	if kind != P and not immune and not target.get("dead"):
 		var applied := st.apply_element(kind, dmg)
+		Audio.element(kind, target.global_position)
 		if applied["froze"]:
 			_text(target, "DONDU", Weapon.kind_color("ice"))
+			Audio.play(Audio.sound_for("hits.freeze"), target.global_position)
 
 	# Kombo etkisi
 	if not combo.is_empty():
@@ -96,6 +98,7 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	if ex_s > 0.0 and not target.get("dead") \
 			and Traits.should_execute(float(target.get("hp")), float(target.get("max_hp")), bool(target.get("is_boss")), ex_s, ex_bonus):
 		_text(target, "İNFAZ", Color(1.0, 0.3, 0.25))
+		Audio.play(Audio.sound_for("hits.execute"), target.global_position)
 		target.call("execute", dir)
 		res["executed"] = true
 	var stun_s := trait_scale(weapon, "stun", opts)

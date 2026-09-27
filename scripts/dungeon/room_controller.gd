@@ -60,6 +60,7 @@ func enter() -> void:
 		return
 	state = State.ACTIVE
 	run.call("set_room_locked", info.id, true)
+	Audio.play("door_slam")
 	GameState.set_in_combat(true)
 	_delay = float(_waves_cfg["first_wave_delay_sec"])
 
@@ -153,6 +154,7 @@ func _touches_obstacle(c: Vector2i) -> bool:
 func _finish() -> void:
 	state = State.CLEARED
 	run.call("set_room_locked", info.id, false)
+	Audio.play("door_open")
 	GameState.set_in_combat(false)
 	Events.room_cleared.emit(info.id)
 	cleared.emit(info.id)

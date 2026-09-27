@@ -31,6 +31,7 @@ func _physics_process(delta: float) -> void:
 
 func _explode() -> void:
 	_done = true
+	Audio.play("explosion_small", global_position)
 	Events.area_pulse.emit(global_position, radius, Color(1.0, 0.35, 0.2))
 	Events.floating_text.emit(global_position + Vector2(0, -60), "TUZAK!", Color(1.0, 0.4, 0.3), 24)
 	var p := get_tree().get_first_node_in_group("player") as Player
