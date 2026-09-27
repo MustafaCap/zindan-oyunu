@@ -4,7 +4,8 @@
 ## yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler (bag_size > 0 olursa çanta geri gelir).
 ##   Aktif 1 / Aktif 2: yalnızca açık (kilitsiz) silah.   Rezonans: kilitli ya da açık silah.
 ##   Esnek: silah (kilitli ya da açık) ya da tılsım.
-## Kurallar: en az bir aktif silah kalır; savaş sürerken (GameState.in_combat) slotlara dokunulamaz ve eşya alınamaz.
+## Kurallar: en az bir aktif silah kalır; in_combat parametresi "slotlar kilitli" demektir (GameState.slots_locked():
+## v0.10.1'den beri savaşta da serbest, economy.slots_in_combat). Yerden eşya alma savaşta kapalıdır (DungeonRun.pick_up).
 ## Dolu yere bırakılan eşya yer değiştirir (karşı taraf da kurala uymalı).
 ## Eşya adresi (ref): {"area": "bag", "index": i} ya da {"area": "slot", "name": "active_1"}.
 class_name Inventory

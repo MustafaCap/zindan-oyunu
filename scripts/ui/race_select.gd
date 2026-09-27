@@ -3,6 +3,9 @@
 ## ustalık leveli. Tıklayınca ya da ←/→, 1-4 ile seçilir (seçilen kart kan kırmızısı çerçeveli, karakter saldırır);
 ## çift tık ya da Enter / "Zindana in" run'ı başlatır, Esc / "Geri" ana menüye döner. Seçim TestRoom.config'e yazılır
 ## (DungeonRun run'ı oradan kurar) ve bir sonraki açılışta aynı ırk seçili gelir.
+## v0.10.1 (kullanıcı kararı): her kartın altında ırkın silah ailesindeki 3 tipin düğmesi — başlangıç silahı (Yaygın,
+## level 1) bunlardan seçilir; ↑/↓ (W/S) seçili ırkın silahını değiştirir. Irk ve silah seçimleri user://menu.json'a
+## kaydedilir, oyun yeniden açılınca da hatırlanır (prefs_path; testler ayrı dosya kullanır).
 class_name RaceSelect
 extends Control
 
@@ -10,8 +13,14 @@ const GAME_SCENE := "res://scenes/game.tscn"
 const MENU_SCENE := "res://scenes/main_menu.tscn"
 const ORDER: Array[String] = ["warrior", "ghost", "archer", "magical"]
 
+## Seçimlerin kaydı (oyuncunun ırkı ve ırk başına başlangıç silahı). Testler değiştirir.
+static var prefs_path: String = "user://menu.json"
+
 var selected: String = "warrior"
 var cards: Dictionary = {}          ## ırk -> Button
+var start_choice: Dictionary = {}   ## ırk -> başlangıç silahı tipi (ailesinden)
+var weapon_buttons: Dictionary = {} ## ırk -> {tip: Button}
+var texts: Dictionary = {}          ## ırk -> RichTextLabel (kart metni)
 var bodies: Dictionary = {}         ## ırk -> PlaceholderBody (SpriteBody)
 var start_button: Button
 var _fade: ColorRect
@@ -29,8 +38,15 @@ func _ready() -> void:
 	add_child(base)
 	MainMenu.add_ember_backdrop(self)
 	add_child(UiTheme.vignette(0.9))
+	_load_prefs()
 	if not TestRoom.config.is_empty() and ORDER.has(str(TestRoom.config.get("race", ""))):
 		selected = str(TestRoom.config["race"])
+		var sw := str(TestRoom.config.get("start_weapon", ""))
+		if LootGenerator.family_types(selected).has(sw):
+			start_choice[selected] = sw
+	for id: String in ORDER:
+		if not LootGenerator.family_types(id).has(str(start_choice.get(id, ""))):
+			start_choice[id] = str(DataDB.table("economy")["start_weapons"][id])
 	_build()
 	_fade = ColorRect.new()
 	_fade.color = Color.BLACK
@@ -51,19 +67,26 @@ func _ready() -> void:
 func _build() -> void:
 	var col := VBoxContainer.new()
 	col.set_anchors_preset(Control.PRESET_FULL_RECT)
-	col.offset_top = 70
-	col.offset_bottom = -60
-	col.add_theme_constant_override("separation", 26)
+	col.offset_top = 40
+	col.offset_bottom = -40
+	col.add_theme_constant_override("separation", 18)
 	col.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(col)
 	col.add_child(UiTheme.title("Irkını seç", 52, Color(0.82, 0.66, 0.52)))
+	var hint := UiTheme.label("←/→ ya da 1-4: ırk  ·  ↑/↓: başlangıç silahı  ·  Enter: zindana in", 17, UiTheme.ASH)
+	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(hint)
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 26)
 	col.add_child(row)
 	for id: String in ORDER:
+		var holder := VBoxContainer.new()
+		holder.add_theme_constant_override("separation", 8)
 		var c := _card(id)
-		row.add_child(c)
+		holder.add_child(c)
+		holder.add_child(_weapon_row(id))
+		row.add_child(holder)
 		cards[id] = c
 	var bar := HBoxContainer.new()
 	bar.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -84,7 +107,7 @@ func _build() -> void:
 func _card(id: String) -> Button:
 	var r: Dictionary = DataDB.table("races")[id]
 	var b := Button.new()
-	b.custom_minimum_size = Vector2(390, 690)
+	b.custom_minimum_size = Vector2(390, 650)
 	b.focus_mode = Control.FOCUS_NONE
 	b.add_theme_stylebox_override("normal", UiTheme.panel_box())
 	b.add_theme_stylebox_override("hover", UiTheme.panel_box(UiTheme.BLOOD))
@@ -96,11 +119,11 @@ func _card(id: String) -> Button:
 	# Karakter: sprite alanının ortasında, yere basar gibi; hafif kızıl zemin ışığı
 	var stage := Control.new()
 	stage.position = Vector2(0, 10)
-	stage.size = Vector2(390, 330)
+	stage.size = Vector2(390, 300)
 	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	stage.draw.connect(func() -> void:
 		var c := Color(0.45, 0.06, 0.04, 0.3)
-		stage.draw_set_transform(Vector2(195, 300), 0.0, Vector2(1.0, 0.42))
+		stage.draw_set_transform(Vector2(195, 280), 0.0, Vector2(1.0, 0.42))
 		for i: int in 6:
 			stage.draw_circle(Vector2.ZERO, 150.0 - i * 20.0, Color(c, c.a * (0.2 + i * 0.1)))
 		stage.draw_circle(Vector2.ZERO, 62.0, Color(0, 0, 0, 0.6))
@@ -108,9 +131,9 @@ func _card(id: String) -> Button:
 	b.add_child(stage)
 	var body := SpriteBody.create(str(r.get("sprite", "")))
 	body.body_color = Color(str(r["placeholder_color"]))
-	var start_type := str(DataDB.table("economy")["start_weapons"][id])
+	var start_type := str(start_choice.get(id, DataDB.table("economy")["start_weapons"][id]))
 	body.weapon_style = str(DataDB.table("weapon_types")[start_type]["visual"])
-	body.position = Vector2(195, 300)
+	body.position = Vector2(195, 280)
 	body.scale = Vector2(3.3, 3.3)
 	body.light_mask = 2
 	stage.add_child(body)
@@ -126,7 +149,7 @@ func _card(id: String) -> Button:
 	body.set_facing(Vector2(1, 1).normalized())
 	bodies[id] = body
 	var info := VBoxContainer.new()
-	info.position = Vector2(26, 352)
+	info.position = Vector2(26, 316)
 	info.size = Vector2(338, 320)
 	info.add_theme_constant_override("separation", 6)
 	info.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -146,13 +169,85 @@ func _card(id: String) -> Button:
 	t.custom_minimum_size = Vector2(338, 0)
 	t.add_theme_font_size_override("normal_font_size", 18)
 	t.add_theme_font_size_override("bold_font_size", 18)
-	t.text = describe(id)
+	t.text = describe(id, start_type)
 	info.add_child(t)
+	texts[id] = t
 	return b
 
 
+## Kartın altındaki 3 düğme: ırkın ailesindeki silah tipleri; basılı olan başlangıç silahıdır.
+func _weapon_row(id: String) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 6)
+	var group := ButtonGroup.new()
+	weapon_buttons[id] = {}
+	for t: String in LootGenerator.family_types(id):
+		var wb := Button.new()
+		wb.text = str(DataDB.table("weapon_types")[t]["name"])
+		wb.toggle_mode = true
+		wb.button_group = group
+		wb.focus_mode = Control.FOCUS_NONE
+		wb.custom_minimum_size = Vector2(126, 46)
+		wb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		wb.add_theme_font_size_override("font_size", 18)
+		wb.tooltip_text = "Başlangıç silahı: Yaygın %s (level 1)" % wb.text.to_lower()
+		wb.button_pressed = t == str(start_choice[id])
+		wb.pressed.connect(func() -> void:
+			select(id, id != selected)
+			choose_weapon(id, t))
+		h.add_child(wb)
+		weapon_buttons[id][t] = wb
+	return h
+
+
+## Irkın başlangıç silahını seçer: düğme, karttaki sprite'ın elindeki silah ve metin güncellenir.
+func choose_weapon(id: String, type_id: String, animate: bool = true) -> void:
+	if not LootGenerator.family_types(id).has(type_id):
+		return
+	var changed := str(start_choice.get(id, "")) != type_id
+	start_choice[id] = type_id
+	var btns: Dictionary = weapon_buttons.get(id, {})
+	if btns.has(type_id):
+		(btns[type_id] as Button).set_pressed_no_signal(true)
+	if bodies.has(id):
+		(bodies[id] as PlaceholderBody).weapon_style = str(DataDB.table("weapon_types")[type_id]["visual"])
+		if animate and changed:
+			(bodies[id] as PlaceholderBody).play_attack()
+	if texts.has(id):
+		(texts[id] as RichTextLabel).text = describe(id, type_id)
+	if animate and changed:
+		Audio.play("ui_click")
+
+
+## Seçimleri okur (bozuk ya da eksik dosyada varsayılanlar).
+func _load_prefs() -> void:
+	if not FileAccess.file_exists(prefs_path):
+		return
+	var f := FileAccess.open(prefs_path, FileAccess.READ)
+	if f == null:
+		return
+	var d: Variant = JSON.parse_string(f.get_as_text())
+	if not d is Dictionary:
+		return
+	var dd: Dictionary = d
+	if ORDER.has(str(dd.get("race", ""))):
+		selected = str(dd["race"])
+	var sw: Variant = dd.get("start_weapons", {})
+	if sw is Dictionary:
+		for id: String in ORDER:
+			if LootGenerator.family_types(id).has(str((sw as Dictionary).get(id, ""))):
+				start_choice[id] = str((sw as Dictionary)[id])
+
+
+func _save_prefs() -> void:
+	var f := FileAccess.open(prefs_path, FileAccess.WRITE)
+	if f == null:
+		return
+	f.store_string(JSON.stringify({"race": selected, "start_weapons": start_choice}, "  "))
+
+
 ## Kartın metni (testler de kullanır): statlar, kaynak, yetenekler, pasif, silah ailesi, başlangıç silahı ve ustalığı.
-static func describe(id: String) -> String:
+static func describe(id: String, start_type: String = "") -> String:
 	var r: Dictionary = DataDB.table("races")[id]
 	var ab: Dictionary = r["abilities"]
 	var fam: PackedStringArray = []
@@ -160,7 +255,8 @@ static func describe(id: String) -> String:
 	for t: String in DataDB.records(wt):
 		if str(wt[t]["family"]) == str(r["family"]):
 			fam.append(str(wt[t]["name"]))
-	var start_type := str(DataDB.table("economy")["start_weapons"][id])
+	if not LootGenerator.family_types(id).has(start_type):
+		start_type = str(DataDB.table("economy")["start_weapons"][id])
 	var lines: PackedStringArray = []
 	lines.append("Can [b]%d[/b] (+%s/level) · Zırh %%%d · Hız %s" % [int(r["base_hp"]), _num(float(r["hp_per_level"])),
 		roundi(float(r["armor"]) * 100.0), _num(float(r["move_speed"]))])
@@ -219,8 +315,10 @@ func start_run() -> void:
 		return
 	var cfg := TestRoom.default_config()
 	cfg["race"] = selected
+	cfg["start_weapon"] = str(start_choice.get(selected, ""))
 	TestRoom.config = cfg
-	print("[Menü] Irk seçildi: %s" % selected)
+	_save_prefs()
+	print("[Menü] Irk seçildi: %s (başlangıç silahı: %s)" % [selected, cfg["start_weapon"]])
 	_leave(GAME_SCENE)
 
 
@@ -245,6 +343,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			select(ORDER[(i + 1) % 4])
 		KEY_1, KEY_2, KEY_3, KEY_4:
 			select(ORDER[k - KEY_1])
+		KEY_UP, KEY_W, KEY_DOWN, KEY_S:
+			var types := LootGenerator.family_types(selected)
+			var j := types.find(str(start_choice.get(selected, "")))
+			var step := -1 if k == KEY_UP or k == KEY_W else 1
+			choose_weapon(selected, types[(maxi(j, 0) + step + types.size()) % types.size()])
 		KEY_ENTER, KEY_KP_ENTER, KEY_SPACE:
 			start_run()
 		KEY_ESCAPE:

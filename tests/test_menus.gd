@@ -55,6 +55,8 @@ func test_race_select_describes_each_race() -> void:
 
 func test_race_select_writes_config() -> void:
 	TestRoom.config = {}
+	RaceSelect.prefs_path = "user://menu_unit_tests.json"
+	DirAccess.remove_absolute(RaceSelect.prefs_path)
 	var rs := RaceSelect.new()
 	_tree().root.add_child(rs)
 	assert_eq(rs.selected, "warrior", "varsayılan Warrior")
@@ -63,15 +65,38 @@ func test_race_select_writes_config() -> void:
 	assert_eq(rs.selected, "ghost", "→ sonraki ırk")
 	rs._unhandled_input(_key(KEY_4))
 	assert_eq(rs.selected, "magical", "4 tuşu")
+	# v0.10.1: kartın altında ailenin 3 silahı; varsayılan asa, ↓ ile sonraki (rün), düğmeyle kitap
+	assert_eq((rs.weapon_buttons["magical"] as Dictionary).size(), 3, "3 silah düğmesi")
+	assert_eq(str(rs.start_choice["magical"]), "staff", "varsayılan başlangıç silahı")
+	rs._unhandled_input(_key(KEY_DOWN))
+	assert_eq(str(rs.start_choice["magical"]), "rune", "↓ sonraki silah")
+	(rs.weapon_buttons["magical"]["tome"] as Button).pressed.emit()
+	assert_eq(str(rs.start_choice["magical"]), "tome", "düğmeyle seçilir")
+	assert_true("Kitap · ustalık" in (rs.texts["magical"] as RichTextLabel).text, "kart metni seçilen silahı yazar")
+	(rs.weapon_buttons["warrior"]["axe"] as Button).pressed.emit()
+	assert_eq(rs.selected, "warrior", "başka ırkın silah düğmesi o ırkı seçer")
+	rs.select("magical")
 	rs.start_run()
 	assert_eq(str(TestRoom.config["race"]), "magical", "seçim run'a gider")
+	assert_eq(str(TestRoom.config["start_weapon"]), "tome", "başlangıç silahı run'a gider")
 	assert_eq(int(TestRoom.config["level"]), 1)
 	rs.free()
-	# Bir sonraki açılışta aynı ırk seçili gelir
+	GameState.start_run("magical", "tome")
+	var w: Weapon = GameState.inventory.slots["active_1"]
+	assert_true(w.type_id == "tome" and w.rarity_id == "common" and w.level == 1, "run Yaygın level 1 kitapla başlar")
+	GameState.start_run("magical", "sword")
+	assert_eq((GameState.inventory.slots["active_1"] as Weapon).type_id, "staff", "başka aileden seçim geçersiz → varsayılan")
+	GameState.reset_run()
+	# Bir sonraki açılışta aynı ırk ve silahlar seçili gelir (oyun yeniden açılsa da: dosyadan)
+	TestRoom.config = {}
 	var rs2 := RaceSelect.new()
 	_tree().root.add_child(rs2)
 	assert_eq(rs2.selected, "magical")
+	assert_eq(str(rs2.start_choice["magical"]), "tome", "silah seçimi hatırlanır")
+	assert_eq(str(rs2.start_choice["warrior"]), "axe", "diğer ırkların seçimi de")
 	rs2.free()
+	DirAccess.remove_absolute(RaceSelect.prefs_path)
+	RaceSelect.prefs_path = "user://menu.json"
 
 
 func test_pause_menu_pauses_and_confirms_abandon() -> void:

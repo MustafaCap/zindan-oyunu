@@ -9,11 +9,15 @@
 ## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
 ## Aşama 7: zindanda "Boss odasına ışınlan" (savaş dışında); test odasında "Düşmanlar" listesinden her tür ya da eliti.
 ## Aşama 10 (kullanıcı kararı): oyunda gizli geliştirici menüsü olarak kalır; F5 açar/kapatır (M artık bir şey yapmaz).
+## v0.10.1 (kullanıcı testi): kat seçimi açılır liste yerine 4 düğme (listeden seçim menü açıkken işlemiyordu, hep 1. kat
+## açılıyordu); menü o anki katla açılır. "Bu kata ışınlan" karakteri (level, envanter, ödüller) koruyarak seçilen katın
+## yeni haritasına götürür (savaş dışında); "Bu kattan yeni run" run'ı o kattan sıfırdan başlatır.
 class_name DebugMenu
 extends CanvasLayer
 
 signal applied(config: Dictionary)
-## Zindan/test odası düğmeleri: "new_map" (config["floor"] katından yeni harita), "test_room", "dungeon".
+## Zindan/test odası düğmeleri: "floor_teleport" (config["floor"] katına ışınlan, karakter kalır), "new_map" (o kattan
+## yeni run), "test_room", "dungeon".
 signal action(action_name: String, config: Dictionary)
 
 const LEVELS := [1, 10, 20, 40, 60, 80]
@@ -41,7 +45,7 @@ var _info: Label
 var _type_ids: Array = []
 var _element_ids: Array = []
 var _trait_ids: Array = []
-var _floor: OptionButton
+var _floor_buttons: Array[Button] = []
 var _god: CheckBox
 var _enemy_row: Control
 var _ok: Button
@@ -60,7 +64,7 @@ func _ready() -> void:
 
 func open(current: Dictionary) -> void:
 	config = current.duplicate(true)
-	if not config.has("floor"):
+	if context == "dungeon" or not config.has("floor"):
 		config["floor"] = maxi(GameState.floor_index, 1)
 	_load_config()
 	set_lock_reason("")
@@ -109,8 +113,8 @@ func _build() -> void:
 
 	var title := _label("Hata Ayıklama Menüsü", 28, Color(1, 0.9, 0.6))
 	box.add_child(title)
-	var sub := "Irk ve level seç; 'Uygula' yerinde uygular (savaş dışında). Silahlar envanterde: 'Silahları boş slotlara ekle'. (M / Esc: kapat)" \
-		if context == "dungeon" else "Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (M / Esc: kapat)"
+	var sub := "Irk ve level seç; 'Uygula' yerinde uygular (savaş dışında). Silahlar envanterde: 'Silahları boş slotlara ekle'. (F5 / Esc: kapat)" \
+		if context == "dungeon" else "Irk, level ve iki aktif silahı seç; 'Uygula' test odasını bu ayarla yeniden kurar. (F5 / Esc: kapat)"
 	box.add_child(_label(sub, 15, Color(0.7, 0.7, 0.75)))
 
 	# Irk
@@ -160,17 +164,39 @@ func _build() -> void:
 			_refresh_info())
 		_slots.append([t_opt, e_opt, r_opt])
 
-	# Zindan: kat seçimi, yeni harita, sahne geçişi
-	var dn_row := _row(box, "Zindan")
-	_floor = _option(dn_row, ["1. kat", "2. kat", "3. kat", "4. kat"], 120)
-	_floor.item_selected.connect(func(i: int) -> void: config["floor"] = i + 1)
+	# Kat: 4 düğme (açılır liste değil), ışınlanma ve o kattan yeni run
+	var fl_row := _row(box, "Kat")
+	var fgroup := ButtonGroup.new()
+	for fi: int in range(1, 5):
+		var fb := Button.new()
+		fb.text = "%d. kat" % fi
+		fb.toggle_mode = true
+		fb.button_group = fgroup
+		fb.custom_minimum_size = Vector2(90, 38)
+		fb.add_theme_font_size_override("font_size", 16)
+		fb.pressed.connect(func() -> void: config["floor"] = fi)
+		fl_row.add_child(fb)
+		_floor_buttons.append(fb)
+	if context == "dungeon":
+		var tp := Button.new()
+		tp.text = "Bu kata ışınlan"
+		tp.tooltip_text = "Level, envanter ve ödüller kalır; seçilen katın yeni haritasının girişine gidersin (savaş dışında)."
+		tp.custom_minimum_size = Vector2(190, 38)
+		tp.pressed.connect(func() -> void:
+			close()
+			action.emit("floor_teleport", config.duplicate(true)))
+		fl_row.add_child(tp)
 	var new_map := Button.new()
-	new_map.text = "Bu kattan yeni harita"
-	new_map.custom_minimum_size = Vector2(230, 38)
+	new_map.text = "Bu kattan yeni run"
+	new_map.tooltip_text = "Run sıfırlanır: menüdeki ırk ve levelle, başlangıç silahıyla seçilen kattan başlarsın."
+	new_map.custom_minimum_size = Vector2(190, 38)
 	new_map.pressed.connect(func() -> void:
 		close()
 		action.emit("new_map", config.duplicate(true)))
-	dn_row.add_child(new_map)
+	fl_row.add_child(new_map)
+
+	# Zindan: sahne geçişi, ölümsüzlük
+	var dn_row := _row(box, "Zindan")
 	var switch := Button.new()
 	switch.text = "Test odasına git" if context == "dungeon" else "Zindana git"
 	switch.custom_minimum_size = Vector2(200, 38)
@@ -262,7 +288,7 @@ func _load_config() -> void:
 		(_slots[slot][0] as OptionButton).select(maxi(_type_ids.find(wc["type"]), 0))
 		(_slots[slot][1] as OptionButton).select(maxi(_element_ids.find(wc["element"]), 0))
 		(_slots[slot][2] as OptionButton).select(maxi(_trait_ids.find(wc["trait"]), 0))
-	_floor.select(clampi(int(config.get("floor", 1)) - 1, 0, 3))
+	_floor_buttons[clampi(int(config.get("floor", 1)) - 1, 0, 3)].button_pressed = true
 	_god.set_pressed_no_signal(bool(config.get("god", false)))
 	var modes := enemy_modes()
 	for i: int in modes.size():

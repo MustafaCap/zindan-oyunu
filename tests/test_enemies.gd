@@ -283,12 +283,15 @@ func test_kordrak_cooling() -> void:
 	var rb := _boss_run(3)
 	var run: DungeonRun = rb[0]
 	var k: Kordrak = rb[1]
-	assert_almost(k.defense.armor, 0.7, 0.001, "plakalar %70 azaltır")
+	var plate := float(k.mech()["plate_damage_reduction"])
+	assert_almost(plate, 0.5, 0.001, "v0.10.1: plakalar %50 azaltır")
+	assert_almost(k.defense.armor, plate, 0.001, "plakalar zırh terimi")
+	assert_almost(float(k.bdata["stats"]["hp"]), 21000.0, 0.1, "v0.10.1: Kordrak canı 21.000")
 	for i: int in 5:
 		k.modify_incoming(10.0, {"kind": "ice"})
 	assert_eq(k.defense.armor, 0.0, "5 buz yığınında plakalar kırılır")
 	k.tick_mechanic(10.5)
-	assert_almost(k.defense.armor, 0.7, 0.001, "10 sn sonra plakalar döner")
+	assert_almost(k.defense.armor, plate, 0.001, "10 sn sonra plakalar döner")
 	k.enter_phase2()
 	assert_eq(k.defense.armor, 0.0, "2. fazda plakalar kalıcı düşer")
 	run.free()
@@ -300,25 +303,29 @@ func test_mycela_totems_and_fire_burst() -> void:
 	var rb := _boss_run(2)
 	var run: DungeonRun = rb[0]
 	var my: Mycela = rb[1]
-	my._plant_totems()
+	# v0.10.1 (kullanıcı kararı): totemler dövüş başında değil, can %20'ye inince yalnızca bir kez dikilir
+	my._time += 5.0
+	my._run_schedule()
+	my.tick_mechanic(0.1)
+	assert_eq(my.alive_minions("spore_totem").size(), 0, "dövüş başında totem yok")
+	my.hp = my.max_hp * 0.25
+	my.tick_mechanic(0.1)
+	assert_true(not my.totems_planted, "%25 canda henüz dikilmez")
+	my.hp = my.max_hp * 0.19
+	my.tick_mechanic(0.1)
+	assert_true(my.totems_planted, "%20'nin altında dikilir")
 	my._time += 2.0
 	my._run_schedule()
 	assert_eq(my.alive_minions("spore_totem").size(), 3, "3 totem dikildi")
-	# Aşama 10 hatası: totemler kırılınca yeniden dikilirken (işaret süresi) ikinci bir sayaç başlamamalı → hep en fazla 3
-	my._time += 5.0
-	my._run_schedule()   # dövüş başında zamanlanan dikimler de bitsin
 	for t: Node2D in my.alive_minions("spore_totem"):
 		t.set("dead", true)
-	my.tick_mechanic(0.1)
-	assert_true(my._replant_t > 0.0, "üçü kırılınca yeniden dikme sayacı")
-	my.tick_mechanic(float(my.mech()["replant_sec"]))
-	assert_eq(my._planting, 3, "yeniden dikiliyor (işaretli)")
-	my.tick_mechanic(0.1)
-	assert_true(my._replant_t < 0.0, "dikilirken ikinci sayaç başlamaz")
+	my.tick_mechanic(60.0)
+	my._time += 60.0
+	my._run_schedule()
+	assert_eq(my.alive_minions("spore_totem").size(), 0, "kırılan totemler yeniden dikilmez")
+	my._plant_totems()
 	my._time += 2.0
 	my._run_schedule()
-	my.tick_mechanic(float(my.mech()["replant_sec"]) + 1.0)
-	assert_eq(my.alive_minions("spore_totem").size(), 3, "yine 3 totem (6 değil)")
 	my.hp = my.max_hp * 0.6
 	var hp0 := my.hp
 	my.tick_mechanic(1.0)

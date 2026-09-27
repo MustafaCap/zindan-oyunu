@@ -764,6 +764,10 @@ func apply_damage(amount: float, info: Dictionary) -> void:
 		Audio.play(Audio.sound_for("hits.immune"), global_position)
 		Events.hit_landed.emit(global_position + Vector2(0, -20), 0.0, false, false, dir)
 		return
+	# v0.10.1: bağışık hedefe ana vuruş %75 işler; "BAĞIŞIK" yazısı yine görünür (ek etkiler işlemedi)
+	if bool(info.get("immune", false)) and _immune_text_cd <= 0.0:
+		Events.floating_text.emit(global_position + Vector2(0, -56), "BAĞIŞIK", Color(0.75, 0.75, 0.78), 16)
+		_immune_text_cd = 0.5
 	hp = maxf(hp - amount, 0.0)
 	if bot_kill_hits > 0:
 		_bot_hits += 1

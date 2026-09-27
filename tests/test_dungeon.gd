@@ -181,12 +181,14 @@ func test_enemy_mult_override() -> void:
 	assert_eq(normal, 30, "çarpan 0,5 ile 60 → 30")
 
 
-## GDD: slot değişimi yalnızca oda dışında.
+## v0.10.1 (kullanıcı kararı): envanter savaşta da düzenlenebilir (economy.slots_in_combat).
 func test_slot_change_rule() -> void:
 	GameState.set_in_combat(false)
 	assert_true(GameState.can_change_slots(), "savaş dışında serbest")
 	GameState.set_in_combat(true)
-	assert_true(not GameState.can_change_slots(), "savaşta kapalı")
+	assert_true(bool(DataDB.get_value("economy", "slots_in_combat")), "veri: savaşta düzenleme açık")
+	assert_true(GameState.can_change_slots(), "savaşta da serbest")
+	assert_true(not GameState.slots_locked(), "slotlar kilitli değil")
 	GameState.set_in_combat(false)
 
 

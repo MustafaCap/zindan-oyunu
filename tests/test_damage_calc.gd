@@ -29,16 +29,20 @@ func test_plain_hit_is_base_damage() -> void:
 	assert_almost(DamageCalc.compute(_hit(125.0), DamageCalc.Defense.new()), 125.0, 0.0001, "terimsiz vuruş = T")
 
 
-func test_immune_is_zero() -> void:
+## v0.10.1 (kullanıcı kararı): bağışık hedefe ana vuruş %75, ek etki (ikincil vuruş) 0.
+func test_immune_primary_75_secondary_zero() -> void:
 	var stone := DamageCalc.Defense.new(["lightning"], [], ["ice"])
-	assert_eq(DamageCalc.compute(_hit(125.0, "lightning"), stone), 0.0, "taşa yıldırım 0")
+	assert_almost(DamageCalc.compute(_hit(100.0, "lightning"), stone), 75.0, 0.0001, "taşa yıldırım ana vuruşta %75")
 	assert_true(DamageCalc.is_immune("lightning", stone), "bağışık sayılır")
+	var sec := _hit(100.0, "lightning")
+	sec.secondary = true
+	assert_eq(DamageCalc.compute(sec, stone), 0.0, "ek etki bağışıklıkta 0")
 
 
-func test_common_weapon_vs_ghost_is_quarter() -> void:
+func test_common_weapon_vs_ghost_same_rule() -> void:
 	var ghost := DamageCalc.Defense.new(["physical"], [], ["fire"])
-	assert_almost(DamageCalc.compute(_hit(100.0), ghost), 25.0, 0.0001, "yaygın silah hayalete %25")
-	assert_true(not DamageCalc.is_immune("physical", ghost), "fiziksel tamamen bağışık sayılmaz (%25 işler)")
+	assert_almost(DamageCalc.compute(_hit(100.0), ghost), 75.0, 0.0001, "yaygın silah hayalete de %75 (tek kural)")
+	assert_true(DamageCalc.is_immune("physical", ghost), "fiziksel bağışıklık da bağışıklık sayılır")
 	assert_almost(DamageCalc.compute(_hit(125.0, "fire"), ghost), 125.0 * 1.5, 0.0001, "hayalet ateşe zayıf")
 
 

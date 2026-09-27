@@ -703,8 +703,8 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 	damage_by_source[src_key] = float(damage_by_source.get(src_key, 0.0)) + dealt
 	if dealt > 0.0:
 		kit.on_hit_landed(attack_id)
-		# Ödüllerden can emme (Ghost'ta öldürme başına iyileşmeye dönüşür: heal() Ghost'ta çalışmaz)
-		if s.lifesteal > 0.0:
+		# Ödüllerden can emme (Ghost'ta öldürme başına iyileşmeye dönüşür: heal() Ghost'ta çalışmaz); bağışık hedefte işlemez (v0.10.1)
+		if s.lifesteal > 0.0 and not bool(res.get("immune", false)):
 			heal(dealt * s.lifesteal)
 	effects.after_hit(target, w, res, attack_id, o)
 	# Kritik zinciri: kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır
@@ -1033,7 +1033,7 @@ func _bot_fight(delta: float) -> Dictionary:
 		var other: Weapon = weapons[(active_index + 1) % weapons.size()]
 		var def: DamageCalc.Defense = nearest.get("defense")
 		var st: StatusEffects = nearest.get("status")
-		var cur_useless := DamageCalc.status_multiplier(w.element, def) <= 0.0
+		var cur_useless := DamageCalc.is_immune(w.element, def)
 		var other_combo := not DamageCalc.is_immune(other.element, def) and not Combos.find(st, other.element).is_empty()
 		if cur_useless or other_combo:
 			out["swap"] = true

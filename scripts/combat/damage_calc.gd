@@ -21,6 +21,7 @@ class Hit:
 	var is_crit: bool = false
 	var crit_damage_bonus: float = 0.0
 	var backstab: bool = false       ## hedefe arkasından mı vuruldu
+	var secondary: bool = false      ## ikincil vuruş / ek etki (zincir, sekme, kombo alanı, Rezonans, efsanevi pasif): bağışıklıkta 0
 
 
 ## Bir vuruşun savunan tarafı.
@@ -44,7 +45,7 @@ static func compute(hit: Hit, def: Defense) -> float:
 		* (1.0 + weapon_level_ratio(hit.weapon_level)) \
 		* (1.0 + mastery_bonus(hit.mastery_level)) \
 		* (1.0 + hit.damage_buffs) \
-		* element_term(hit.kind, def, hit.element_bonus) \
+		* element_term(hit.kind, def, hit.element_bonus, hit.secondary) \
 		* crit_term(hit.is_crit, hit.crit_damage_bonus) \
 		* backstab_term(hit.kind, hit.backstab) \
 		* armor_term(def.armor)
@@ -65,11 +66,12 @@ static func mastery_bonus(level: int) -> float:
 	return per_level * clampi(level, 0, max_level)
 
 
-## Durum çarpanı: bağışık 0 (fiziksel hasar fiziksele bağışık hedefe, yani hayalete %25), dirençli 0,5, normal 1, zayıf 1,5.
-static func status_multiplier(kind: String, def: Defense) -> float:
+## Durum çarpanı: bağışık — ana vuruş 0,75, ek etki (secondary) 0 (kullanıcı kararı, v0.10.1; fiziksele bağışık hayalete
+## yaygın silah da aynı kuralla), dirençli 0,5, normal 1, zayıf 1,5.
+static func status_multiplier(kind: String, def: Defense, secondary: bool = false) -> float:
 	var m: Dictionary = DataDB.get_value("elements", "status_multipliers")
 	if kind in def.immune:
-		return float(m["common_vs_ghost"]) if kind == PHYSICAL else float(m["immune"])
+		return float(m["immune_secondary"]) if secondary else float(m["immune"])
 	if kind in def.resistant:
 		return float(m["resistant"])
 	if kind in def.weak:
@@ -79,8 +81,8 @@ static func status_multiplier(kind: String, def: Defense) -> float:
 
 ## E: durum çarpanı × (1 + element hasarı bonusları) × elementin kendi çarpanı (Su'da 0,8).
 ## Fiziksel hasara element bonusları uygulanmaz.
-static func element_term(kind: String, def: Defense, element_bonus: float) -> float:
-	var sm := status_multiplier(kind, def)
+static func element_term(kind: String, def: Defense, element_bonus: float, secondary: bool = false) -> float:
+	var sm := status_multiplier(kind, def, secondary)
 	if kind == PHYSICAL:
 		return sm
 	var el: Dictionary = DataDB.table("elements")["elements"].get(kind, {})
@@ -117,6 +119,7 @@ static func is_behind(target_pos: Vector2, target_facing_cart: Vector2, attacker
 	return absf(rad_to_deg(target_facing_cart.angle_to(to_attacker))) > limit
 
 
-## Hasar türü hedefe hiç işlemiyor mu? (element durumu ve kombo uygulanmaz)
+## Hedef bu hasar türüne bağışık mı? Ana vuruş %75 işler; element durumu, kombo, özellikler ve ek etkiler uygulanmaz.
+## v0.10.1'den beri fiziksel bağışıklık (hayaletler) da aynı kurala uyar.
 static func is_immune(kind: String, def: Defense) -> bool:
-	return kind != PHYSICAL and kind in def.immune
+	return kind in def.immune

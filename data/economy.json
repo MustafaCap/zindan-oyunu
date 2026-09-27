@@ -21,6 +21,8 @@
     "chest_talisman_chance": 0.2,
     "_default": "Kullanıcı kararı (Aşama 5): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir (kullanıcı kararı, Aşama 6): normal düşman %1, elit %10 (önceden %1,5 / %25); kat başına ortalama ~0,8 iksir. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
   },
+  "slots_in_combat": true,
+  "_default_slots_in_combat": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): envanter (4 slot) savaş sırasında da düzenlenebilir — I ile açılır (oyun durur), sürükle-bırak, sağ/çift tık ve yere bırakma serbest; böylece bağışık düşmana karşı silah değiştirilebilir. Yerden eşya alma yine yalnızca savaş dışında. false yapılırsa eski kural (savaşta slotlar kilitli) döner.",
   "pickup": {
     "gold_magnet_tiles": 1.6,
     "potion_pickup_tiles": 1.0,

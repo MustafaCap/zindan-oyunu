@@ -2,16 +2,16 @@
 ##   Spor Bulutu: oyuncunun çevresinde işaretlenen yerlerde birkaç saniye kalan zehirli bulutlar.
 ##   Kök Patlaması: oyuncunun o anki yerinin altında sırayla işaretlenip fışkıran kökler (sürekli hareket et).
 ##   Spor Oku: yolları önce çizilen 5 sporluk yelpaze.
-## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir; hepsi kırılınca replant_sec (30 sn)
-## sonra yeniden dikilir. Aşama 10 hata düzeltmesi: dikilme işareti sürerken ikinci bir sayaç başlamaz (eskiden 6 totem olabiliyordu). Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
+## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir. Kullanıcı kararı (v0.10.1): totemler
+## savaşta YALNIZCA BİR KEZ, Mycela'nın canı %20'ye (mechanic.plant_at_hp_pct) inince dikilir; kırılınca yeniden dikilmez.
+## Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
 ## olur ve çevredeki düşmanlara (Mycela ve totemler dahil) hasar verir.
 ## 2. faz: arena sporla dolar — yalnızca küçülen temiz hava alanları güvenli; Mycela 6 sn'de bir işaretli yere ışınlanır.
 class_name Mycela
 extends Boss
 
 var _clouds: Array[EnemyHazard] = []
-var _replant_t: float = -1.0
-var _planting: int = 0                ## işaretlenip henüz dikilmemiş totem sayısı
+var totems_planted: bool = false      ## totemler bu savaşta dikildi mi (yalnızca bir kez)
 var _wander: Vector2 = Vector2.INF
 var _wander_t: float = 0.0
 var _clean: Array[Vector2] = []       ## 2. faz temiz hava merkezleri
@@ -25,32 +25,27 @@ func _body_color() -> String:
 
 
 func start_fight() -> void:
-	schedule(1.5, _plant_totems)
+	pass
 
 
+## 3 totemi işaretleyip diker (savaşta bir kez; tick_mechanic can eşiğinde çağırır).
 func _plant_totems() -> void:
 	var m := mech()
+	totems_planted = true
+	Events.floating_text.emit(global_position + Vector2(0, -150), "MANTAR TOTEMLERİ!", Color(0.7, 1.0, 0.5), 28)
 	var base := rng.randf() * TAU
 	for i: int in int(m["totems"]):
 		var off := Vector2.RIGHT.rotated(base + TAU * i / float(m["totems"])) * float(m["totem_distance"])
 		var pt := arena.clamp_inside(arena.point(off))
 		hazard("totems", pt, "circle", float(m["plant_warn"]), 0.0, {"mode": "visual", "radius": 0.8, "color": Color(0.6, 0.35, 0.9)})
-		_planting += 1
-		schedule(float(m["plant_warn"]), func() -> void:
-			_planting = maxi(_planting - 1, 0)
-			add_minion(str(m["add_id"]), pt))
-	_replant_t = -1.0
+		schedule(float(m["plant_warn"]), func() -> void: add_minion(str(m["add_id"]), pt))
 
 
 func tick_mechanic(delta: float) -> void:
 	var m := mech()
+	if not totems_planted and hp <= max_hp * float(m["plant_at_hp_pct"]):
+		_plant_totems()
 	var totems := alive_minions(str(m["add_id"]))
-	if totems.is_empty() and _replant_t < 0.0 and _planting == 0 and _time > 3.0:
-		_replant_t = float(m["replant_sec"])
-	if _replant_t > 0.0:
-		_replant_t -= delta
-		if _replant_t <= 0.0:
-			_plant_totems()
 	if not totems.is_empty() and status.can_heal():
 		var heal := max_hp * float(m["heal_pct_per_sec"]) * totems.size() * delta
 		hp = minf(hp + heal, max_hp)
@@ -58,7 +53,7 @@ func tick_mechanic(delta: float) -> void:
 			for t: Node2D in totems:
 				Events.chain_zap.emit(t.global_position + Vector2(0, -30), global_position + Vector2(0, -60), Color(0.5, 1.0, 0.5), false)
 	status_text = "Totemler Mycela'yı iyileştiriyor (%d) — önce totemleri kır!" % totems.size() if not totems.is_empty() \
-		else ("Totemler %.0f sn sonra yeniden dikilecek" % _replant_t if _replant_t > 0.0 else "")
+		else ("Canı %%%d'ye inince 3 mantar totemi dikecek" % roundi(float(m["plant_at_hp_pct"]) * 100.0) if not totems_planted else "")
 	_check_fire_on_clouds()
 	if phase == 2:
 		_tick_phase2(delta)

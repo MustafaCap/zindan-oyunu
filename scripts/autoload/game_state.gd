@@ -64,20 +64,27 @@ func reset_run() -> void:
 	xp_earned = 0.0
 
 
-func start_run(new_race_id: String) -> void:
+## start_type: ırk seçim ekranında seçilen başlangıç silahı tipi (v0.10.1; boşsa ırkın varsayılanı).
+func start_run(new_race_id: String, start_type: String = "") -> void:
 	reset_run()
 	race_id = new_race_id
 	in_run = true
 	potions = int(DataDB.get_value("progression", "potions.start"))
-	# Her run ırkın kendi ailesinden Yaygın, level 1 bir silahla başlar; çanta boş (economy.start_weapons).
-	inventory.slots["active_1"] = LootGenerator.start_weapon(race_id)
+	# Her run ırkın kendi ailesinden Yaygın, level 1 bir silahla başlar (tipi oyuncu seçer; varsayılan economy.start_weapons).
+	inventory.slots["active_1"] = LootGenerator.start_weapon(race_id, start_type)
 	Events.run_started.emit(race_id)
 
 
-## GDD Kontroller ve Slotlar: çanta ↔ slot değişimi yalnızca oda dışında (koridorda, temizlenmiş ya da savaş dışı
-## odada). Tab ile iki aktif silah arasında geçiş bu kurala tabi değildir, savaşta da serbesttir.
+## Envanter slotları düzenlenebilir mi? Kullanıcı kararı (v0.10.1): savaşta da serbest (economy.slots_in_combat);
+## eskiden (GDD Kontroller ve Slotlar) yalnızca oda dışında. Tab her zaman serbesttir. Yerden eşya alma ayrı kuraldır
+## (yalnızca savaş dışında; DungeonRun.pick_up).
 func can_change_slots() -> bool:
-	return not in_combat
+	return not in_combat or bool(DataDB.get_value("economy", "slots_in_combat"))
+
+
+## Envanter arayüzü ve Inventory kuralları için: slotlar şu an kilitli mi?
+func slots_locked() -> bool:
+	return not can_change_slots()
 
 
 func set_in_combat(value: bool) -> void:

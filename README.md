@@ -17,11 +17,39 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 8 | Sanat | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 9 | Ses | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 10 | Menüler, denge ve teslim | 🔶 Yapıldı, kullanıcı testi bekleniyor (yerelde commit; push ve `v0.1` etiketi onaydan sonra) |
+| 10 | Menüler, denge ve teslim | 🔶 Yapıldı; kullanıcı testi düzeltmeleri **v0.10.1** yerelde commit edildi, yeniden test bekleniyor (push ve `v0.1` etiketi onaydan sonra) |
 
-**Kalınan yer:** Aşama 10 (sürüm 0.10.0) `main`'den açılan `asama-10` dalında yapıldı ve **yalnızca yerelde commit edildi**
-(derleme: `ZindanOyunu-Derlemeler\asama-10\`). Kullanıcı oyunu baştan sona oynayıp onaylayınca: push, `main`'e birleştirme ve GitHub'da
-`v0.1` sürüm etiketi. Ana menü videosu eklendi (`make menu-video`; giriş + sakin döngü + menü müziği).
+**Kalınan yer:** Aşama 10 (sürüm 0.10.0) `main`'den açılan `asama-10` dalında yapıldı; kullanıcı oyunu oynadı ve istediği 10 düzeltme
+**sürüm 0.10.1** olarak aynı dalda yapıldı, **yalnızca yerelde commit edildi** (derleme: `ZindanOyunu-Derlemeler\asama-10\ZindanOyunu-v0.10.1\`
+ve `zindan-oyunu-windows-v0.10.1.zip`; 0.10.0 da duruyor). Kullanıcı oyunu baştan sona oynayıp onaylayınca: push, `main`'e birleştirme ve
+GitHub'da `v0.1` sürüm etiketi. Ana menü videosu eklendi (`make menu-video`; giriş + sakin döngü + menü müziği).
+
+**Aşama 10 kullanıcı testi düzeltmeleri (v0.10.1, hepsi kullanıcının onayladığı değişiklikler):**
+1. **Mycela** (2. kat boss'u): 3 mantar totemi savaşta **yalnızca bir kez**, canı **%20**'ye inince dikilir (kırılınca yeniden dikilmez).
+   Önceden dövüş başında dikiliyor, üçü kırılınca 30 sn'de bir yeniden geliyordu.
+2. **Kordrak** (3. kat boss'u): can 42.000 → **21.000**, zırh plakalarının hasar azaltması %70 → **%50** (buzsuz silahlarla da yenilebilsin;
+   buz yine plakaları kırar, Ateş + Buz Erime'si hâlâ en hızlısı).
+3. **Envanter savaşta da düzenlenir:** I ile açılır (oyun durur), sürükle-bırak, sağ/çift tık ve yere bırakma serbest — bağışık düşmana karşı
+   silah değiştirebilirsin. Yerden eşya alma yine yalnızca savaş dışında. HUD: "SAVAŞ: I ile silah değiştirebilirsin · yerden eşya alınmaz".
+4. **Bağışıklık kuralı:** bağışık düşmana ana silah vuruşu (sol/sağ tık, Q, E, onların mermi ve alanları) hasarın **%75**'ini verir (eskiden 0).
+   Pasif/ek etkiler — element durumu, süreli hasar, kombo, Yıldırım zinciri, özellikler (Öfke, İnfaz, Can Emme, Sekme, Sersemletme; ödüllerden
+   can emme dahil), efsanevi pasifler, Rezonans — bağışıklıkta **0 vurur ve uygulanmaz**. Vuruşta hasar sayısının yanında küçük "BAĞIŞIK" yazısı
+   çıkar. Fiziksel bağışıklık da aynı kural: yaygın silah hayaletlere ve Nyx'thar'a %25 yerine **%75** (tek kural).
+5. **F5 geliştirici menüsü kat ışınlaması düzeltildi:** açılır kat listesinden seçim işlemiyordu (hep 1. kat açılıyordu). Artık 4 kat düğmesi
+   (menü o anki katla açılır), **"Bu kata ışınlan"** (level, envanter, ödüller ve altın korunur; seçilen katın yeni haritasının girişine, savaş
+   dışında) ve **"Bu kattan yeni run"** (run o kattan sıfırlanır).
+6. **Ödül ekranı:** level ve boss ödül ekranı açıldıktan sonra **1,2 sn** tıklama ve 1/2 tuşları çalışmaz; kartlar soluk/kilitli görünür,
+   altındaki kızıl çubuk dolunca seçilir.
+7. **Kordrak kesim ödülü:** %65 ihtimalle **1 Efsanevi** YA DA %35 ihtimalle **2 Destansı** silah, silah leveli **en az 40**.
+8. **4. kat düşman canı** ×8 → **×6** (−%25; hasar aynı).
+9. **Irk seçimi:** her kartın altında ırkın silah ailesindeki **3 silahın düğmesi** — başlangıç silahını sen seçersin (Yaygın, level 1).
+   ↑/↓ (W/S) ile de seçilir; ırk ve silah seçimi `menu.json`'a kaydedilir, oyun yeniden açılınca da hatırlanır.
+10. **Sandık nadirliği** (kendi tablosu): 1. kat Yaygın %70 / Ender %25 / Destansı %4 / Efsanevi %1 · 2. kat en az Ender (%70 / %27 / %3) ·
+    3. kat en az Destansı (%70 / Efsanevi %30) · 4. kat **%100 Efsanevi**. Gizli oda sandığı bunun üstüne üst nadirlik ×2. Tüccar ve boss eski
+    tabloyla.
+- Testler kodla birlikte güncellendi ama çalıştırılmadı (kullanıcı kararı); .exe derlendi ve değişen script'ler derleme için yüklendi (hata yok).
+- **Mycela hâlâ zor gelirse önerim:** can 22.000 → ~16.000 ve 2. kat düşman ölçeği ×2,5/×1,9 → ×2,0/×1,6 (denge simülasyonunda da asıl duvar
+  2. kattı). Kullanıcı onaylarsa uygulanır.
 
 **Test (kullanıcı kararı, 27 Eyl 2026):** geliştirici test çalıştırmaz (`make test`, `make quick`, bot testleri ve `make balance` yok —
 aşama sonunda da); oyunu kullanıcı kendisi oynayarak test eder. En fazla derleme (.exe export'u) ile parse hatası yakalanır.
@@ -234,7 +262,7 @@ notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
   Silah F ile alınır; nadirliğe göre ışık sütunu. Sandıklar %25 tuzaklı (kırmızı işaret, 1 sn sonra patlar).
 - `Inventory` + `InventoryUI` (I): envanterin tamamı 4 slot (Aktif 1, Aktif 2, Rezonans, Esnek), çanta yok (kullanıcı kararı). Yer yoksa F
   yerdekiyle değiştirir, eski eşya yere düşer. Sürükle-bırak, sağ tık/çift tık (aktif ↔ Rezonans), yere bırakma, stat karşılaştırmalı
-  tooltip. Kilitli silah aktif slota konamaz; savaşta slotlar kilitli ve eşya alınamaz.
+  tooltip. Kilitli silah aktif slota konamaz; savaşta eşya alınamaz (slotlar Aşama 5-10'da savaşta kilitliydi; v0.10.1'den beri serbest).
 - Silah leveli ve yetişme XP'si (1,5 kat, oyuncuyu geçemez; yalnızca slottakiler, kilitliler almaz).
 - `ItemEffects`: Rezonans ek hasarı (%10 kilitli / %7 açık), Esnek slot (özellik ve efsanevi pasif %9, tılsım tam), 3 tılsım,
   12 efsanevi silahın pasifleri ve sağ tık ekleri.
@@ -287,11 +315,11 @@ Aşama 0-9'da verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 | Tab | Aktif silah değiştir |
 | 1 | İksir (Ghost kullanamaz) |
 | F | Etkileşim: yerdeki silah/tılsım, sandık, tüccar, demirci, merdiven |
-| I | Envanter: 4 slot (sürükle-bırak, sağ tık aktif ↔ Rezonans; açıkken oyun durur) |
-| 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seç (kartlara tıklamak da olur; açıkken oyun durur) |
+| I | Envanter: 4 slot (sürükle-bırak, sağ tık aktif ↔ Rezonans; açıkken oyun durur; savaşta da düzenlenir — v0.10.1) |
+| 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seç (kartlara tıklamak da olur; açıkken oyun durur; açıldıktan sonra 1,2 sn kilitli) |
 | O | Ses ayarları: ana ses, müzik, efektler, arayüz, sessiz (her ekranda; açıkken oyun durur, O ya da Esc kapatır) |
 | Esc | Duraklatma menüsü: devam, ses ayarları, ana menüye dön (run ölüm sayılır), oyundan çık · menülerde geri |
-| F5 | Gizli geliştirici menüsü (eski hata ayıklama menüsü): ırk, level, silahlar; zindanda kat/yeni harita/ölümsüz, loot testi, ilerleme testi (+level, boss ödülü, ustalık sıfırla, boss odasına ışınlan), test odası ↔ zindan; test odasında düşman türü (her tür ya da eliti) |
+| F5 | Gizli geliştirici menüsü (eski hata ayıklama menüsü): ırk, level, silahlar; zindanda kat düğmeleri + "Bu kata ışınlan" (karakter kalır) / "Bu kattan yeni run" / ölümsüz, loot testi, ilerleme testi (+level, boss ödülü, ustalık sıfırla, boss odasına ışınlan), test odası ↔ zindan; test odasında düşman türü (her tür ya da eliti) |
 | R | Zindan: run sonu özetinde yeni run (Esc: ana menü) · Test odası: odayı yeniden başlat |
 | 2-7 / 0 | (Test odası) Aktif silahın elementi: Ateş, Su, Yıldırım, Zehir, Buz, Karanlık / elementsiz |
 | 8 | (Test odası) Aktif silahın özelliğini değiştir (Öfke, İnfaz, Can Emme, Sekme, Sersemletme) |

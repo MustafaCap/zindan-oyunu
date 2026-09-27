@@ -332,7 +332,7 @@ func new_run(from_floor: int = 1) -> void:
 	get_tree().paused = false
 	var seed_value := fixed_seed if fixed_seed >= 0 else randi()
 	fixed_seed = -1 if not autoplay else fixed_seed
-	GameState.start_run(str(TestRoom.config["race"]))
+	GameState.start_run(str(TestRoom.config["race"]), str(TestRoom.config.get("start_weapon", "")))
 	GameState.run_seed = seed_value
 	GameState.level = maxi(int(TestRoom.config.get("level", 1)), 1)
 	reward_rng.seed = hash([seed_value, "rewards"])
@@ -489,6 +489,17 @@ func teleport_to_boss() -> bool:
 	camera.global_position = player.global_position
 	camera.reset_smoothing()
 	visited[int(nid)] = true
+	return true
+
+
+## Geliştirici menüsü (v0.10.1): run'ı bozmadan seçilen katın yeni haritasının girişine geçer; level, envanter, ödüller
+## ve altın korunur. Savaş sürerken yapılmaz (kilitli odadaki düşman ve tehlikeler yarım kalmasın).
+func teleport_to_floor(index: int) -> bool:
+	if GameState.in_combat or finished:
+		return false
+	enter_floor(clampi(index, 1, 4))
+	Audio.play("floor_enter")
+	print("[Zindan] Geliştirici: %d. kata ışınlandı" % GameState.floor_index)
 	return true
 
 
@@ -1140,7 +1151,8 @@ func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 	if not finished:
 		GameState.kills += 1
 		grant_xp(Leveling.enemy_xp(GameState.floor_index, kind))
-	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng):
+	var bid := str(enemy.get("boss_id")) if is_boss and enemy.get("boss_id") != null else ""
+	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng, bid):
 		_spawn_drop(d, pos)
 
 
@@ -1563,7 +1575,9 @@ func _update_hud() -> void:
 			room_txt += " · Dalga %d / %d · Kalan düşman %d" % [maxi(rc.wave_index + 1, 1), rc.info.waves.size(), rc.alive_count()]
 		elif rc.state == RoomController.State.CLEARED and rc.has_enemies():
 			room_txt += " · temizlendi"
-	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest (I: envanter)"
+	var slot_txt := "Savaş dışı: slot değişimi serbest (I: envanter)"
+	if GameState.in_combat:
+		slot_txt = "SAVAŞ: slot değişimi kapalı" if GameState.slots_locked() else "SAVAŞ: I ile silah değiştirebilirsin · yerden eşya alınmaz"
 	hud.wave_text = "%d. Kat — %s   ·   %s\n%s   ·   Seed %d%s" % [GameState.floor_index, fl["name"], room_txt, slot_txt,
 		GameState.run_seed, "   ·   ÖLÜMSÜZ (test)" if player.invulnerable else ""]
 
@@ -1586,6 +1600,11 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 	match action_name:
 		"new_map":
 			new_run(int(c.get("floor", 1)))
+		"floor_teleport":
+			if teleport_to_floor(int(c.get("floor", 1))):
+				hud.flash_note("%d. kata ışınlandın (level ve envanter korundu)" % GameState.floor_index)
+			else:
+				hud.flash_note("Savaş sürerken ışınlanılamaz")
 		"test_room":
 			get_tree().change_scene_to_file(TEST_ROOM_SCENE)
 		"add_weapons":
