@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 # Zindan Oyunu — derleme ve test komutları
-# Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make all
+# Kullanım: make test | make quick | make unit | make smoke | make matrix | make dungeon | make bosses | make sprites | make sfx | make export-windows | make export-linux | make all
 #           make balance (Aşama 10 denge simülasyonu) | make perf (60 FPS ölçümü, pencerede) | make clean-alpha (sprite PNG temizliği)
 #           make menu-video VIDEO=... (ana menü videosu: giriş + döngü + müzik) | make textures (sprite sıkıştırma ayarı)
 
@@ -10,6 +10,8 @@ PYTHON  ?= python3
 VERSION := $(shell grep -m1 'config/version' project.godot | cut -d'"' -f2)
 WIN_DIR := build/windows
 WIN_ZIP := build/zindan-oyunu-windows-v$(VERSION).zip
+LINUX_DIR := build/linux
+LINUX_TGZ := build/zindan-oyunu-linux-v$(VERSION).tar.gz
 
 TEST_ROOM := res://scenes/test_room.tscn
 # Zindan smoke testi: sabit seed, ölümsüz bot, düşman sayısı ×0,2 ve canı ×0,25 (haritanın yürünebilirliği denenir)
@@ -17,9 +19,9 @@ DUNGEON_ARGS ?= --autoplay --god --seed=1234 --enemy-mult=0.2 --enemy-hp=0.25
 # Aşama 7 boss testi: bot her katta doğrudan boss'a gider, katın beklenen level ve silah gücüyle (ateş + buz kılıç)
 BOSS_ARGS ?= --autoplay --god --boss-test --seed=7 --weapons=sword:fire,sword:ice
 
-.PHONY: all import test quick unit smoke matrix dungeon bosses balance perf clean-alpha menu-video textures sprites sfx export-windows clean
+.PHONY: all import test quick unit smoke matrix dungeon bosses balance perf clean-alpha menu-video textures sprites sfx export-windows export-linux clean
 
-all: sprites sfx test export-windows
+all: sprites sfx test export-windows export-linux
 
 # Godot'nun .godot/ önbelleğini oluşturur (ilk kez ya da yeni dosya eklendiğinde gerekli)
 import:
@@ -126,6 +128,13 @@ export-windows: import
 	@# zip yoksa (Windows Git Bash) PowerShell'in Compress-Archive'i kullanılır
 	@if command -v zip > /dev/null 2>&1; then cd $(WIN_DIR) && zip -q -r ../$(notdir $(WIN_ZIP)) . ; 	else powershell.exe -NoProfile -Command "Compress-Archive -Path '$(WIN_DIR)/*' -DestinationPath '$(WIN_ZIP)' -Force" ; fi
 	@echo "Hazır: $(WIN_ZIP)"
+
+# Linux (x86_64): tek dosya (pck gömülü); tar.gz çalıştırma iznini korur
+export-linux: import
+	rm -rf $(LINUX_DIR) && mkdir -p $(LINUX_DIR)
+	$(GODOT) --headless --path . --export-release "Linux" $(LINUX_DIR)/ZindanOyunu.x86_64
+	$(PYTHON) tools/dev/pack_linux.py $(LINUX_DIR)/ZindanOyunu.x86_64 $(LINUX_TGZ)
+	@echo "Hazır: $(LINUX_TGZ)"
 
 clean:
 	rm -rf build .godot

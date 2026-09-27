@@ -1,22 +1,28 @@
 # Zindan Oyunu
 
-Godot 4 ile yaptığım 2D izometrik, öl-baştan-başla (roguelike) bir zindan oyunu. Windows için.
+Godot 4 ile yaptığım 2D izometrik, öl-baştan-başla (roguelike) bir zindan oyunu. Windows ve Linux için.
 Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md)'de, derleme ve araç notları [`docs/GELISTIRME.md`](docs/GELISTIRME.md)'de.
 
 ## Oyunu indir
 
-**[oyun.indir.zip](https://github.com/MustafaCap/zindan-oyunu/releases/latest/download/oyun.indir.zip)** her zaman son sürümü
-indirir (şu an v0.1, oyun sürümü 0.10.2; Windows, ~80 MB).
+Bağlantılar her zaman son sürümü indirir (oyun sürümü 0.10.3). Repo özel, o yüzden önce tarayıcıda GitHub hesabınla giriş yap.
+Bağlantılar yerine sağdaki **Releases** bölümünden [son sürümü](https://github.com/MustafaCap/zindan-oyunu/releases/latest) açıp dosyayı oradan da indirebilirsin. Sürüm
+sayfasındaki "Source code" arşivlerinde oyun yok, yalnızca kaynak kod var.
 
-1. Repo özel, o yüzden önce tarayıcıda GitHub hesabınla giriş yap.
-2. Yukarıdaki bağlantıya tıkla ya da sağdaki **Releases** bölümünden
-   [son sürümü](https://github.com/MustafaCap/zindan-oyunu/releases/latest) açıp `oyun.indir.zip`'i indir.
-   Sürüm sayfasındaki "Source code" arşivlerinde oyun yok, yalnızca kaynak kod var.
-3. Zipe sağ tıkla → Tümünü ayıkla, sonra `ZindanOyunu.exe`'ye çift tıkla. Kurulum gerekmez.
-4. Windows SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır (.exe imzasız).
+**Windows:** [oyun.indir.zip](https://github.com/MustafaCap/zindan-oyunu/releases/latest/download/oyun.indir.zip) (~80 MB)
 
-İlerleme (ustalık, ilk kesişler, ses ayarları) her cihazın kendi `%APPDATA%\Godot\app_userdata\Zindan Oyunu\` klasöründe
-tutulur. Hata olursa log dosyası da orada: `logs\godot.log`.
+1. Zipe sağ tıkla → Tümünü ayıkla, sonra `ZindanOyunu.exe`'ye çift tıkla. Kurulum gerekmez.
+2. Windows SmartScreen uyarırsa: Ek bilgi → Yine de çalıştır (.exe imzasız).
+
+**Linux** (64 bit, x86_64): [oyun.indir.linux.tar.gz](https://github.com/MustafaCap/zindan-oyunu/releases/latest/download/oyun.indir.linux.tar.gz) (~70 MB)
+
+1. Arşivi aç: `tar xzf oyun.indir.linux.tar.gz` (ya da dosya yöneticisinde sağ tık → Buraya çıkar).
+2. Çalıştır: `./ZindanOyunu/ZindanOyunu.x86_64` ya da dosyaya sağ tık → Program olarak çalıştır. Çalıştırma izni arşivde hazır.
+3. OpenGL 3.3 destekleyen bir ekran kartı sürücüsü yeterli; ayrıca bir şey kurmak gerekmez.
+
+İlerleme (ustalık, ilk kesişler, ses ayarları) her cihazın kendi klasöründe tutulur, cihazlar arasında taşınmaz. Windows'ta
+`%APPDATA%\Godot\app_userdata\Zindan Oyunu\`, Linux'ta `~/.local/share/godot/app_userdata/Zindan Oyunu/`. Hata olursa log
+dosyası da orada: `logs/godot.log`.
 
 ## Oyun
 
@@ -64,9 +70,13 @@ GDD'deki 11 aşamanın hepsi bitti. Son sürüm **v0.1** (oyun sürümü 0.10.2)
 | 7 | 55 düşman ve 4 boss | 0.7.0 |
 | 8 | Sanat: Blender'da sprite'lar, ışık, karolar | 0.8.0 |
 | 9 | Ses: efektler ve müzik | 0.9.0 |
-| 10 | Menüler, denge simülasyonu, teslim; oyun testi düzeltmeleri | 0.10.0 – 0.10.2 |
+| 10 | Menüler, denge simülasyonu, teslim; oyun testi düzeltmeleri, Linux sürümü | 0.10.0 – 0.10.3 |
 
-Son değişiklikler (0.10.1 ve 0.10.2, oyun testinden sonra):
+Son değişiklikler:
+
+- 0.10.3: Linux sürümü (`oyun.indir.linux.tar.gz`).
+
+0.10.1 ve 0.10.2, oyun testinden sonra:
 
 - Mycela'nın mantar totemleri yalnızca bir kez, canı %20'ye inince geliyor.
 - Kordrak'ın canı 42.000'den 21.000'e, zırh plakalarının hasar azaltması %70'ten %50'ye indi. Kesince %65 ihtimalle 1 efsanevi ya da
@@ -92,6 +102,7 @@ Kurulum yolları ve bütün komutlar [`docs/GELISTIRME.md`](docs/GELISTIRME.md)'
 make quick           # birim testleri + test odası smoke (~1 dk); tek dosya: make unit TEST_FILTER=menus
 make test            # bütün testler (uzun)
 make export-windows  # build/ içine ZindanOyunu.exe ve zip
+make export-linux    # build/ içine ZindanOyunu.x86_64 ve tar.gz
 make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"   # sprite'lar (~35 dk)
 make sfx BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"       # ses ve müzik (~15 dk)
 ```

@@ -1,7 +1,8 @@
 ## UiTheme — Aşama 10: menülerin ortak görünümü (görsel yön: karanlık, kanlı, vahşi). Kömür karası
 ## zemin, pas-kan kırmızısı çerçeveler, kemik beyazı serif yazı; üzerine gelinen düğmenin çerçevesi kan kırmızısına döner
-## ve solunda kan izi belirir. Yazı tipi Windows'un kendi serif fontlarından (SystemFont: Palatino Linotype → Book Antiqua →
-## Georgia); .exe'ye font dosyası eklenmez, hiçbiri yoksa Godot'nun varsayılan fontu kullanılır.
+## ve solunda kan izi belirir. Yazı tipi sistemin serif fontlarından (SystemFont): Windows'ta Palatino Linotype → Book Antiqua →
+## Georgia, Linux'ta Palatino benzerleri (TeX Gyre Pagella, P052, URW Palladio L) → Liberation/DejaVu Serif. Oyuna font dosyası
+## eklenmez; hiçbiri yoksa Godot'nun varsayılan fontu kullanılır.
 ## Kullanım: bir CanvasLayer'ın kök Control'üne `theme = UiTheme.theme()`; başlıklar için UiTheme.title().
 class_name UiTheme
 extends RefCounted
@@ -24,7 +25,8 @@ static var _font: Font
 static func font() -> Font:
 	if _font == null:
 		var f := SystemFont.new()
-		f.font_names = PackedStringArray(["Palatino Linotype", "Book Antiqua", "Georgia", "Times New Roman", "serif"])
+		f.font_names = PackedStringArray(["Palatino Linotype", "Book Antiqua", "Georgia", "TeX Gyre Pagella", "P052",
+			"URW Palladio L", "Liberation Serif", "DejaVu Serif", "Times New Roman", "serif"])
 		f.antialiasing = TextServer.FONT_ANTIALIASING_GRAY
 		_font = f
 	return _font
