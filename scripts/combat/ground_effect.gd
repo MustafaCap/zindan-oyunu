@@ -132,7 +132,7 @@ func _draw() -> void:
 		draw_line(p2 + Vector2(0, -120 * k2 - 20), p2 + Vector2(0, -120 * k2), Color(0.95, 0.9, 0.75), 2.0)
 
 
-## Rün mührü (kullanıcı kararı, v0.10.2: eski altı köşeli yıldız kaldırıldı): içe dönük dişlerle çevrili halka — yavaşça
+## Rün mührü (v0.10.2: eski altı köşeli yıldız kaldırıldı): içe dönük dişlerle çevrili halka — yavaşça
 ## döner — ve ortada dikey göz bebekli bir göz ("yutan göz"). Zeminde düz çizilip izometrik basılır.
 func _draw_rune_glyph(r: float) -> void:
 	var col := Color(color.lightened(0.4), 0.9)

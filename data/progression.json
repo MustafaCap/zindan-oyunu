@@ -112,7 +112,7 @@
     "knockback_duration": 0.16
   },
   "blood": {
-    "_note": "Aşama 8, kullanıcı kararı: kanlı oyun — düşmana (ve oyuncuya) vurunca kan fışkırır, yere leke düşer; ölünce büyük fışkırma ve kan gölü.",
+    "_note": "Aşama 8: kanlı oyun — düşmana (ve oyuncuya) vurunca kan fışkırır, yere leke düşer; ölünce büyük fışkırma ve kan gölü.",
     "_default": "Tüm sayılar Aşama 8'de verildi; oyun testinde ayarlanır. Renk düşman malzemesinden (enemies.json > materials > blood) gelebilir.",
     "color": "#8a0c0c",
     "droplets_per_hit": 12,

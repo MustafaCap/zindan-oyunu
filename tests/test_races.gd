@@ -112,7 +112,7 @@ func test_mana() -> void:
 	assert_eq(k1.resource_max, 124.0, "Mana = 120 + level × 4")
 	var k80 := RaceKit.new("magical", 80)
 	assert_eq(k80.resource_max, 440.0, "level 80'de 440")
-	# v0.10.2 (kullanıcı kararı): normal vuruş mana harcamaz, skill bedelleri düşürüldü
+	# v0.10.2: normal vuruş mana harcamaz, skill bedelleri düşürüldü
 	assert_eq(k80.cost("light", "magical"), 0.0, "sol tık bedava")
 	assert_eq(k80.cost("heavy", "magical"), 45.0)
 	assert_eq(k80.cost("q", "magical"), 55.0)
@@ -249,7 +249,7 @@ func test_deal_hit_applies_matrix_and_passive() -> void:
 	assert_almost(war.damage_by_source["light"], 125.0 * mu * (0.9 + me), 0.001, "hasar kaynağa göre kaydedilir")
 
 
-## Kullanıcı kararı (Aşama 6): Warrior Q artık Kalkan Hücumu — ileri atılır, yoldaki düşmanlara ×1,5 vurur, iter ve sersemletir.
+## Aşama 6: Warrior Q artık Kalkan Hücumu — ileri atılır, yoldaki düşmanlara ×1,5 vurur, iter ve sersemletir.
 func test_warrior_shield_charge() -> void:
 	var p := _player("warrior", [Weapon.make("sword", "common")] as Array[Weapon])
 	p.rng.seed = 12345  # kritik zarı sabit: vuruş kritik olmasın (test rastgeleliğe bağlı kalmasın)

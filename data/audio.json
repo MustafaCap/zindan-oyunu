@@ -988,7 +988,7 @@
       "menu": {
         "file": "menu.ogg",
         "db": 0.0,
-        "_default": "Aşama 10: ana menü ve ırk seçimi müziği = kullanıcının menü videosunun sesi (make menu-video; sıçramasız döngü, düzeyi 1. kat ambiyansına eşit). Video sessizdir; menu.ogg yoksa müzik çalmaz."
+        "_default": "Aşama 10: ana menü ve ırk seçimi müziği = menü videosunun sesi (make menu-video; sıçramasız döngü, düzeyi 1. kat ambiyansına eşit). Video sessizdir; menu.ogg yoksa müzik çalmaz."
       },
       "floor_1": {
         "file": "floor_1.ogg",

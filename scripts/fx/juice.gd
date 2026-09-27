@@ -169,7 +169,7 @@ func _on_chain_zap(from: Vector2, to: Vector2, color: Color, jagged: bool) -> vo
 		tw.tween_callback(l.queue_free)
 
 
-## Aşama 8 (kullanıcı kararı: kanlı oyun): vuruş yönüne kan fışkırır, yere leke düşer; ölümde büyük fışkırma ve
+## Aşama 8 (kanlı oyun): vuruş yönüne kan fışkırır, yere leke düşer; ölümde büyük fışkırma ve
 ## kan gölü. Lekeler bir süre kalır, sonra solar (progression.json > blood).
 func _on_blood(pos: Vector2, dir_cart: Vector2, amount: float, color: Color) -> void:
 	var b := _blood

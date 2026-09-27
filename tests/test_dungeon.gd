@@ -181,7 +181,7 @@ func test_enemy_mult_override() -> void:
 	assert_eq(normal, 30, "çarpan 0,5 ile 60 → 30")
 
 
-## v0.10.1 (kullanıcı kararı): envanter savaşta da düzenlenebilir (economy.slots_in_combat).
+## v0.10.1: envanter savaşta da düzenlenebilir (economy.slots_in_combat).
 func test_slot_change_rule() -> void:
 	GameState.set_in_combat(false)
 	assert_true(GameState.can_change_slots(), "savaş dışında serbest")
@@ -260,7 +260,7 @@ func test_boss_kill_opens_stairs_and_next_floor() -> void:
 	rc._process(0.1)
 	assert_eq(run.player.hp, run.player.max_hp, "boss sonrası can tamamen dolar")
 	var bw := run.drops.filter(func(d: LootDrop) -> bool: return d.kind == "weapon")
-	assert_eq(bw.size(), 1, "boss kesilince 1 silah düşer (Aşama 5 kullanıcı kararı)")
+	assert_eq(bw.size(), 1, "boss kesilince 1 silah düşer (Aşama 5)")
 	var stairs: RoomProp = null
 	for p: RoomProp in run.props:
 		if is_instance_valid(p) and p.kind == "stairs":

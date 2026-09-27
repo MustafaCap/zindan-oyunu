@@ -1,10 +1,10 @@
-## MainMenu — Aşama 10 ana menüsü (oyunun açılış sahnesi). Oyunun adı yazılmaz (kullanıcı kararı: henüz ad yok).
-## Arka plan kullanıcının videosu (Ogg Theora, make menu-video üretir): oyun açılışında kanlı giriş videosu bir kez oynar
+## MainMenu — Aşama 10 ana menüsü (oyunun açılış sahnesi). Oyunun adı yazılmaz (henüz ad yok).
+## Arka plan menü videosu (Ogg Theora, make menu-video üretir): oyun açılışında kanlı giriş videosu bir kez oynar
 ## (menu_intro.ogv), sonunda çapraz geçişle kansız sakin döngüye (menu_loop.ogv, ileri-geri, sıçramasız) geçer; menüye sonraki
 ## dönüşlerde yalnızca döngü oynar. Müzik videonun sesidir (audio.json > music.tracks.menu → menu.ogg).
 ## Videoda menü yazıları gömülüdür (YENİ OYUN / YÜKLE / AYARLAR / ÇIKIŞ): düğmeler bu yazıların üstüne oturan görünmez tıklama
-## alanlarıdır; üzerine gelince yazı kızıl parlar ve solunda kan izi belirir. YÜKLE soluk ve tıklanmaz (kayıtlı run yok;
-## kullanıcı kararı). Klavyeyle yukarı/aşağı ve Enter. Video yoksa koyu, korlu yedek arka plan ve kendi düğmeleri
+## alanlarıdır; üzerine gelince yazı kızıl parlar ve solunda kan izi belirir. YÜKLE soluk ve tıklanmaz (kayıtlı run yok).
+## Klavyeyle yukarı/aşağı ve Enter. Video yoksa koyu, korlu yedek arka plan ve kendi düğmeleri
 ## (Başla, Ses ayarları, Çık).
 ## Komut satırında oyun bayrağı verilmişse (--autoplay, --seed=…, --race=… gibi test ve geliştirme bayrakları) menü atlanır ve
 ## zindan doğrudan açılır: make dungeon / make bosses / denge simülasyonu eskisi gibi çalışır. "--menu" menüde kalır.

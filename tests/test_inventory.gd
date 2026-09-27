@@ -13,7 +13,7 @@ func _w(level: int = 1, type: String = "axe", rarity: String = "rare", el: Strin
 	return Weapon.make(type, rarity, el, [], level)
 
 
-## Kullanıcı kararı: envanterin tamamı 4 slot, çanta yok. Run ırkın başlangıç silahıyla, diğer 3 slot boş başlar.
+## Envanterin tamamı 4 slot, çanta yok. Run ırkın başlangıç silahıyla, diğer 3 slot boş başlar.
 func test_run_starts_with_race_weapon_and_four_slots() -> void:
 	GameState.start_run("archer")
 	var inv := GameState.inventory

@@ -2,7 +2,7 @@
 ##   Spor Bulutu: oyuncunun çevresinde işaretlenen yerlerde birkaç saniye kalan zehirli bulutlar.
 ##   Kök Patlaması: oyuncunun o anki yerinin altında sırayla işaretlenip fışkıran kökler (sürekli hareket et).
 ##   Spor Oku: yolları önce çizilen 5 sporluk yelpaze.
-## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir. Kullanıcı kararı (v0.10.1): totemler
+## İyileştiren Mantarlar: 3 totem (öncelikli hedef) yaşadıkça Mycela'yı iyileştirir. v0.10.1: totemler
 ## savaşta YALNIZCA BİR KEZ, Mycela'nın canı %20'ye (mechanic.plant_at_hp_pct) inince dikilir; kırılınca yeniden dikilmez.
 ## Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
 ## olur ve çevredeki düşmanlara (Mycela ve totemler dahil) hasar verir.

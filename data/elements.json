@@ -6,7 +6,7 @@
     "resistant": 0.5,
     "normal": 1.0,
     "weak": 1.5,
-    "_default": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): bağışık düşmana ana silah vuruşu (sol tık, sağ tık, Q, E ve onların mermi/alanları) hasarın %75'ini verir (eskiden 0). Fiziksele bağışık hedefe (hayaletler, Nyx'thar) yaygın silah da aynı kuralla %75 (eski %25 kuralı kalktı; tek kural). Ek etkiler bağışıklıkta 0 vurur (immune_secondary: zincir, sekme, kombo alanı, Rezonans, efsanevi pasif patlamaları); element durumu, süreli hasar, kombo ve özellikler (Öfke, İnfaz, Can Emme, Sekme, Sersemletme; ödüllerden can emme dahil) uygulanmaz."
+    "_default": "Aşama 10 testinden sonra (v0.10.1): bağışık düşmana ana silah vuruşu (sol tık, sağ tık, Q, E ve onların mermi/alanları) hasarın %75'ini verir (eskiden 0). Fiziksele bağışık hedefe (hayaletler, Nyx'thar) yaygın silah da aynı kuralla %75 (eski %25 kuralı kalktı; tek kural). Ek etkiler bağışıklıkta 0 vurur (immune_secondary: zincir, sekme, kombo alanı, Rezonans, efsanevi pasif patlamaları); element durumu, süreli hasar, kombo ve özellikler (Öfke, İnfaz, Can Emme, Sekme, Sersemletme; ödüllerden can emme dahil) uygulanmaz."
   },
   "physical": { "name": "Fiziksel", "color": "#d9d4c7" },
   "elements": {

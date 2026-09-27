@@ -8,8 +8,8 @@
 ## Aşama 6: "İlerleme (test)" satırı: +1 / +5 level (gerçek XP ile; ödüller sıraya girer), boss ödülü aç, ustalıkları ve
 ## boss ilk kesişlerini sıfırla (kalıcı kaydı siler). Menüdeki level seçimi XP'siz doğrudan level verir (ödül vermez).
 ## Aşama 7: zindanda "Boss odasına ışınlan" (savaş dışında); test odasında "Düşmanlar" listesinden her tür ya da eliti.
-## Aşama 10 (kullanıcı kararı): oyunda gizli geliştirici menüsü olarak kalır; F5 açar/kapatır (M artık bir şey yapmaz).
-## v0.10.1 (kullanıcı testi): kat seçimi açılır liste yerine 4 düğme (listeden seçim menü açıkken işlemiyordu, hep 1. kat
+## Aşama 10: oyunda gizli geliştirici menüsü olarak kalır; F5 açar/kapatır (M artık bir şey yapmaz).
+## v0.10.1 (oyun testi): kat seçimi açılır liste yerine 4 düğme (listeden seçim menü açıkken işlemiyordu, hep 1. kat
 ## açılıyordu); menü o anki katla açılır. "Bu kata ışınlan" karakteri (level, envanter, ödüller) koruyarak seçilen katın
 ## yeni haritasına götürür (savaş dışında); "Bu kattan yeni run" run'ı o kattan sıfırdan başlatır.
 class_name DebugMenu

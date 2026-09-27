@@ -3,7 +3,7 @@
 ## tools/blender/render_sprites.py üretir). Renk ve normal CanvasTexture'da birleşir: Light2D'ler (meşale, büyü) karakteri
 ## normal haritasıyla aydınlatır. Karanlıkta parlayan parçalar (gözler) ışıktan etkilenmeyen ayrı bir katmandır.
 ## Silah ayrı katmandır (`assets/sprites/weapons/`, 16 dönüş × 4 eğim): karakterin elindeki konum ve açı meta'dan okunur,
-## element varsa parıltı maskesi element rengiyle boyanır. Demir yumruk iki ele birden giydirilir (kullanıcı kararı).
+## element varsa parıltı maskesi element rengiyle boyanır. Demir yumruk iki ele birden giydirilir.
 ## Animasyon kendiliğinden seçilir: hareket → walk, durunca idle; lean yükselince (saldırı) attack, cast ya da demir
 ## yumrukta sırayla punch_r / punch_l; flash → hit; play_action() yetenek animasyonu (Warrior Kalkan Hücumu: rush);
 ## play_death() ölüm animasyonunu oynatıp son karede kalır. API PlaceholderBody ile aynıdır (flash, set_facing, lean, …).

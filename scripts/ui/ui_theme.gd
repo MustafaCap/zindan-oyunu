@@ -1,4 +1,4 @@
-## UiTheme — Aşama 10: menülerin ortak görünümü (görsel yön kullanıcı kararı: karanlık, kanlı, vahşi). Kömür karası
+## UiTheme — Aşama 10: menülerin ortak görünümü (görsel yön: karanlık, kanlı, vahşi). Kömür karası
 ## zemin, pas-kan kırmızısı çerçeveler, kemik beyazı serif yazı; üzerine gelinen düğmenin çerçevesi kan kırmızısına döner
 ## ve solunda kan izi belirir. Yazı tipi Windows'un kendi serif fontlarından (SystemFont: Palatino Linotype → Book Antiqua →
 ## Georgia); .exe'ye font dosyası eklenmez, hiçbiri yoksa Godot'nun varsayılan fontu kullanılır.

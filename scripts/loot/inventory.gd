@@ -1,6 +1,6 @@
 ## Inventory — run'ın 4 slotu, altını ve iksirleri (GDD: Kontroller ve Slotlar, Rezonans ve Esnek Slot).
 ## Saf mantıktır; arayüz (InventoryUI) ve DungeonRun bunu çağırır. GameState.inventory run boyunca tutar.
-## Kullanıcı kararı (Aşama 5): envanterin tamamı 4 slottur, çanta yoktur (economy.bag_size = 0); yeni eşya için yer
+## Aşama 5: envanterin tamamı 4 slottur, çanta yoktur (economy.bag_size = 0); yeni eşya için yer
 ## yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler (bag_size > 0 olursa çanta geri gelir).
 ##   Aktif 1 / Aktif 2: yalnızca açık (kilitsiz) silah.   Rezonans: kilitli ya da açık silah.
 ##   Esnek: silah (kilitli ya da açık) ya da tılsım.

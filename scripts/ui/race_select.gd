@@ -3,7 +3,7 @@
 ## ustalık leveli. Tıklayınca ya da ←/→, 1-4 ile seçilir (seçilen kart kan kırmızısı çerçeveli, karakter saldırır);
 ## çift tık ya da Enter / "Zindana in" run'ı başlatır, Esc / "Geri" ana menüye döner. Seçim TestRoom.config'e yazılır
 ## (DungeonRun run'ı oradan kurar) ve bir sonraki açılışta aynı ırk seçili gelir.
-## v0.10.1 (kullanıcı kararı): her kartın altında ırkın silah ailesindeki 3 tipin düğmesi — başlangıç silahı (Yaygın,
+## v0.10.1: her kartın altında ırkın silah ailesindeki 3 tipin düğmesi — başlangıç silahı (Yaygın,
 ## level 1) bunlardan seçilir; ↑/↓ (W/S) seçili ırkın silahını değiştirir. Irk ve silah seçimleri user://menu.json'a
 ## kaydedilir, oyun yeniden açılınca da hatırlanır (prefs_path; testler ayrı dosya kullanır).
 class_name RaceSelect

@@ -236,7 +236,7 @@ func test_foreign_spell_weapon_heavy_cooldown() -> void:
 	assert_true(not WeaponAttacks.heavy_pressed(p), "beklemedeyken olmaz")
 
 
-## v0.10.2 (kullanıcı kararı): Magical'ın normal vuruşu mana harcamaz.
+## v0.10.2: Magical'ın normal vuruşu mana harcamaz.
 func test_magical_light_attack_is_free() -> void:
 	var p := _player("magical", "tome", "fire", 1)
 	p.kit.resource = 0.0

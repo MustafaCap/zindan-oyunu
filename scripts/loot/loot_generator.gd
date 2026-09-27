@@ -2,9 +2,9 @@
 ## verilen RandomNumberGenerator'dan gelir (aynı seed aynı loot).
 ##   Nadirlik: katın oranları (loot_tables.json). Gizli oda üst nadirliklerin (Destansı, Efsanevi) şansını ×2 yapar,
 ##   fark Yaygın'dan düşülür (Yaygın yetmezse — 4. kat — kalan Ender'den). Efsanevi 3. kattan itibaren.
-##   v0.10.1 (kullanıcı kararı): sandık ve gizli oda sandığı kendi tablosunu kullanır (chest_rarity_weights: 2. kat en az
+##   v0.10.1: sandık ve gizli oda sandığı kendi tablosunu kullanır (chest_rarity_weights: 2. kat en az
 ##   Ender, 3. kat en az Destansı, 4. kat Efsanevi; efsanevi 1-2. katta da düşük şansla). Kordrak'ın kesim ödülü boss_drops'tan.
-##   Kullanıcı kararı (Aşama 5): düşmanlar (elit dahil) silah düşürmez, yalnızca altın (ve nadiren iksir); boss kesilince
+##   Aşama 5: düşmanlar (elit dahil) silah düşürmez, yalnızca altın (ve nadiren iksir); boss kesilince
 ##   1 silah düşer, nadirliği katın normal oranlarıyla çıkar (garanti yüksek nadirlik yok).
 ##   Silah: tip 12 tipten eşit olasılıkla; element sayısı ve özellik sayısı nadirliğe göre; level katın aralığından.
 ##   Efsanevi: legendaries.json'daki kayıtlardan biri (tip ve element kayıttan), 1 veya 2 özellik.
@@ -179,7 +179,7 @@ static func enemy_drops(floor_i: int, kind: String, rng: RandomNumberGenerator, 
 	return out
 
 
-## Boss'a özel kesim ödülü (loot_tables.boss_drops; kullanıcı kararı v0.10.1 — Kordrak: %65 1 Efsanevi YA DA %35 2 Destansı,
+## Boss'a özel kesim ödülü (loot_tables.boss_drops; v0.10.1 — Kordrak: %65 1 Efsanevi YA DA %35 2 Destansı,
 ## silah leveli en az 40). Seçeneklerden biri şansına göre seçilir; level katın aralığından, en az min_level.
 static func boss_special_weapons(floor_i: int, spec: Dictionary, rng: RandomNumberGenerator) -> Array[Weapon]:
 	var opts: Array = spec["options"]
@@ -227,7 +227,7 @@ static func merchant_stock(floor_i: int, rng: RandomNumberGenerator, owned_talis
 	return out
 
 
-## Irkın başlangıç silahı: kendi ailesinden Yaygın, level 1. v0.10.1 (kullanıcı kararı): oyuncu ırk seçim ekranında
+## Irkın başlangıç silahı: kendi ailesinden Yaygın, level 1. v0.10.1: oyuncu ırk seçim ekranında
 ## ailenin 3 tipinden birini seçer (type_id); geçersizse ya da başka ailedense varsayılan (economy.start_weapons).
 static func start_weapon(race_id: String, type_id: String = "") -> Weapon:
 	var wt: Dictionary = DataDB.table("weapon_types")

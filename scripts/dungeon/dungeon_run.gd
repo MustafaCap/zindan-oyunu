@@ -29,7 +29,7 @@
 ##   --grant-levels=N  Run başında N level'lik XP verir (level ödülü ekranı açılır; ekran görüntüsü/deneme için).
 ##   --end-run=SN      SN saniye sonra oyuncu ölür (run sonu özet ekranını denemek için).
 ##   --kill-hits=N     Bot hızlandırması: düşman (boss dahil) N hasarlı vuruşta ölür. --autoplay'da varsayılan 4
-##                     (kullanıcı kararı, Aşama 10; --balance ve --boss-test'te 0 = kapalı), 0 kapatır.
+##                     (Aşama 10; --balance ve --boss-test'te 0 = kapalı), 0 kapatır.
 ##   --enemy-hp=X      Tüm düşmanların (boss'lar dahil) can çarpanı (smoke testini kısaltmak için).
 ##   --boss-rush       Her katta oyuncu boss odasının kapısında başlar (bot yalnızca boss'a gider).
 ##   --boss-test       --boss-rush + katın beklenen level ve silah gücü; her boss süre, saldırılar, 2. faz ve uyarı
@@ -1051,7 +1051,7 @@ func _end_subtitle(won: bool, abandoned: bool) -> String:
 	return "%d. kat — %s%s" % [GameState.floor_index, fl["name"], " · ölüm sayıldı" if abandoned else ""]
 
 
-## Duraklatma menüsünden run'ı bırakma (kullanıcı kararı: ölüm sayılır). Ustalık o kattaki ölüm çarpanıyla işlenir ve
+## Duraklatma menüsünden run'ı bırakma (ölüm sayılır). Ustalık o kattaki ölüm çarpanıyla işlenir ve
 ## kaydedilir; quit ise oyun kapanır, değilse özet ekranı açılır (dünya durur).
 func abandon_run(quit: bool = false) -> void:
 	if not finished:
@@ -1257,7 +1257,7 @@ func _remove_drop(d: LootDrop) -> void:
 
 ## Yerdeki silah/tılsımı alır (yalnızca savaş dışında): uygun boş slota; yer yoksa yerdekiyle değiştirir ve eski eşya
 ## yere düşer (açık silah kullanılan aktif silahla, kilitli silah Rezonans'la, tılsım Esnek'le). Envanterin tamamı
-## 4 slottur (kullanıcı kararı): çok eşya taşınamaz, geride bırakılır.
+## 4 slottur: çok eşya taşınamaz, geride bırakılır.
 ## swap false ise (bot) yer yoksa almaz.
 func pick_up(d: LootDrop, swap: bool = true) -> bool:
 	if d.picked or not d.is_item():
@@ -1492,7 +1492,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			bag_ui.open_ui("bag", player)
 			get_viewport().set_input_as_handled()
 		elif key == KEY_F5:
-			# Geliştirici menüsü (hata ayıklama; kullanıcı kararı: F5'te kalır)
+			# Geliştirici menüsü (hata ayıklama; F5'te kalır)
 			menu.open(TestRoom.config)
 			menu.set_lock_reason("Savaş sürerken ırk ve silahlar değiştirilemez (oda dışında serbest)." if GameState.in_combat else "")
 			get_viewport().set_input_as_handled()

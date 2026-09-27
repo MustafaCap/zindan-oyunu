@@ -38,7 +38,7 @@ var hp_override: float = 0.0
 ## Ek can/hasar çarpanı ve gövde ölçeği (elit ve kat ölçeklemesine ek; testler ve hata ayıklama için).
 var hp_mult: float = 1.0
 var damage_mult: float = 1.0
-## Bot hızlandırması (kullanıcı kararı, Aşama 10): > 0 ise düşman (boss dahil) oyuncudan bu kadar hasarlı vuruş alınca
+## Bot hızlandırması (Aşama 10): > 0 ise düşman (boss dahil) oyuncudan bu kadar hasarlı vuruş alınca
 ## hemen ölür; uzun savaşlar bot run'larını uzatmasın. Yalnızca zindan botunda açılır (dungeon_run: --autoplay → 4;
 ## denge simülasyonunda ve boss testinde kapalı, çünkü onlar tam savaşı ölçer). Oyuncunun oyununda her zaman 0.
 static var bot_kill_hits: int = 0

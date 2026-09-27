@@ -2,7 +2,7 @@
 
 Silahlar karakterden ayrı bir katmandır: oyunda karakterin eline (sprite meta'sındaki el konumu ve açısı) yerleştirilir;
 demir yumruk iki ele birden giydirilir. glow=True parçalar element maskesine girer; oyun bu maskeyi silahın element
-rengiyle boyar. Görsel yön: karanlık ve kanlı (kullanıcı kararı, Aşama 8) — koyu çelik, kan izleri.
+rengiyle boyar. Görsel yön: karanlık ve kanlı (Aşama 8) — koyu çelik, kan izleri.
 Anahtarlar weapon_types.json > visual ile aynıdır.
 """
 

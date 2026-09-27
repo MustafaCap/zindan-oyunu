@@ -58,7 +58,7 @@ func test_secret_room_doubles_upper_rarities_of_chest_table() -> void:
 		assert_eq(LootGenerator.rarity_weights(3, src2), LootGenerator.rarity_weights(3, "normal"), src2 + " normal tablo")
 
 
-## v0.10.1 (kullanıcı kararı): sandık tablosu — 2. kat en az Ender, 3. kat en az Destansı (efsanevi ~%30), 4. kat Efsanevi,
+## v0.10.1: sandık tablosu — 2. kat en az Ender, 3. kat en az Destansı (efsanevi ~%30), 4. kat Efsanevi,
 ## ilk 2 katta efsanevi düşük şansla.
 func test_chest_rarity_table() -> void:
 	var ct: Dictionary = DataDB.table("loot_tables")["chest_rarity_weights"]["floors"]
@@ -85,7 +85,7 @@ func test_no_legendary_before_floor_3() -> void:
 	assert_true(float(LootGenerator.rarity_weights(3, "normal")["legendary"]) > 0.0, "3. katta efsanevi var")
 
 
-## v0.10.1 (kullanıcı kararı): Kordrak kesilince %65 1 Efsanevi YA DA %35 2 Destansı, silah leveli en az 40.
+## v0.10.1: Kordrak kesilince %65 1 Efsanevi YA DA %35 2 Destansı, silah leveli en az 40.
 func test_kordrak_special_drop() -> void:
 	var rng := _rng(77)
 	var one_leg := 0
@@ -107,7 +107,7 @@ func test_kordrak_special_drop() -> void:
 	assert_eq(m.size(), 1, "Mycela 1 silah (normal tablo)")
 
 
-## Kullanıcı kararı: boss'un silahı "direkt çok iyi" değil, katın normal oranlarıyla çıkar (ör. 3. kat efsanevi %5).
+## Boss'un silahı "direkt çok iyi" değil, katın normal oranlarıyla çıkar (ör. 3. kat efsanevi %5).
 func test_boss_weapon_uses_floor_rates() -> void:
 	for f: int in range(1, 5):
 		var table: Dictionary = DataDB.table("loot_tables")["floors"][str(f)]["rarity_weights"]
@@ -195,7 +195,7 @@ func test_legendaries() -> void:
 	assert_eq(seen.size(), 12, "12 efsanevinin hepsi düşebilir")
 
 
-## Düşmeler (kullanıcı kararı): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss 1 silah düşürür.
+## Düşmeler: düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss 1 silah düşürür.
 func test_enemy_drops() -> void:
 	var rng := _rng(8)
 	var ec: Dictionary = DataDB.table("economy")

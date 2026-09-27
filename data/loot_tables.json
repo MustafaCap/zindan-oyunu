@@ -7,7 +7,7 @@
   },
   "legendary_from_floor": 3,
   "chest_rarity_weights": {
-    "_default": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): sandıkların kendi nadirlik tablosu var. 2. katta en az Ender (Nadir), 3. katta en az Destansı, 4. katta hep Efsanevi; ilk 2 katta efsanevi şansı düşük (%1 / %3), 3. katta %30. legendary_from_floor kuralı sandıklara uygulanmaz. Gizli oda sandığı bu tablonun üstüne upper_rarity_boost'u (×2) uygular. Tüccar ve boss (Kordrak hariç) katın normal tablosunu kullanır.",
+    "_default": "Aşama 10 testinden sonra (v0.10.1): sandıkların kendi nadirlik tablosu var. 2. katta en az Ender (Nadir), 3. katta en az Destansı, 4. katta hep Efsanevi; ilk 2 katta efsanevi şansı düşük (%1 / %3), 3. katta %30. legendary_from_floor kuralı sandıklara uygulanmaz. Gizli oda sandığı bu tablonun üstüne upper_rarity_boost'u (×2) uygular. Tüccar ve boss (Kordrak hariç) katın normal tablosunu kullanır.",
     "sources": ["chest", "secret_room"],
     "floors": {
       "1": { "common": 0.70, "rare": 0.25, "epic": 0.04, "legendary": 0.01 },
@@ -17,7 +17,7 @@
     }
   },
   "boss_drops": {
-    "_default": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): bazı boss'ların kesim ödülü (düşen silah) katın normal tablosu yerine buradan gelir. Seçeneklerden biri 'chance' ile seçilir, 'count' kadar 'rarity' silah düşer; silah leveli katın aralığından ama en az min_level. Kordrak (3. kat): %65 ihtimalle 1 Efsanevi YA DA %35 ihtimalle 2 Destansı, level en az 40.",
+    "_default": "Aşama 10 testinden sonra (v0.10.1): bazı boss'ların kesim ödülü (düşen silah) katın normal tablosu yerine buradan gelir. Seçeneklerden biri 'chance' ile seçilir, 'count' kadar 'rarity' silah düşer; silah leveli katın aralığından ama en az min_level. Kordrak (3. kat): %65 ihtimalle 1 Efsanevi YA DA %35 ihtimalle 2 Destansı, level en az 40.",
     "kordrak": {
       "options": [
         { "chance": 0.65, "rarity": "legendary", "count": 1 },
@@ -27,7 +27,7 @@
     }
   },
   "upper_rarity_boost": {
-    "_note": "Gizli odalar üst nadirlik şanslarını iki katına çıkarır; fark alttaki nadirliklerden düşülür (önce Yaygın, sonra Ender; sandık tablosunda alt nadirlik yetmezse kalan fark Destansı'dan: ör. 3. kat gizli sandık Destansı %40 / Efsanevi %60). Aşama 5 kullanıcı kararı: düşmanlar (elit dahil) silah düşürmez; boss'un tek silahı katın normal oranlarıyla çıkar (en az Destansı kuralı kaldırıldı; v0.10.1'de Kordrak'a özel ödül: boss_drops).",
+    "_note": "Gizli odalar üst nadirlik şanslarını iki katına çıkarır; fark alttaki nadirliklerden düşülür (önce Yaygın, sonra Ender; sandık tablosunda alt nadirlik yetmezse kalan fark Destansı'dan: ör. 3. kat gizli sandık Destansı %40 / Efsanevi %60). Aşama 5: düşmanlar (elit dahil) silah düşürmez; boss'un tek silahı katın normal oranlarıyla çıkar (en az Destansı kuralı kaldırıldı; v0.10.1'de Kordrak'a özel ödül: boss_drops).",
     "sources": ["secret_room"],
     "rarities": ["epic", "legendary"],
     "multiplier": 2.0

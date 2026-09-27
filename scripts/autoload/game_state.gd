@@ -75,7 +75,7 @@ func start_run(new_race_id: String, start_type: String = "") -> void:
 	Events.run_started.emit(race_id)
 
 
-## Envanter slotları düzenlenebilir mi? Kullanıcı kararı (v0.10.1): savaşta da serbest (economy.slots_in_combat);
+## Envanter slotları düzenlenebilir mi? v0.10.1: savaşta da serbest (economy.slots_in_combat);
 ## eskiden (GDD Kontroller ve Slotlar) yalnızca oda dışında. Tab her zaman serbesttir. Yerden eşya alma ayrı kuraldır
 ## (yalnızca savaş dışında; DungeonRun.pick_up).
 func can_change_slots() -> bool:

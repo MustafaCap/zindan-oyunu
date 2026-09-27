@@ -10,7 +10,7 @@ Godot 4 yalnızca Ogg Theora oynatır; MP4/MOV/WebM gibi videolar önce buna çe
 Kullanım (make menu-video VIDEO=...):
   blender -b --factory-startup --python tools/blender/menu_video.py -- --in=VIDEO.mp4
           [--calm-end=1.3] [--slow=0.5] [--kbps=5000] [--height=1080] [--xfade=1.5] [--no-audio]
---calm-end: kanın akmaya başlamadığı son an (sn; kullanıcının videosunda damla ~1,4. sn'de belirir).
+--calm-end: kanın akmaya başlamadığı son an (sn; videoda damla ~1,4. sn'de belirir).
 """
 import math
 import os

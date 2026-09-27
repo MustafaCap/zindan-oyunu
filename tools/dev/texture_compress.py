@@ -1,4 +1,4 @@
-"""Aşama 10: sprite dokularının içe aktarma sıkıştırması (kullanıcı kararı). Renk ve normal sayfaları (ör. idle.png,
+"""Aşama 10: sprite dokularının içe aktarma sıkıştırması. Renk ve normal sayfaları (ör. idle.png,
 idle_n.png) %85 kaliteli kayıplı WebP olarak içe aktarılır (.exe ~189 → ~146 MB, gözle fark yok); ışıma katmanları
 (*_e.png) kayıpsız kalır (zaten küçükler ve ışıma kenarları kayıplı sıkıştırmada lekelenir). Kaynak PNG'ler depoda
 kayıpsız durur; yalnızca .import dosyalarındaki compress/mode ve compress/lossy_quality değişir.

@@ -1,5 +1,5 @@
 """Düşman ve boss modelleri (Aşama 8): 17 temel düşman, 3 boss yardımcısı (Sürünen Göz, Duvar Gözü, Mantar Totemi)
-ve 4 boss. Görsel yön (kullanıcı kararı): karanlık, kanlı, vahşi. Elit (büyük + aura halkası) ve malzeme varyantları
+ve 4 boss. Görsel yön: karanlık, kanlı, vahşi. Elit (büyük + aura halkası) ve malzeme varyantları
 (taş, alevli, zehirli, hayalet) oyunda ton ve ölçekle aynı sprite'tan üretilir.
 
 İskeletler: insansı (humanoid.py), sürüngen/böcek (crawler: 4 ya da 6 bacak, baş ve çene, kuyruk) ve et kütlesi (blob:

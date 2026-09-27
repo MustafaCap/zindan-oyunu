@@ -25,7 +25,7 @@
         "id": "shield_charge", "name": "Kalkan Hücumu", "description": "İleri atılır; yolundaki düşmanlara vurur, onları iter ve sersemletir",
         "distance": 4.0, "duration": 0.25, "skill_mult": 1.5, "hit_radius": 0.9,
         "stun_duration": 0.6, "boss_slow_duration": 1.0, "boss_slow": 0.3,
-        "_default": "Kullanıcı kararı (Aşama 6): Zırh yeteneği yerine Kalkan Hücumu. Farenin yönünde 0,25 sn'de 4 karo atılır (atılırken dokunulmaz, düşmanların içinden geçer, duvarda durur); yoluna 0,9 karo yaklaşan her düşmana bir kez aktif silahın vuruşunun ×1,5'i (güçlü vuruş: savrulur, elementi ve kombosu işler) ve 0,6 sn sersemletme (boss'ta 1 sn %30 yavaşlatma). Bedel 40 enerji; sayılar _default."
+        "_default": "Aşama 6: Zırh yeteneği yerine Kalkan Hücumu. Farenin yönünde 0,25 sn'de 4 karo atılır (atılırken dokunulmaz, düşmanların içinden geçer, duvarda durur); yoluna 0,9 karo yaklaşan her düşmana bir kez aktif silahın vuruşunun ×1,5'i (güçlü vuruş: savrulur, elementi ve kombosu işler) ve 0,6 sn sersemletme (boss'ta 1 sn %30 yavaşlatma). Bedel 40 enerji; sayılar _default."
       },
       "e": {
         "id": "ground_slam", "name": "Yer sarsıntısı", "description": "Önündeki alana büyük hasar",
@@ -123,7 +123,7 @@
       "regen_pct_per_sec": 0.03
     },
     "costs": { "light": 0, "heavy": 45, "q": 55, "e": 75 },
-    "_costs_note": "Kullanıcı isteğiyle iki kez düşürüldü: Aşama 3 testinden sonra (sol 2 → 1, sağ 70 → 55, Q 80 → 65, E 110 → 90) ve Aşama 10 testinden sonra v0.10.2 (normal vuruş mana harcamaz: sol 1 → 0, sağ 55 → 45, Q 65 → 55, E 90 → 75). Maks levelde (440 mana) arka arkaya 9 sağ tık ya da karışık 7 skill.",
+    "_costs_note": "İki kez düşürüldü: Aşama 3 testinden sonra (sol 2 → 1, sağ 70 → 55, Q 80 → 65, E 110 → 90) ve Aşama 10 testinden sonra v0.10.2 (normal vuruş mana harcamaz: sol 1 → 0, sağ 55 → 45, Q 65 → 55, E 90 → 75). Maks levelde (440 mana) arka arkaya 9 sağ tık ya da karışık 7 skill.",
     "cooldowns": {},
     "abilities": {
       "q": {

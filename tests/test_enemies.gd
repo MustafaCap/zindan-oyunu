@@ -303,7 +303,7 @@ func test_mycela_totems_and_fire_burst() -> void:
 	var rb := _boss_run(2)
 	var run: DungeonRun = rb[0]
 	var my: Mycela = rb[1]
-	# v0.10.1 (kullanıcı kararı): totemler dövüş başında değil, can %20'ye inince yalnızca bir kez dikilir
+	# v0.10.1: totemler dövüş başında değil, can %20'ye inince yalnızca bir kez dikilir
 	my._time += 5.0
 	my._run_schedule()
 	my.tick_mechanic(0.1)

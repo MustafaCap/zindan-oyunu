@@ -30,7 +30,7 @@ func test_theme_has_dark_buttons_and_serif_font() -> void:
 func test_main_menu_has_three_buttons_and_no_title() -> void:
 	var m := MainMenu.new()
 	_tree().root.add_child(m)
-	if m.video != null:   # videodaki gömülü yazılar düğme; YÜKLE soluk ve düğmesiz (kullanıcı kararı)
+	if m.video != null:   # videodaki gömülü yazılar düğme; YÜKLE soluk ve düğmesiz
 		assert_eq(m.button_labels, ["YENİ OYUN", "AYARLAR", "ÇIKIŞ"])
 		assert_true(m.video.loop, "sakin döngü sıçramasız döner")
 	else:

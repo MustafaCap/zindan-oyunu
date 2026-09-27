@@ -1,7 +1,7 @@
 {
   "_note": "Aşama 5: loot düşmeleri, altın, çanta, tüccar, demirci ve sandık sayıları. GDD'de sayısı olmayan her şey burada; hepsi '_default' sayılır ve oyun testinde ayarlanır. Altın ve fiyatlar katın altın çarpanıyla (floor_gold_mult) çarpılır.",
   "bag_size": 0,
-  "_default_bag_size": "Kullanıcı kararı (Aşama 5): envanterin tamamı 4 slottur (Aktif 1, Aktif 2, Rezonans, Esnek); çanta yoktur. Yeni eşya almak için boş (uygun) slot gerekir, yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler; bag_size > 0 yapılırsa çanta geri gelir.",
+  "_default_bag_size": "Aşama 5: envanterin tamamı 4 slottur (Aktif 1, Aktif 2, Rezonans, Esnek); çanta yoktur. Yeni eşya almak için boş (uygun) slot gerekir, yoksa bir eşya geride bırakılır. Kod çanta gözlerini destekler; bag_size > 0 yapılırsa çanta geri gelir.",
   "start_weapons": { "warrior": "sword", "ghost": "dagger", "archer": "bow", "magical": "staff" },
   "_default_start_weapons": "Her run ırkın kendi ailesinden Yaygın (elementsiz) level 1 bir silahla Aktif 1'de başlar; diğer 3 slot boş.",
   "floor_gold_mult": { "1": 1, "2": 2, "3": 3, "4": 4 },
@@ -19,10 +19,10 @@
     "elite_potion_chance": 0.10,
     "boss_potion_chance": 0.0,
     "chest_talisman_chance": 0.2,
-    "_default": "Kullanıcı kararı (Aşama 5): düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir (kullanıcı kararı, Aşama 6): normal düşman %1, elit %10 (önceden %1,5 / %25); kat başına ortalama ~0,8 iksir. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
+    "_default": "Aşama 5: düşmanlar (normal ve elit) silah düşürmez, altın düşürür; boss kesilince 1 silah düşer ve nadirliği katın normal oranlarıyla çıkar (ör. 3. katta efsanevi %5). İksir (Aşama 6): normal düşman %1, elit %10 (önceden %1,5 / %25); kat başına ortalama ~0,8 iksir. Sandık 1 silah (%20 ihtimalle yerine tılsım) + altın."
   },
   "slots_in_combat": true,
-  "_default_slots_in_combat": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): envanter (4 slot) savaş sırasında da düzenlenebilir — I ile açılır (oyun durur), sürükle-bırak, sağ/çift tık ve yere bırakma serbest; böylece bağışık düşmana karşı silah değiştirilebilir. Yerden eşya alma yine yalnızca savaş dışında. false yapılırsa eski kural (savaşta slotlar kilitli) döner.",
+  "_default_slots_in_combat": "Aşama 10 testinden sonra (v0.10.1): envanter (4 slot) savaş sırasında da düzenlenebilir — I ile açılır (oyun durur), sürükle-bırak, sağ/çift tık ve yere bırakma serbest; böylece bağışık düşmana karşı silah değiştirilebilir. Yerden eşya alma yine yalnızca savaş dışında. false yapılırsa eski kural (savaşta slotlar kilitli) döner.",
   "pickup": {
     "gold_magnet_tiles": 1.6,
     "potion_pickup_tiles": 1.0,

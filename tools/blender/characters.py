@@ -1,6 +1,6 @@
 """Karakter modelleri (Aşama 8): koddan düşük poligonlu gövdeler. Her kurucu Model'i doldurur ve sözlük döndürür.
 
-Görsel yön (kullanıcı kararı, Aşama 8): karanlık, kanlı, vahşi — şövalye parlaklığı yok. Soluk renkler, kirli yüzeyler
+Görsel yön (Aşama 8): karanlık, kanlı, vahşi — şövalye parlaklığı yok. Soluk renkler, kirli yüzeyler
 (malzemelerdeki gürültü), kan lekeleri ve ıslak kan parlaması, karanlıkta yanan gözler.
 Dönen sözlük: {"hand": silah eli, "grip": elin içindeki tutma noktası (yerel), "anims": animasyon seti}.
 """

@@ -1,5 +1,5 @@
 ## PauseMenu — Aşama 10 duraklatma menüsü (Esc): Devam, Ses ayarları, Ana menüye dön, Oyundan çık. Açıkken oyun durur;
-## Esc ya da "Devam" kapatır. Zindanda "Ana menüye dön" run'ı bırakır ve ölüm sayılır (kullanıcı kararı): önce onay sorulur,
+## Esc ya da "Devam" kapatır. Zindanda "Ana menüye dön" run'ı bırakır ve ölüm sayılır: önce onay sorulur,
 ## sonra DungeonRun ustalık XP'sini o kattaki ölüm çarpanıyla işler ve özet ekranını açar. "Oyundan çık" da run'ı aynı
 ## şekilde işleyip kaydeder, sonra oyunu kapatır. Test odasında (run yok) ikisi de onaysız, doğrudan çalışır.
 class_name PauseMenu

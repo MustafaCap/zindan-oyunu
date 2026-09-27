@@ -66,7 +66,7 @@ static func mastery_bonus(level: int) -> float:
 	return per_level * clampi(level, 0, max_level)
 
 
-## Durum çarpanı: bağışık — ana vuruş 0,75, ek etki (secondary) 0 (kullanıcı kararı, v0.10.1; fiziksele bağışık hayalete
+## Durum çarpanı: bağışık — ana vuruş 0,75, ek etki (secondary) 0 (v0.10.1; fiziksele bağışık hayalete
 ## yaygın silah da aynı kuralla), dirençli 0,5, normal 1, zayıf 1,5.
 static func status_multiplier(kind: String, def: Defense, secondary: bool = false) -> float:
 	var m: Dictionary = DataDB.get_value("elements", "status_multipliers")

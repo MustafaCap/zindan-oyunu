@@ -8,7 +8,7 @@
 ##
 ## İkincil vuruşlar (zincir, sekme, kombo alanı) hasar ve element durumu uygular ama yeni kombo, zincir ya da
 ## özellik tetiklemez; böylece sonsuz döngü olmaz.
-## Bağışıklık (kullanıcı kararı, v0.10.1): bağışık hedefe ana vuruş %75 işler; element durumu, kombo, zincir ve
+## Bağışıklık (v0.10.1): bağışık hedefe ana vuruş %75 işler; element durumu, kombo, zincir ve
 ## özellikler uygulanmaz, ikincil vuruşlar 0 vurur.
 class_name HitResolver
 extends RefCounted
@@ -55,7 +55,7 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	var caps: Dictionary = DataDB.get_value("progression", "stat_caps")
 	var crit_chance := minf(float(DataDB.get_value("progression", "combat.base_crit_chance")) + float(opts.get("crit_bonus_chance", 0.0)), float(caps["crit_chance"]))
 	hit.is_crit = bool(combo.get("guaranteed_crit", false)) or rng.randf() < crit_chance
-	# v0.10.1 (kullanıcı kararı): bağışık hedefte ana vuruş %75 işler ama özellikler (Öfke, Can Emme, İnfaz, Sersemletme,
+	# v0.10.1: bağışık hedefte ana vuruş %75 işler ama özellikler (Öfke, Can Emme, İnfaz, Sersemletme,
 	# Sekme) uygulanmaz; element durumu, kombo ve zincir zaten yok.
 	var fury_s := trait_scale(weapon, "fury", opts) if not immune else 0.0
 	if fury_s > 0.0:

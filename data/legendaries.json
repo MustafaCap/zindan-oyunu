@@ -1,5 +1,5 @@
 {
-  "_note": "Efsanevi silahlar (GDD: Nadirlik ve Efsanevi Silahlar). Her birinin adı, elementi, pasifi ve sağ tık eki (kendine özel skill) elle seçildi; özellik sayısı 1 veya 2 (rastgele). İlk sürümde her silah tipinden bir efsanevi var (Aşama 5 önerisi, kullanıcı değiştirebilir). Pasif ve skill sayıları '_default': oyun testinde ayarlanır. flex_field: silah Esnek slottayken %9 ile çarpılan sayı (GDD: pasifinin %9'u).",
+  "_note": "Efsanevi silahlar (GDD: Nadirlik ve Efsanevi Silahlar). Her birinin adı, elementi, pasifi ve sağ tık eki (kendine özel skill) elle seçildi; özellik sayısı 1 veya 2 (rastgele). İlk sürümde her silah tipinden bir efsanevi var (Aşama 5 önerisi, sonradan değiştirilebilir). Pasif ve skill sayıları '_default': oyun testinde ayarlanır. flex_field: silah Esnek slottayken %9 ile çarpılan sayı (GDD: pasifinin %9'u).",
   "passive_templates": {
     "sky_lightning": { "description": "Her {every_n_hits}. vuruş hedefe gökten {element_name} indirir (vuruşun %{damage_pct}'i, {radius} karo alan)", "every_n_hits": 5, "damage_pct": 0.8, "radius": 1.2, "flex_field": "damage_pct" },
     "death_burst":   { "description": "Öldürülen düşman silahın elementinde patlar (vuruşun %{damage_pct}'i, {radius} karo alan)", "damage_pct": 0.5, "radius": 2.0, "flex_field": "damage_pct" },

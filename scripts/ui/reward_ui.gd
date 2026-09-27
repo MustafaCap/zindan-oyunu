@@ -1,7 +1,7 @@
 ## RewardUI — run içi ödül seçim ekranı (Aşama 6): level ödülü (her 5 levelde) ve boss ödülü. 2 kart; tıklanarak ya da
 ## 1 / 2 tuşuyla seçilir. Açıkken oyun durur. Seçenekleri Rewards üretir; seçimi DungeonRun işler (chosen sinyali).
 ## Kartta ödülün adı, değeri, şu anki toplamı ve (varsa) tavanı yazar. Nihai arayüz tasarımı sonraya (GDD Açık Kararlar).
-## v0.10.1 (kullanıcı kararı): ekran açıldıktan sonra rewards.input_delay_sec (1,2 sn) boyunca tıklama ve 1/2 çalışmaz;
+## v0.10.1: ekran açıldıktan sonra rewards.input_delay_sec (1,2 sn) boyunca tıklama ve 1/2 çalışmaz;
 ## kartlar soluk ve kilitli görünür, kartların altındaki çubuk dolunca seçilebilir (yanlışlıkla seçimi önler).
 class_name RewardUI
 extends CanvasLayer

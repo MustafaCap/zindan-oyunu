@@ -1,4 +1,4 @@
-## InventoryUI — 4 slotluk envanter arayüzü (kullanıcı kararı: çanta yok; economy.bag_size > 0 olursa çanta ızgarası da
+## InventoryUI — 4 slotluk envanter arayüzü (çanta yok; economy.bag_size > 0 olursa çanta ızgarası da
 ## görünür); tüccar ve demirci panelleri (GDD: Görsel Stil > Arayüz: envanter ızgarası,
 ## sürükle-bırak, stat karşılaştırmalı tooltip). I ile açılır (tüccar/demirci F ile), açıkken oyun duraklar.
 ##   Sürükle-bırak: eşyayı taşı ya da yer değiştir; "Yere bırak" alanına bırakınca yere düşer.
@@ -6,7 +6,7 @@
 ##   (yoksa kullanılan aktif silahla yer değiştirir).   Sol tık: seç (tüccarda satmak, demircide işlemek için).
 ##   Tüccar: tezgâhtaki eşyayı satın al, iksir al; seçileni sat ya da "Sat" alanına sürükle.
 ##   Demirci: silahı örse sürükle ya da seç; level atlat, elementi ya da özellikleri yeniden çek.
-## Kullanıcı kararı (v0.10.1): savaş sürerken de slotlar düzenlenebilir (GameState.slots_locked; economy.slots_in_combat).
+## v0.10.1: savaş sürerken de slotlar düzenlenebilir (GameState.slots_locked; economy.slots_in_combat).
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu ilk sürümdür.
 class_name InventoryUI
 extends CanvasLayer

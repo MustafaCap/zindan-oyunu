@@ -511,7 +511,7 @@ func start_rush(ab: Dictionary, w: Weapon, attack_id: int) -> void:
 	_rush = {"ab": ab, "weapon": w, "id": attack_id, "dir": dir, "hit": {}}
 	iframes = maxf(iframes, dur + 0.05)
 	busy_t = maxf(busy_t, dur)
-	# Aşama 8 (kullanıcı kararı): sol koldaki demir bileklikten kalkan açılır, hücum biterken geri çekilip kaybolur
+	# Aşama 8: sol koldaki demir bileklikten kalkan açılır, hücum biterken geri çekilip kaybolur
 	visual.play_action("rush", dur + 0.15)
 	move_override(Iso.to_screen(dir * Iso.tiles(float(ab["distance"]))) / dur, dur, func() -> void:
 		rush_t = 0.0

@@ -29,7 +29,7 @@ func test_plain_hit_is_base_damage() -> void:
 	assert_almost(DamageCalc.compute(_hit(125.0), DamageCalc.Defense.new()), 125.0, 0.0001, "terimsiz vuruş = T")
 
 
-## v0.10.1 (kullanıcı kararı): bağışık hedefe ana vuruş %75, ek etki (ikincil vuruş) 0.
+## v0.10.1: bağışık hedefe ana vuruş %75, ek etki (ikincil vuruş) 0.
 func test_immune_primary_75_secondary_zero() -> void:
 	var stone := DamageCalc.Defense.new(["lightning"], [], ["ice"])
 	assert_almost(DamageCalc.compute(_hit(100.0, "lightning"), stone), 75.0, 0.0001, "taşa yıldırım ana vuruşta %75")

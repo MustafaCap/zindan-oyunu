@@ -1,6 +1,6 @@
 """Oda nesneleri (Aşama 8): sandık (kapalı/açık), tüccar, demirci, aşağı inen merdiven. Tek yönden (izometrik)
 render edilir; oyunda RoomProp çizer. Tüccarın feneri ve demircinin ocağı ayrıca oyunda nokta ışık yayar.
-Görsel yön: karanlık, kanlı zindan (kullanıcı kararı).
+Görsel yön: karanlık, kanlı zindan.
 """
 
 import math
