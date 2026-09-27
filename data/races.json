@@ -122,8 +122,8 @@
       "max_per_level": 4,
       "regen_pct_per_sec": 0.03
     },
-    "costs": { "light": 1, "heavy": 55, "q": 65, "e": 90 },
-    "_costs_note": "Aşama 3 testinden sonra kullanıcı isteğiyle düşürüldü (eski: sol 2, sağ 70, Q 80, E 110).",
+    "costs": { "light": 0, "heavy": 45, "q": 55, "e": 75 },
+    "_costs_note": "Kullanıcı isteğiyle iki kez düşürüldü: Aşama 3 testinden sonra (sol 2 → 1, sağ 70 → 55, Q 80 → 65, E 110 → 90) ve Aşama 10 testinden sonra v0.10.2 (normal vuruş mana harcamaz: sol 1 → 0, sağ 55 → 45, Q 65 → 55, E 90 → 75). Maks levelde (440 mana) arka arkaya 9 sağ tık ya da karışık 7 skill.",
     "cooldowns": {},
     "abilities": {
       "q": {

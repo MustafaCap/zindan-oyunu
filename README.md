@@ -17,12 +17,18 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 8 | Sanat | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 9 | Ses | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 10 | Menüler, denge ve teslim | 🔶 Yapıldı; kullanıcı testi düzeltmeleri **v0.10.1** yerelde commit edildi, yeniden test bekleniyor (push ve `v0.1` etiketi onaydan sonra) |
+| 10 | Menüler, denge ve teslim | 🔶 Yapıldı; kullanıcı testi düzeltmeleri **v0.10.1** ve **v0.10.2** yerelde commit edildi, yeniden test bekleniyor (push ve `v0.1` etiketi onaydan sonra) |
 
 **Kalınan yer:** Aşama 10 (sürüm 0.10.0) `main`'den açılan `asama-10` dalında yapıldı; kullanıcı oyunu oynadı ve istediği 10 düzeltme
-**sürüm 0.10.1** olarak aynı dalda yapıldı, **yalnızca yerelde commit edildi** (derleme: `ZindanOyunu-Derlemeler\asama-10\ZindanOyunu-v0.10.1\`
-ve `zindan-oyunu-windows-v0.10.1.zip`; 0.10.0 da duruyor). Kullanıcı oyunu baştan sona oynayıp onaylayınca: push, `main`'e birleştirme ve
+**sürüm 0.10.1**, ardından rün işareti ve Magical mana değişiklikleri **sürüm 0.10.2** olarak aynı dalda yapıldı, **yalnızca yerelde commit
+edildi** (en son derleme: `ZindanOyunu-Derlemeler\asama-10\ZindanOyunu-v0.10.2\` ve `zindan-oyunu-windows-v0.10.2.zip`; 0.10.0 ve 0.10.1 da duruyor). Kullanıcı oyunu baştan sona oynayıp onaylayınca: push, `main`'e birleştirme ve
 GitHub'da `v0.1` sürüm etiketi. Ana menü videosu eklendi (`make menu-video`; giriş + sakin döngü + menü müziği).
+
+**Aşama 10 kullanıcı testi düzeltmeleri 2 (v0.10.2, kullanıcının isteği):**
+- **Rün işareti:** rünün normal vuruşunda (ve rün tuzağında) yere çizilen **altı köşeli yıldız kaldırıldı**. Yerine içe dönük dişlerle
+  çevrili, yavaşça dönen bir halka ve ortada dikey göz bebekli, nabız gibi açılıp kapanan bir göz ("yutan göz" mührü) çizilir.
+- **Magical mana:** normal vuruş (sol tık) artık **mana harcamaz** (her silahta). Skill bedelleri düşürüldü: sağ tık 55 → **45**, Q 65 → **55**,
+  E 90 → **75** (maks levelde arka arkaya karışık 7 skill, eskiden 5-6).
 
 **Aşama 10 kullanıcı testi düzeltmeleri (v0.10.1, hepsi kullanıcının onayladığı değişiklikler):**
 1. **Mycela** (2. kat boss'u): 3 mantar totemi savaşta **yalnızca bir kez**, canı **%20**'ye inince dikilir (kırılınca yeniden dikilmez).
