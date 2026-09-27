@@ -5,7 +5,7 @@
 ##   Çığlık: etrafında dolan işaret, sonra patlama.
 ## Karanlık Perdesi: arena kararır; yanan meşalelerin çevresi güvenli, karanlıkta 1 sn'den fazla kalan oyuncu can kaybeder.
 ## Nyx'thar 12 sn'de bir meşale söndürür (önce kırmızı titrer); en az 2 meşale hep yanar. Ateş vuruşu meşaleyi yakar.
-## Fiziksele bağışık (yaygın silahlar %25). 2. faz: platform kenarları çöker (işaretli), kopyalar 5'e çıkar ve
+## Fiziksele bağışık (v0.10.1: yaygın silah da her bağışıklık gibi %75). 2. faz: platform kenarları çöker (işaretli), kopyalar 5'e çıkar ve
 ## kopyalar da Boşluk Yırtığı açar.
 class_name Nyxthar
 extends Boss

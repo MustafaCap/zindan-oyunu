@@ -42,8 +42,8 @@ func _ready() -> void:
 	_info.position = Vector2(32, 112)
 
 	_hint_lines = PackedStringArray([
-		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · R yeniden başla · Esc çık",
-		"M: HATA AYIKLAMA MENÜSÜ (ırk, silah, element) · Kısayol: 2-7 element · 0 elementsiz · 8 özellik · N yeni dalga",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · R yeniden başla · Esc menü",
+		"F5: HATA AYIKLAMA MENÜSÜ (ırk, silah, element) · Kısayol: 2-7 element · 0 elementsiz · 8 özellik · N yeni dalga",
 	])
 
 	var ver := _make_label(16, Color(0.5, 0.5, 0.55))
@@ -52,7 +52,12 @@ func _ready() -> void:
 	ver.position = Vector2(-32, 24)
 	ver.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_ver = ver
-	_ver.text = "v%s · %s" % [ProjectSettings.get_setting("application/config/version", "?"), stage_text]
+	_ver.text = _version_text()
+
+
+func _version_text() -> String:
+	var v := "v%s" % ProjectSettings.get_setting("application/config/version", "?")
+	return v if stage_text == "" else "%s · %s" % [v, stage_text]
 
 
 func _make_label(size: int, color: Color) -> Label:
@@ -84,7 +89,7 @@ func flash_note(text: String) -> void:
 func _process(delta: float) -> void:
 	_info.text = wave_text
 	if _ver:
-		_ver.text = "v%s · %s" % [ProjectSettings.get_setting("application/config/version", "?"), stage_text]
+		_ver.text = _version_text()
 	_note_t = maxf(_note_t - delta, 0.0)
 	_panel.queue_redraw()
 

@@ -58,6 +58,14 @@ var dead: bool = false
 var autoplay: bool = false
 ## Geliştirme: hasar almaz (zindan smoke testi --god ile haritanın yürünebilirliğini dener).
 var invulnerable: bool = false
+## Aşama 10 denge simülasyonu (--balance): ölümcül hasarda ölmez, ölüm sayılır ve tam canla sürer.
+var balance_revive: bool = false
+var balance_deaths: int = 0
+## Alınan toplam hasar ve içilen iksirler (denge simülasyonunun kat özeti için)
+var damage_taken: float = 0.0
+var potions_used: int = 0
+## Denge botu: yerdeki işaretlerden ve saldırı hazırlayan düşmanların menzilinden kaçar (smoke/boss testlerinde kapalı).
+var bot_dodge: bool = false
 ## Zindan botu (DungeonAutopilot): düşman yokken bu noktaya yürür / bu noktaya vurur (çatlak duvar). INF = yok.
 var bot_waypoint: Vector2 = Vector2.INF
 var bot_attack_point: Vector2 = Vector2.INF
@@ -695,8 +703,8 @@ func deal_hit(target: Node2D, w: Weapon, source: String, skill_mult: float, atta
 	damage_by_source[src_key] = float(damage_by_source.get(src_key, 0.0)) + dealt
 	if dealt > 0.0:
 		kit.on_hit_landed(attack_id)
-		# Ödüllerden can emme (Ghost'ta öldürme başına iyileşmeye dönüşür: heal() Ghost'ta çalışmaz)
-		if s.lifesteal > 0.0:
+		# Ödüllerden can emme (Ghost'ta öldürme başına iyileşmeye dönüşür: heal() Ghost'ta çalışmaz); bağışık hedefte işlemez (v0.10.1)
+		if s.lifesteal > 0.0 and not bool(res.get("immune", false)):
 			heal(dealt * s.lifesteal)
 	effects.after_hit(target, w, res, attack_id, o)
 	# Kritik zinciri: kritik vuruş %20 ihtimalle sağ tık, Q ve E beklemelerini 1 sn azaltır
@@ -758,6 +766,7 @@ func use_potion() -> bool:
 		Audio.play("deny")
 		return false
 	potions -= 1
+	potions_used += 1
 	Audio.play("potion_drink")
 	restore(max_hp * float(DataDB.get_value("progression", "potions.heal_pct")))
 	return true
@@ -823,6 +832,7 @@ func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCa
 	hit.kind = kind
 	defense.armor = current_armor()
 	var dmg := DamageCalc.compute(hit, defense)
+	damage_taken += minf(dmg, hp)
 	hp = maxf(hp - dmg, 0.0)
 	iframes = float(_combat["player_hurt_iframes"])
 	visual.flash(float(_feel["flash_duration"]) * 1.5, Color(1.0, 0.25, 0.25))
@@ -831,6 +841,13 @@ func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCa
 	Events.damage_number.emit(global_position + Vector2(0, -40), dmg, false, true, kind)
 	health_changed.emit(hp, max_hp)
 	if hp <= 0.0 and not _try_second_chance():
+		if balance_revive:
+			# Denge simülasyonu (--balance): ölüm sayılır, bot tam canla sürdürür (kat süreleri ölçülebilsin)
+			balance_deaths += 1
+			hp = max_hp
+			iframes = 1.0
+			health_changed.emit(hp, max_hp)
+			return
 		_die()
 
 
@@ -883,6 +900,62 @@ func _draw() -> void:
 ## En yakın düşmana yaklaşır (uzak silahta mesafe korur), menzildeyse vurur, kalabalıkta ya da uzaktan sağ tık,
 ## hazır olunca Q/E kullanır. Hedef aktif silahın elementine bağışıksa ya da diğer silahla kombo yapılabilecekse Tab.
 func _bot_think(delta: float) -> Dictionary:
+	var out := _bot_fight(delta)
+	if bot_dodge:
+		var esc := _bot_escape()
+		var dir: Vector2 = esc[0]
+		if dir != Vector2.ZERO:
+			out["move"] = dir
+			out["heavy"] = false
+			if bool(esc[1]) and dash_cd <= 0.0:
+				out["dash"] = true
+	return out
+
+
+## Denge botu (--balance): kaçış yönü (düz uzay, birim vektör; yoksa sıfır) ve acil mi (işaret dolmak üzere ya da şok
+## halkası geliyor: atılmayla dokunulmaz geçilir). [yön, acil]
+func _bot_escape() -> Array:
+	var esc := Vector2.ZERO
+	var urgent := false
+	for n: Node in get_tree().get_nodes_in_group("enemy_hazards"):
+		var h := n as EnemyHazard
+		if h == null or h.mode == "visual" or not is_instance_valid(h):
+			continue
+		var v := Iso.to_cart(global_position - h.global_position) / Iso.KARO
+		if h.shape == "ring_wave":
+			if h.is_active() and absf(h.ring_radius() - v.length()) < 1.0 and h.ring_radius() < v.length():
+				urgent = true
+				esc += v.normalized() if v.length() > 0.05 else Vector2.RIGHT
+			continue
+		if h.mode == "burst" and h.is_active():
+			continue
+		if not h.contains(global_position, radius_tiles + 0.35):
+			continue
+		var away := v
+		if h.shape == "rect":
+			var d := h.dir_cart.normalized()
+			var t := clampf(v.dot(d), h.start, h.start + h.length)
+			away = v - d * t
+			if away.length() < 0.05:
+				away = d.orthogonal()
+		elif away.length() < 0.05:
+			away = facing_cart.orthogonal()
+		esc += away.normalized()
+		if h.time_to_fire() < 0.3 and h.mode == "burst":
+			urgent = true
+	for e: Node2D in enemies():
+		if int(e.get("state")) != Enemy.State.WINDUP:
+			continue
+		var dist := Iso.tile_distance(global_position, e.global_position)
+		if dist > float(e.get("attack_range")) + radius_tiles + 0.4:
+			continue
+		var v2 := Iso.to_cart(global_position - e.global_position).normalized()
+		esc += v2.orthogonal() * 0.7 if str(e.get("attack_type")) in ["projectile", "beam", "cone"] else v2 * 0.8
+	return [esc.normalized() if esc.length() > 0.01 else Vector2.ZERO, urgent]
+
+
+## Savaş botunun saldırı kararı (smoke testi botu; Aşama 10'da kaçınmadan ayrıldı).
+func _bot_fight(delta: float) -> Dictionary:
 	var out := _empty_intent()
 	for k: String in _bot.keys():
 		_bot[k] = float(_bot[k]) - delta
@@ -960,7 +1033,7 @@ func _bot_think(delta: float) -> Dictionary:
 		var other: Weapon = weapons[(active_index + 1) % weapons.size()]
 		var def: DamageCalc.Defense = nearest.get("defense")
 		var st: StatusEffects = nearest.get("status")
-		var cur_useless := DamageCalc.status_multiplier(w.element, def) <= 0.0
+		var cur_useless := DamageCalc.is_immune(w.element, def)
 		var other_combo := not DamageCalc.is_immune(other.element, def) and not Combos.find(st, other.element).is_empty()
 		if cur_useless or other_combo:
 			out["swap"] = true

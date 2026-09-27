@@ -454,6 +454,11 @@ func test_boss_kill_first_kill_reward_and_run_end_save() -> void:
 	assert_true(run.reward_ui.visible, "savaş dışında ödül ekranı açılır")
 	assert_eq(run.reward_ui.choices.size(), 2)
 	var special: Dictionary = run.reward_ui.choices[1]
+	# v0.10.1: açıldıktan sonra 1,2 sn seçim kilitli (yanlışlıkla tıklamayı önler)
+	assert_true(run.reward_ui.is_locked(), "açılınca seçim kilitli")
+	run.reward_ui.pick(1)
+	assert_true(run.reward_ui.visible, "kilitliyken seçilmez")
+	run.reward_ui.unlock()
 	run.reward_ui.pick(1)
 	assert_true(not run.reward_ui.visible)
 	assert_true(GameState.has_special(str(special["id"])), "özel etki alındı")
@@ -466,6 +471,7 @@ func test_boss_kill_first_kill_reward_and_run_end_save() -> void:
 	GameState.set_in_combat(false)
 	run._try_open_reward()
 	assert_true(run.reward_ui.visible, "savaş bitince açılır")
+	run.reward_ui.unlock()
 	run.reward_ui.pick(0)
 	# Run sonu: 2. katı bitirip ölüm → ×1,0 → 100 XP, hasar payına göre
 	GameState.damage_by_weapon_type = {"sword": 600.0, "staff": 400.0}

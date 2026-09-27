@@ -140,7 +140,9 @@ func after_hit(target: Node2D, w: Weapon, res: Dictionary, attack_id: int, opts:
 		var dir: Vector2 = opts.get("dir", player.facing_cart)
 		var dmg := HitResolver.secondary_hit(resonance, target, resonance_pct(), resonance.element, {}, false, dir)
 		GameState.record_damage(resonance.type_id, dmg)
-	# Efsanevi pasifler
+	# Efsanevi pasifler (bağışık hedefe yapılan vuruş pasifi tetiklemez ve saymaz — v0.10.1 kullanıcı kararı)
+	if bool(res.get("immune", false)):
+		return
 	for src: Array in passive_sources():
 		var lw: Weapon = src[0]
 		var scale: float = src[1]

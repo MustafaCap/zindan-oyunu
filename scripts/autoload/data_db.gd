@@ -43,10 +43,12 @@ const SCHEMA := {
 	"loot_tables": {
 		"floors": {"_each": {"rarity_weights": "dict", "weapon_level": "array"}},
 		"legendary_from_floor": "number",
+		"chest_rarity_weights": {"sources": "array", "floors": {"_each": "dict"}},
+		"boss_drops": {"_each": {"options": "array", "min_level": "number"}},
 		"upper_rarity_boost": {"sources": "array", "rarities": "array", "multiplier": "number"},
 	},
 	"elements": {
-		"status_multipliers": {"immune": "number", "resistant": "number", "normal": "number", "weak": "number", "common_vs_ghost": "number"},
+		"status_multipliers": {"immune": "number", "immune_secondary": "number", "resistant": "number", "normal": "number", "weak": "number"},
 		"physical": {"name": "string", "color": "string"},
 		"elements": {"_each": {"name": "string", "color": "string", "status": "string", "description": "string"}},
 		"combos": "array",
@@ -430,6 +432,31 @@ func _cross_check() -> void:
 			total += float(weights[r])
 		if absf(total - 1.0) > 0.0001:
 			errors.append("loot_tables.floors.%s: nadirlik oranlarının toplamı 1 olmalı (bulunan %.4f)" % [floor_id, total])
+	# v0.10.1: sandık tablosu (her kat, toplam 1) ve boss'a özel kesim ödülleri (şanslar toplamı 1, bilinen nadirlik)
+	var chest_floors: Dictionary = tables["loot_tables"]["chest_rarity_weights"]["floors"]
+	for cf: String in _records(tables["loot_tables"]["floors"]):
+		if not chest_floors.has(cf):
+			errors.append("loot_tables.chest_rarity_weights.floors: %s. kat eksik" % cf)
+			continue
+		var ctotal := 0.0
+		for r2: String in (chest_floors[cf] as Dictionary).keys():
+			if not r2 in rarity_ids:
+				errors.append("loot_tables.chest_rarity_weights.floors.%s: bilinmeyen nadirlik '%s'" % [cf, r2])
+			ctotal += float(chest_floors[cf][r2])
+		if absf(ctotal - 1.0) > 0.0001:
+			errors.append("loot_tables.chest_rarity_weights.floors.%s: toplam 1 olmalı (bulunan %.4f)" % [cf, ctotal])
+	var boss_drops: Dictionary = tables["loot_tables"]["boss_drops"]
+	for bd: String in _records(boss_drops):
+		if not (tables["bosses"]["bosses"] as Dictionary).has(bd):
+			errors.append("loot_tables.boss_drops: bilinmeyen boss '%s'" % bd)
+		var btotal := 0.0
+		for o: Variant in boss_drops[bd]["options"]:
+			var od: Dictionary = o
+			if not str(od.get("rarity", "")) in rarity_ids or int(od.get("count", 0)) < 1:
+				errors.append("loot_tables.boss_drops.%s: seçenekte nadirlik/sayı hatalı" % bd)
+			btotal += float(od.get("chance", 0.0))
+		if absf(btotal - 1.0) > 0.0001:
+			errors.append("loot_tables.boss_drops.%s: şansların toplamı 1 olmalı (bulunan %.4f)" % [bd, btotal])
 
 	var elements: Dictionary = tables["elements"]["elements"]
 	for el_id: String in ELEMENT_FIELDS.keys():

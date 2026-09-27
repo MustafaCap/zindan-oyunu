@@ -2,11 +2,11 @@
   "_note": "Aşama 7: 17 temel düşman (5 rol), her birinin elit sürümü ve 21 malzeme varyantı = 55 sıradan düşman. Statlar 1. kat ölçeğindedir; zindanda floor_scaling ile çarpılır. XP değerleri progression.json > enemy_xp içinde. 'material' varyantı düşmana malzeme bağışıklıklarını ekler (Taş İskelet, Hayalet İskelet...). Sayılar _default: oyun testlerinde (Aşama 10) ayarlanır.",
   "_default_ai": "ai: chase (oyuncuya yürür), kite (mesafe korur), wall (duvara yapışık, yürümez), support (dostlarının yakınında kalır, oyuncudan uzak durur), inert (hareket etmez, saldırmaz). attack.type: arc (yakın yay), projectile (mermi), beam (ışın), slam (etrafına alan), lunge (atılıp vurma), cone (çığlık konisi). Her saldırının hazırlığı boyunca yerde kırmızı işaret görünür.",
   "floor_scaling": {
-    "_default": "Kat bazında güç ölçeklemesi (GDD: düşman canı ve hasarı katın hedef oyuncu level aralığına göre artar). Oyuncunun kattaki beklenen gücüne (silah leveli, nadirlik, ödüller, can) göre seçildi. Boss'lar bosses.json'daki kendi değerlerini kullanır (ölçeklenmez); boss'un çağırdıkları ölçeklenir.",
+    "_default": "Kat bazında güç ölçeklemesi (GDD: düşman canı ve hasarı katın hedef oyuncu level aralığına göre artar). Oyuncunun kattaki beklenen gücüne (silah leveli, nadirlik, ödüller, can) göre seçildi. Boss'lar bosses.json'daki kendi değerlerini kullanır (ölçeklenmez); boss'un çağırdıkları ölçeklenir. Kullanıcı kararı (v0.10.1): 4. kat canı ×8 → ×6 (hasar ×4 aynı).",
     "1": {"hp": 1.0, "damage": 1.0},
     "2": {"hp": 2.5, "damage": 1.9},
     "3": {"hp": 5.0, "damage": 2.9},
-    "4": {"hp": 8.0, "damage": 4.0}
+    "4": {"hp": 6.0, "damage": 4.0}
   },
   "elite": {
     "_default": "Elit: ×3 can, ×1,5 hasar, ×1,35 boy ve bir aura (aynı odadaki düşmanlara ve kendisine). Sürü düşmanlarının eliti elite_hp_mult ile daha dayanıklıdır (odada tek başına durabilsin).",

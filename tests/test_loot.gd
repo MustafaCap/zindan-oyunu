@@ -1,5 +1,5 @@
 ## Aşama 5 — LootGenerator: nadirlik oranları (kabul: 10.000 düşüşlük simülasyonda tabloya ±%1), gizli oda
-## üst nadirlik ×2, efsanevi 3. kattan, düşmanlar silah düşürmez / boss 1 silah (katın oranlarıyla), silah alanları,
+## üst nadirlik ×2, efsanevi 3. kattan (v0.10.1: sandık tablosu ve Kordrak'ın özel ödülü), düşmanlar silah düşürmez / boss 1 silah (katın oranlarıyla), silah alanları,
 ## düşmeler, sandık, tüccar tezgâhı.
 extends "res://tests/test_case.gd"
 
@@ -36,34 +36,75 @@ func test_rarity_rates_match_table_10000_drops() -> void:
 			assert_almost(float(got[r]), float(table[r]), TOL, "kat %d %s oranı" % [f, r])
 
 
-## Gizli oda: Destansı ve Efsanevi ×2, fark Yaygın'dan (örn. 3. kat: %8 / %38 / %44 / %10);
-## Yaygın yetmezse kalan Ender'den (4. kat: %0 / %16 / %64 / %20).
-func test_elite_and_secret_double_upper_rarities() -> void:
-	for src: String in ["secret_room"]:
-		for f: int in range(1, 5):
-			var t: Dictionary = DataDB.table("loot_tables")["floors"][str(f)]["rarity_weights"]
-			var want := {"rare": float(t["rare"]), "epic": float(t["epic"]) * 2.0, "legendary": float(t["legendary"]) * 2.0}
-			want["common"] = 1.0 - float(want["rare"]) - float(want["epic"]) - float(want["legendary"])
-			if float(want["common"]) < 0.0:
-				# Yaygın yetmezse kalan Ender'den (4. kat: %0 / %16 / %64 / %20)
-				want["rare"] = float(want["rare"]) + float(want["common"])
-				want["common"] = 0.0
-			var w := LootGenerator.rarity_weights(f, src)
-			for r: String in want.keys():
-				assert_almost(float(w[r]), float(want[r]), 0.0001, "%s kat %d %s ağırlığı" % [src, f, r])
-			var got := _freqs(f, src, 2000 + f)
-			for r2: String in want.keys():
-				assert_almost(float(got[r2]), float(want[r2]), TOL, "%s kat %d %s oranı (10.000 düşüş)" % [src, f, r2])
-	# Sandık, tüccar ve boss normal tabloyu kullanır; elit düşmanlar artık silah düşürmez (boost yok)
-	for src2: String in ["chest", "merchant", "boss", "elite"]:
+## Gizli oda sandığı (v0.10.1): sandık tablosunun Destansı ve Efsanevi şansı ×2; fark önce Yaygın'dan, sonra Ender'den,
+## alt nadirlik yetmezse Destansı'dan düşülür (3. kat: Destansı %40 / Efsanevi %60; 4. kat hep Efsanevi).
+func test_secret_room_doubles_upper_rarities_of_chest_table() -> void:
+	var want_by_floor := {
+		1: {"common": 0.65, "rare": 0.25, "epic": 0.08, "legendary": 0.02},
+		2: {"common": 0.0, "rare": 0.40, "epic": 0.54, "legendary": 0.06},
+		3: {"common": 0.0, "rare": 0.0, "epic": 0.40, "legendary": 0.60},
+		4: {"common": 0.0, "rare": 0.0, "epic": 0.0, "legendary": 1.0},
+	}
+	for f: int in range(1, 5):
+		var want: Dictionary = want_by_floor[f]
+		var w := LootGenerator.rarity_weights(f, "secret_room")
+		for r: String in want.keys():
+			assert_almost(float(w[r]), float(want[r]), 0.0001, "gizli oda kat %d %s ağırlığı" % [f, r])
+		var got := _freqs(f, "secret_room", 2000 + f)
+		for r2: String in want.keys():
+			assert_almost(float(got[r2]), float(want[r2]), TOL, "gizli oda kat %d %s oranı (10.000 düşüş)" % [f, r2])
+	# Tüccar ve boss normal tabloyu kullanır; elit düşmanlar silah düşürmez (boost yok)
+	for src2: String in ["merchant", "boss", "elite"]:
 		assert_eq(LootGenerator.rarity_weights(3, src2), LootGenerator.rarity_weights(3, "normal"), src2 + " normal tablo")
+
+
+## v0.10.1 (kullanıcı kararı): sandık tablosu — 2. kat en az Ender, 3. kat en az Destansı (efsanevi ~%30), 4. kat Efsanevi,
+## ilk 2 katta efsanevi düşük şansla.
+func test_chest_rarity_table() -> void:
+	var ct: Dictionary = DataDB.table("loot_tables")["chest_rarity_weights"]["floors"]
+	for f: int in range(1, 5):
+		var w := LootGenerator.rarity_weights(f, "chest")
+		for r: String in (ct[str(f)] as Dictionary).keys():
+			assert_almost(float(w[r]), float(ct[str(f)][r]), 0.0001, "sandık kat %d %s" % [f, r])
+		var got := _freqs(f, "chest", 2500 + f)
+		for r2: String in (ct[str(f)] as Dictionary).keys():
+			assert_almost(float(got[r2]), float(ct[str(f)][r2]), TOL, "sandık kat %d %s oranı" % [f, r2])
+	assert_eq(float(LootGenerator.rarity_weights(2, "chest")["common"]), 0.0, "2. kat sandığında Yaygın yok")
+	assert_eq(float(LootGenerator.rarity_weights(3, "chest")["rare"]) + float(LootGenerator.rarity_weights(3, "chest")["common"]), 0.0, "3. kat en az Destansı")
+	assert_almost(float(LootGenerator.rarity_weights(3, "chest")["legendary"]), 0.30, 0.0001, "3. kat efsanevi %30")
+	assert_almost(float(LootGenerator.rarity_weights(4, "chest")["legendary"]), 1.0, 0.0001, "4. kat hep efsanevi")
+	for f2: int in [1, 2]:
+		var lg := float(LootGenerator.rarity_weights(f2, "chest")["legendary"])
+		assert_true(lg > 0.0 and lg <= 0.05, "kat %d sandığında efsanevi düşük şansla (%.2f)" % [f2, lg])
 
 
 func test_no_legendary_before_floor_3() -> void:
 	for f: int in [1, 2]:
-		for src: String in ["normal", "elite", "secret_room", "boss", "chest"]:
+		for src: String in ["normal", "elite", "boss", "merchant"]:
 			assert_eq(float(LootGenerator.rarity_weights(f, src)["legendary"]), 0.0, "kat %d %s efsanevi yok" % [f, src])
 	assert_true(float(LootGenerator.rarity_weights(3, "normal")["legendary"]) > 0.0, "3. katta efsanevi var")
+
+
+## v0.10.1 (kullanıcı kararı): Kordrak kesilince %65 1 Efsanevi YA DA %35 2 Destansı, silah leveli en az 40.
+func test_kordrak_special_drop() -> void:
+	var rng := _rng(77)
+	var one_leg := 0
+	var n := 2000
+	for i: int in n:
+		var ws := LootGenerator.enemy_drops(3, "boss", rng, "kordrak").filter(func(d: Dictionary) -> bool: return d["kind"] == "weapon")
+		if ws.size() == 1:
+			assert_eq((ws[0]["item"] as Weapon).rarity_id, "legendary", "tek silahsa efsanevi")
+			one_leg += 1
+		else:
+			assert_eq(ws.size(), 2, "yoksa 2 silah")
+			for d: Dictionary in ws:
+				assert_eq((d["item"] as Weapon).rarity_id, "epic", "ikisi de destansı")
+		for d2: Dictionary in ws:
+			assert_true((d2["item"] as Weapon).level >= 40, "silah leveli en az 40")
+	assert_almost(float(one_leg) / n, 0.65, 0.03, "%65 efsanevi")
+	# Diğer boss'lar normal: 1 silah
+	var m := LootGenerator.enemy_drops(2, "boss", rng, "mycela").filter(func(d: Dictionary) -> bool: return d["kind"] == "weapon")
+	assert_eq(m.size(), 1, "Mycela 1 silah (normal tablo)")
 
 
 ## Kullanıcı kararı: boss'un silahı "direkt çok iyi" değil, katın normal oranlarıyla çıkar (ör. 3. kat efsanevi %5).

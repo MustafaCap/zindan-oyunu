@@ -17,7 +17,7 @@ dest_files=["res://.godot/imported/blocks2_e.png-3138cb4c7b3d94c8978ca31387d535d
 
 compress/mode=0
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

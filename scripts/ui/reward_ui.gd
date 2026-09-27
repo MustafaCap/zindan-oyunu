@@ -1,6 +1,8 @@
 ## RewardUI — run içi ödül seçim ekranı (Aşama 6): level ödülü (her 5 levelde) ve boss ödülü. 2 kart; tıklanarak ya da
 ## 1 / 2 tuşuyla seçilir. Açıkken oyun durur. Seçenekleri Rewards üretir; seçimi DungeonRun işler (chosen sinyali).
 ## Kartta ödülün adı, değeri, şu anki toplamı ve (varsa) tavanı yazar. Nihai arayüz tasarımı sonraya (GDD Açık Kararlar).
+## v0.10.1 (kullanıcı kararı): ekran açıldıktan sonra rewards.input_delay_sec (1,2 sn) boyunca tıklama ve 1/2 çalışmaz;
+## kartlar soluk ve kilitli görünür, kartların altındaki çubuk dolunca seçilebilir (yanlışlıkla seçimi önler).
 class_name RewardUI
 extends CanvasLayer
 
@@ -10,6 +12,10 @@ var choices: Array = []
 var _title: Label
 var _sub: Label
 var _row: HBoxContainer
+var _cards: Array[Button] = []
+var _lock_bar: ProgressBar
+var _open_ms: int = 0
+var _unlock_ms: int = 0
 
 
 func _ready() -> void:
@@ -35,6 +41,17 @@ func _ready() -> void:
 	_row.add_theme_constant_override("separation", 28)
 	_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	box.add_child(_row)
+	_lock_bar = ProgressBar.new()
+	_lock_bar.show_percentage = false
+	_lock_bar.custom_minimum_size = Vector2(420, 6)
+	_lock_bar.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	var bg := StyleBoxFlat.new()
+	bg.bg_color = Color(0.15, 0.08, 0.08, 0.9)
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = Color(0.7, 0.12, 0.1)
+	_lock_bar.add_theme_stylebox_override("background", bg)
+	_lock_bar.add_theme_stylebox_override("fill", fill)
+	box.add_child(_lock_bar)
 
 
 ## Ekranı açar. totals: statların şu anki toplamları (kartta gösterilir).
@@ -44,8 +61,14 @@ func open(title: String, subtitle: String, p_choices: Array, totals: Dictionary 
 	_sub.text = subtitle
 	for c: Node in _row.get_children():
 		c.queue_free()
+	_cards.clear()
 	for i: int in choices.size():
-		_row.add_child(_card(i, choices[i], totals))
+		var card := _card(i, choices[i], totals)
+		_cards.append(card)
+		_row.add_child(card)
+	_open_ms = Time.get_ticks_msec()
+	_unlock_ms = _open_ms + roundi(float(DataDB.get_value("rewards", "input_delay_sec")) * 1000.0)
+	_apply_lock(true)
 	visible = true
 	get_tree().paused = true
 	Audio.play("reward_open")
@@ -56,8 +79,37 @@ func close() -> void:
 	get_tree().paused = false
 
 
+## Seçim kilitli mi (açıldıktan sonraki bekleme süresi)? Gerçek zamanla sayılır (oyun durmuşken ve hitstop'ta da).
+func is_locked() -> bool:
+	return visible and Time.get_ticks_msec() < _unlock_ms
+
+
+## Beklemeyi hemen bitirir (testler).
+func unlock() -> void:
+	_unlock_ms = 0
+	_apply_lock(false)
+
+
+func _process(_delta: float) -> void:
+	if not visible or _lock_bar == null:
+		return
+	var total := maxi(_unlock_ms - _open_ms, 1)
+	_lock_bar.value = 100.0 * clampf(float(Time.get_ticks_msec() - _open_ms) / float(total), 0.0, 1.0)
+	if not is_locked() and not _cards.is_empty() and _cards[0].disabled:
+		_apply_lock(false)
+
+
+func _apply_lock(on: bool) -> void:
+	for b: Button in _cards:
+		if is_instance_valid(b):
+			b.disabled = on
+			b.modulate = Color(1, 1, 1, 0.4) if on else Color.WHITE
+	if _lock_bar:
+		_lock_bar.modulate.a = 1.0 if on else 0.0
+
+
 func pick(i: int) -> void:
-	if not visible or i < 0 or i >= choices.size():
+	if not visible or i < 0 or i >= choices.size() or is_locked():
 		return
 	var c: Dictionary = choices[i]
 	close()
@@ -93,6 +145,7 @@ func _card(i: int, c: Dictionary, totals: Dictionary) -> Button:
 	b.add_theme_stylebox_override("normal", sb)
 	b.add_theme_stylebox_override("hover", hover)
 	b.add_theme_stylebox_override("pressed", hover)
+	b.add_theme_stylebox_override("disabled", sb)
 	b.pressed.connect(func() -> void: pick(i))
 	var v := VBoxContainer.new()
 	v.set_anchors_preset(Control.PRESET_FULL_RECT)

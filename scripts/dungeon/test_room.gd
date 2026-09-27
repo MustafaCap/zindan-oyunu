@@ -1,4 +1,4 @@
-## TestRoom — hata ayıklama odası (Aşama 3; Aşama 4'ten beri ana sahne zindan, buraya M menüsünden geçilir): tek izometrik oda, 4 ırk × 12 silah tipi denenebilir.
+## TestRoom — hata ayıklama odası (Aşama 3; Aşama 4'ten beri ana sahne zindan, buraya F5 geliştirici menüsünden geçilir): tek izometrik oda, 4 ırk × 12 silah tipi denenebilir.
 ## M ile hata ayıklama menüsü açılır (ırk, level, iki silahın tipi/elementi/özelliği, düşman türü).
 ## Düşmanlar: 1. kat dalgaları (Taş ve Hayalet varyantlarıyla) ya da saldırmayan kuklalar.
 ## Kısayollar: 2-7 aktif silahın elementi, 0 elementsiz, 8 özellik değiştir, N yeni dalga, R yeniden başla.
@@ -40,6 +40,7 @@ var wall_layer: TileMapLayer
 var juice: Juice
 var hud: Hud
 var menu: DebugMenu
+var pause: PauseMenu
 var camera: Camera2D
 
 var wave_index: int = -1
@@ -148,6 +149,15 @@ func _ready() -> void:
 	hud = Hud.new()
 	hud.stage_text = "Test odası"
 	add_child(hud)
+	pause = PauseMenu.new()
+	pause.in_run = false
+	add_child(pause)
+	pause.leave_requested.connect(func(quit: bool) -> void:
+		if quit:
+			get_tree().quit()
+		else:
+			get_tree().paused = false
+			get_tree().change_scene_to_file("res://scenes/main_menu.tscn"))
 
 	menu = DebugMenu.new()
 	add_child(menu)
@@ -256,9 +266,9 @@ func _process(delta: float) -> void:
 		if _between_waves <= 0.0:
 			_start_wave(wave_index + 1)
 	if config.get("enemies", "waves") == "dummies":
-		hud.wave_text = "Kukla modu · M: menü · N: kuklaları yenile"
+		hud.wave_text = "Kukla modu · F5: menü · N: kuklaları yenile"
 	else:
-		hud.wave_text = "Dalga %d / %d   ·   Kalan düşman: %d   ·   M: menü" % [wave_index + 1, waves.size(), _alive_enemies()]
+		hud.wave_text = "Dalga %d / %d   ·   Kalan düşman: %d   ·   F5: menü" % [wave_index + 1, waves.size(), _alive_enemies()]
 	if _autoplay and _elapsed > autoplay_timeout_sec and not finished:
 		print("[TestRoom] SÜRE DOLDU")
 		get_tree().quit(3)
@@ -269,7 +279,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := (event as InputEventKey).keycode
-		if key == KEY_M:
+		if key == KEY_F5:
 			menu.open(config)
 		elif DEBUG_ELEMENT_KEYS.has(key) and player and not player.dead:
 			_debug_set_element(DEBUG_ELEMENT_KEYS[key])
@@ -284,8 +294,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif key == KEY_R:
 			Engine.time_scale = 1.0
 			get_tree().reload_current_scene()
-		elif key == KEY_ESCAPE:
-			get_tree().quit()
+		elif key == KEY_ESCAPE and not menu.visible:
+			pause.open()
+			get_viewport().set_input_as_handled()
 
 
 func clear_enemies() -> void:
@@ -391,7 +402,7 @@ func _on_enemy_killed(_enemy: Node, _elite: bool, _boss: bool) -> void:
 		_between_waves = 1.5
 	else:
 		finished = true
-		hud.show_message("Oda temizlendi!\nN: yeni dalga · R: yeniden başla · M: menü")
+		hud.show_message("Oda temizlendi!\nN: yeni dalga · R: yeniden başla · F5: menü")
 		print("[TestRoom] ODA TEMİZLENDİ (%s, %.1f sn, can %d/%d, kombo %d: %s)" % [player.race_id, _elapsed, player.hp, player.max_hp, player.combos_done, _combo_log])
 		if _autoplay:
 			var code := 0 if player.combos_done > 0 else 4
@@ -404,7 +415,7 @@ func _on_player_died() -> void:
 	if finished or _matrix:
 		return
 	finished = true
-	hud.show_message("Öldün\nR: yeniden başla · M: menü")
+	hud.show_message("Öldün\nR: yeniden başla · F5: menü")
 	print("[TestRoom] OYUNCU ÖLDÜ (%s, %.1f sn)" % [player.race_id, _elapsed])
 	if _autoplay:
 		get_tree().create_timer(1.0).timeout.connect(func() -> void: get_tree().quit(2))

@@ -6,7 +6,7 @@
 ##   (yoksa kullanılan aktif silahla yer değiştirir).   Sol tık: seç (tüccarda satmak, demircide işlemek için).
 ##   Tüccar: tezgâhtaki eşyayı satın al, iksir al; seçileni sat ya da "Sat" alanına sürükle.
 ##   Demirci: silahı örse sürükle ya da seç; level atlat, elementi ya da özellikleri yeniden çek.
-## Savaş sürerken (GameState.in_combat) slotlara dokunulamaz.
+## Kullanıcı kararı (v0.10.1): savaş sürerken de slotlar düzenlenebilir (GameState.slots_locked; economy.slots_in_combat).
 ## Ayrıntılı arayüz tasarımı sonraya bırakıldı (GDD Açık Kararlar); bu ilk sürümdür.
 class_name InventoryUI
 extends CanvasLayer
@@ -168,11 +168,11 @@ func can_drop(data: Variant, s: ItemSlot) -> bool:
 	var from: Dictionary = data["from"]
 	match s.kind:
 		"inv":
-			return inv().check_move(from, s.ref, player_level(), GameState.in_combat) == ""
+			return inv().check_move(from, s.ref, player_level(), GameState.slots_locked()) == ""
 		"drop":
-			return inv().can_remove(from, GameState.in_combat) == ""
+			return inv().can_remove(from, GameState.slots_locked()) == ""
 		"sell":
-			return mode == "merchant" and inv().can_remove(from, GameState.in_combat) == ""
+			return mode == "merchant" and inv().can_remove(from, GameState.slots_locked()) == ""
 		"smith":
 			return mode == "blacksmith" and inv().get_item(from) is Weapon
 	return false
@@ -182,9 +182,9 @@ func do_drop(data: Variant, s: ItemSlot) -> void:
 	var from: Dictionary = data["from"]
 	match s.kind:
 		"inv":
-			_result(inv().move(from, s.ref, player_level(), GameState.in_combat), "")
+			_result(inv().move(from, s.ref, player_level(), GameState.slots_locked()), "")
 		"drop":
-			var why := inv().can_remove(from, GameState.in_combat)
+			var why := inv().can_remove(from, GameState.slots_locked())
 			if why == "":
 				var it: Variant = inv().remove(from)
 				drop_requested.emit(it)
@@ -209,7 +209,7 @@ func quick_action(s: ItemSlot) -> void:
 		return
 	var I := inv()
 	var lvl := player_level()
-	var combat := GameState.in_combat
+	var combat := GameState.slots_locked()
 	if str(s.ref["area"]) == "slot":
 		var n0 := str(s.ref["name"])
 		if I.bag.size() > 0:
@@ -281,7 +281,7 @@ func buy_potion() -> void:
 func sell_ref(ref: Dictionary) -> void:
 	var it: Variant = inv().get_item(ref)
 	var price := Shop.sell_price(it, floor_i()) if it != null else 0
-	_result(Shop.sell(inv(), ref, floor_i(), GameState.in_combat), "Satıldı: %s (+%d altın)" % [_item_name(it), price], true, "sell")
+	_result(Shop.sell(inv(), ref, floor_i(), GameState.slots_locked()), "Satıldı: %s (+%d altın)" % [_item_name(it), price], true, "sell")
 	if selected and selected.kind == "inv" and inv().get_item(selected.ref) == null:
 		selected = null
 
@@ -340,9 +340,12 @@ func refresh() -> void:
 	var I := inv()
 	_gold_label.text = "Altın: %d    ·    İksir: %d / %d%s" % [I.gold, I.potions, I.potion_max,
 		"" if race_id() == "" or bool(DataDB.table("races")[race_id()]["healing"]["potions"]) else " (kullanamazsın)"]
-	if GameState.in_combat:
+	if GameState.slots_locked():
 		_status.text = "SAVAŞ SÜRÜYOR: slotlar kilitli (oda temizlenince düzenle)"
 		_status.add_theme_color_override("font_color", Color(1, 0.55, 0.5))
+	elif GameState.in_combat and _status.text == "":
+		_status.text = "SAVAŞ SÜRÜYOR: oyun durdu, slotları düzenleyebilirsin (yerden eşya alma oda temizlenince)"
+		_status.add_theme_color_override("font_color", Color(1, 0.8, 0.5))
 	for n: Node in _slot_nodes.values() + _bag_nodes:
 		(n as Control).queue_redraw()
 	for c: Control in [_sell_slot, _drop_slot, _smith_slot]:

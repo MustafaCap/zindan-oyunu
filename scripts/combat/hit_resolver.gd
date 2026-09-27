@@ -8,6 +8,8 @@
 ##
 ## İkincil vuruşlar (zincir, sekme, kombo alanı) hasar ve element durumu uygular ama yeni kombo, zincir ya da
 ## özellik tetiklemez; böylece sonsuz döngü olmaz.
+## Bağışıklık (kullanıcı kararı, v0.10.1): bağışık hedefe ana vuruş %75 işler; element durumu, kombo, zincir ve
+## özellikler uygulanmaz, ikincil vuruşlar 0 vurur.
 class_name HitResolver
 extends RefCounted
 
@@ -53,7 +55,9 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 	var caps: Dictionary = DataDB.get_value("progression", "stat_caps")
 	var crit_chance := minf(float(DataDB.get_value("progression", "combat.base_crit_chance")) + float(opts.get("crit_bonus_chance", 0.0)), float(caps["crit_chance"]))
 	hit.is_crit = bool(combo.get("guaranteed_crit", false)) or rng.randf() < crit_chance
-	var fury_s := trait_scale(weapon, "fury", opts)
+	# v0.10.1 (kullanıcı kararı): bağışık hedefte ana vuruş %75 işler ama özellikler (Öfke, Can Emme, İnfaz, Sersemletme,
+	# Sekme) uygulanmaz; element durumu, kombo ve zincir zaten yok.
+	var fury_s := trait_scale(weapon, "fury", opts) if not immune else 0.0
 	if fury_s > 0.0:
 		hit.damage_buffs += Traits.fury_bonus(int(target.get("fury_stacks")), fury_s, float(opts.get("fury_max", 0.0)))
 		target.set("fury_stacks", int(target.get("fury_stacks")) + 1)
@@ -89,7 +93,10 @@ static func resolve(attacker: Node2D, weapon: Weapon, target: Node2D, opts: Dict
 			total_dealt += secondary_hit(weapon, o, float(el["chain_damage_pct"]), kind, opts, true, dir)
 			(res["chained"] as Array).append(o)
 
-	# Özellikler (silahın kendi özellikleri tam güçle, Esnek slottakiler %9 ile)
+	# Özellikler (silahın kendi özellikleri tam güçle, Esnek slottakiler %9 ile; bağışık hedefte hiçbiri)
+	if immune:
+		GameState.record_damage(weapon.type_id, total_dealt)
+		return res
 	var ls_s := trait_scale(weapon, "lifesteal", opts)
 	if ls_s > 0.0 and attacker.has_method("heal"):
 		attacker.call("heal", Traits.lifesteal_amount(total_dealt, ls_s))
@@ -128,7 +135,7 @@ static func trait_scale(weapon: Weapon, trait_id: String, opts: Dictionary) -> f
 	return s
 
 
-## İkincil vuruş: ana vuruşun pct katı, kritik ve arkadan vuruş yok. Hedefin bağışıklığı geçerlidir.
+## İkincil vuruş (ek etki): ana vuruşun pct katı, kritik ve arkadan vuruş yok. Bağışık hedefe 0 vurur (v0.10.1).
 ## apply_status true ise element durumunu da bırakır (kombo tetiklemez).
 static func secondary_hit(weapon: Weapon, target: Node2D, pct: float, kind: String, opts: Dictionary,
 		apply_status: bool, dir: Vector2) -> float:
@@ -137,6 +144,7 @@ static func secondary_hit(weapon: Weapon, target: Node2D, pct: float, kind: Stri
 	var hit := _base_hit(weapon, opts)
 	hit.type_mult *= pct
 	hit.kind = kind
+	hit.secondary = true
 	var def: DamageCalc.Defense = target.get("defense")
 	var immune := DamageCalc.is_immune(kind, def)
 	var dmg := DamageCalc.compute(hit, def)

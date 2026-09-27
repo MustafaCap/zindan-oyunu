@@ -1,11 +1,12 @@
 {
   "_note": "Elementler, durum etkileri ve kombolar (GDD: Elementler, Özellikler ve Kombolar). '_default' ile işaretli sayılar GDD'de yazmıyordu; Aşama 2'de makul bir değer seçildi, oyun testinde ayarlanır.",
   "status_multipliers": {
-    "immune": 0.0,
+    "immune": 0.75,
+    "immune_secondary": 0.0,
     "resistant": 0.5,
     "normal": 1.0,
     "weak": 1.5,
-    "common_vs_ghost": 0.25
+    "_default": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): bağışık düşmana ana silah vuruşu (sol tık, sağ tık, Q, E ve onların mermi/alanları) hasarın %75'ini verir (eskiden 0). Fiziksele bağışık hedefe (hayaletler, Nyx'thar) yaygın silah da aynı kuralla %75 (eski %25 kuralı kalktı; tek kural). Ek etkiler bağışıklıkta 0 vurur (immune_secondary: zincir, sekme, kombo alanı, Rezonans, efsanevi pasif patlamaları); element durumu, süreli hasar, kombo ve özellikler (Öfke, İnfaz, Can Emme, Sekme, Sersemletme; ödüllerden can emme dahil) uygulanmaz."
   },
   "physical": { "name": "Fiziksel", "color": "#d9d4c7" },
   "elements": {

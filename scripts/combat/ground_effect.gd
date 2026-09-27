@@ -132,10 +132,34 @@ func _draw() -> void:
 		draw_line(p2 + Vector2(0, -120 * k2 - 20), p2 + Vector2(0, -120 * k2), Color(0.95, 0.9, 0.75), 2.0)
 
 
+## Rün mührü (kullanıcı kararı, v0.10.2: eski altı köşeli yıldız kaldırıldı): içe dönük dişlerle çevrili halka — yavaşça
+## döner — ve ortada dikey göz bebekli bir göz ("yutan göz"). Zeminde düz çizilip izometrik basılır.
 func _draw_rune_glyph(r: float) -> void:
-	var pts := PackedVector2Array()
-	for i: int in 6:
-		var a := _t * 1.5 + TAU * i / 6.0
-		pts.append(Iso.to_screen(Vector2(cos(a), sin(a)) * r))
-	for i: int in 6:
-		draw_line(pts[i], pts[(i + 2) % 6], Color(color.lightened(0.4), 0.9), 2.0)
+	var col := Color(color.lightened(0.4), 0.9)
+	var ring := PackedVector2Array()
+	for i: int in 33:
+		var a := TAU * i / 32.0
+		ring.append(Iso.to_screen(Vector2(cos(a), sin(a)) * r))
+	draw_polyline(ring, col, 2.0)
+	# İçe dönük dişler
+	var fangs := 7
+	for i: int in fangs:
+		var a := _t * 0.8 + TAU * i / fangs
+		var d := Vector2(cos(a), sin(a))
+		var side := d.orthogonal() * r * 0.14
+		draw_colored_polygon(PackedVector2Array([Iso.to_screen(d * r + side), Iso.to_screen(d * r * 0.58),
+			Iso.to_screen(d * r - side)]), Color(col, 0.8))
+	# Ortada göz: badem biçimli kapak ve dikey yarık göz bebeği (nabız gibi açılıp kapanır)
+	var w := r * 0.42
+	var h := r * 0.2 * (0.75 + 0.25 * sin(_t * 4.0))
+	var lid := PackedVector2Array()
+	for j: int in 13:
+		var x := lerpf(-w, w, j / 12.0)
+		lid.append(Iso.to_screen(Vector2(x, -h * sin(PI * j / 12.0))))
+	for j2: int in range(11, 0, -1):
+		var x2 := lerpf(-w, w, j2 / 12.0)
+		lid.append(Iso.to_screen(Vector2(x2, h * sin(PI * j2 / 12.0))))
+	draw_colored_polygon(lid, Color(color.darkened(0.6), 0.55))
+	lid.append(lid[0])
+	draw_polyline(lid, col, 1.5)
+	draw_line(Iso.to_screen(Vector2(0, -h * 0.85)), Iso.to_screen(Vector2(0, h * 0.85)), Color(0.05, 0.0, 0.0, 0.95), 3.0)

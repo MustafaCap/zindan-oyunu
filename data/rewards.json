@@ -2,6 +2,8 @@
   "_note": "Run içi ödüller (GDD: Run İçi Ödüller). Aşama 6'da oyuna bağlandı. Değerler GDD tablolarından; '_default' notları GDD'de olmayan ayrıntılar için verilen kararlardır ve oyun testinde ayarlanır.",
   "choices_per_offer": 2,
   "level_reward_every": 5,
+  "input_delay_sec": 1.2,
+  "_default_input_delay_sec": "Kullanıcı kararı (Aşama 10 testi, v0.10.1): ödül ekranı (level ve boss) açıldıktan sonra 1,2 sn tıklama ve 1/2 tuşları çalışmaz (yanlışlıkla seçimi önler); bu sürede kartlar soluk ve kilitli görünür, altında geri sayım çubuğu dolar.",
   "reward_after_combat": true,
   "_default_reward_after_combat": "Level ödülü savaşı bölmez: level hemen atlanır (can, statlar), ama ödül ekranı oda temizlenince (savaş bitince) açılır. Savaş dışındaysa hemen açılır. Birden çok ödül birikirse sırayla gelir (önce level, sonra boss). Ekran açıkken oyun durur.",
   "boss_reward_on_final_floor": false,

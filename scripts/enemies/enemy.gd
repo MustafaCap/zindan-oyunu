@@ -38,6 +38,11 @@ var hp_override: float = 0.0
 ## Ek can/hasar çarpanı ve gövde ölçeği (elit ve kat ölçeklemesine ek; testler ve hata ayıklama için).
 var hp_mult: float = 1.0
 var damage_mult: float = 1.0
+## Bot hızlandırması (kullanıcı kararı, Aşama 10): > 0 ise düşman (boss dahil) oyuncudan bu kadar hasarlı vuruş alınca
+## hemen ölür; uzun savaşlar bot run'larını uzatmasın. Yalnızca zindan botunda açılır (dungeon_run: --autoplay → 4;
+## denge simülasyonunda ve boss testinde kapalı, çünkü onlar tam savaşı ölçer). Oyuncunun oyununda her zaman 0.
+static var bot_kill_hits: int = 0
+var _bot_hits: int = 0
 var body_scale: float = 1.0
 var name_override: String = ""
 ## Boss'un kaydı (bosses.json id'si; ilk kesiş bonusu için). Boss değilse boş.
@@ -759,7 +764,15 @@ func apply_damage(amount: float, info: Dictionary) -> void:
 		Audio.play(Audio.sound_for("hits.immune"), global_position)
 		Events.hit_landed.emit(global_position + Vector2(0, -20), 0.0, false, false, dir)
 		return
+	# v0.10.1: bağışık hedefe ana vuruş %75 işler; "BAĞIŞIK" yazısı yine görünür (ek etkiler işlemedi)
+	if bool(info.get("immune", false)) and _immune_text_cd <= 0.0:
+		Events.floating_text.emit(global_position + Vector2(0, -56), "BAĞIŞIK", Color(0.75, 0.75, 0.78), 16)
+		_immune_text_cd = 0.5
 	hp = maxf(hp - amount, 0.0)
+	if bot_kill_hits > 0:
+		_bot_hits += 1
+		if _bot_hits >= bot_kill_hits:
+			hp = 0.0
 	visual.flash(float(_feel["flash_duration"]), Color.WHITE if kind == DamageCalc.PHYSICAL else Weapon.kind_color(kind).lightened(0.5))
 	if not secondary and not status.is_frozen() and state != State.ACTION:
 		var kb_tiles := float(_feel["knockback_heavy_tiles"] if heavy else _feel["knockback_tiles"]) * (1.0 - knockback_resist)

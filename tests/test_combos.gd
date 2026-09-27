@@ -175,10 +175,24 @@ func test_immune_target_gets_no_status_or_combo() -> void:
 	var a := _attacker()
 	var stone := _target(Vector2(1, 0), 1000.0, false, DamageCalc.Defense.new(["lightning"], [], ["ice"]))
 	(stone.get("status") as StatusEffects).apply_element("water", 10.0)
+	var plain := _target(Vector2(3, 3))
 	var r := _hit(a, "lightning", stone, [stone])
-	assert_eq(r["damage"], 0.0, "taşa yıldırım işlemez")
+	var r0 := _hit(a, "lightning", plain, [plain])
+	assert_almost(float(r["damage"]), float(r0["damage"]) * 0.75, 0.01, "taşa yıldırım ana vuruşta %75 (v0.10.1)")
+	assert_true(bool(r["immune"]), "bağışık vuruş işaretlenir")
 	assert_eq(r["combo"], "", "bağışık hedefte kombo yok")
 	assert_true((stone.get("status") as StatusEffects).has_element("water"), "ıslaklık tüketilmedi")
+	assert_true(not (stone.get("status") as StatusEffects).has_element("lightning"), "element durumu bırakılmaz")
+
+
+## v0.10.1: bağışık hedefte özellikler (İnfaz, Öfke, Sekme…) uygulanmaz.
+func test_immune_target_gets_no_traits() -> void:
+	var a := _attacker()
+	var stone := _target(Vector2(1, 0), 100000.0, false, DamageCalc.Defense.new(["fire"], [], []))
+	stone.set("hp", 5000.0)   # %5: bağışık olmasa İnfaz eşiğinin (%7) altında
+	var r := _hit(a, "fire", stone, [stone], ["execute", "fury"])
+	assert_true(not bool(r["executed"]), "bağışık hedefte İnfaz yok")
+	assert_eq(int(stone.get("fury_stacks")), 0, "bağışık hedefte Öfke birikmez")
 
 
 func test_common_sword_vs_ghost_in_game() -> void:
@@ -186,7 +200,7 @@ func test_common_sword_vs_ghost_in_game() -> void:
 	var ghost := _target(Vector2(1, 0), 1000.0, false, DamageCalc.Defense.new(["physical"], [], ["fire"]))
 	var w := Weapon.make("sword", "common")
 	var r := HitResolver.resolve(a, w, ghost, NO_CRIT, [], _rng)
-	assert_almost(float(r["damage"]), 25.0, 0.001, "yaygın kılıç hayalete %25")
+	assert_almost(float(r["damage"]), 75.0, 0.001, "yaygın kılıç hayalete %75 (v0.10.1 tek kural)")
 
 
 func test_lightning_chains_to_two() -> void:

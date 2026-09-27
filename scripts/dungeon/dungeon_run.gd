@@ -3,7 +3,9 @@
 ## giriş odasında başlar, odaları gezer (RoomController kapıları kilitler ve dalgaları yönetir), kat boss'unu keser
 ## (canı tamamen dolar), boss odasında beliren merdivenle bir alt kata iner. 4. kat boss'u kesilince "Kazandın".
 ## Gizli oda: bir odanın duvarındaki çatlak bölüme vurarak (yakın saldırı ya da mermi) kırılır.
-## Irk ve level hata ayıklama menüsünden (M) seçilir; savaş sırasında değiştirilemez (GDD: slot değişimi yalnızca
+## Aşama 10: ırk ırk seçim ekranından gelir (TestRoom.config); hata ayıklama menüsü F5'te (geliştirici). Esc duraklatma
+## menüsünü açar (PauseMenu: devam, ses, ana menüye dön / çık — run'ı bırakmak ölüm sayılır). Run sonu ekranından
+## (RunSummary) yeni run ya da ana menü. Irk ve level hata ayıklama menüsünden de seçilebilir; savaş sırasında değiştirilemez (GDD: slot değişimi yalnızca
 ## oda dışında). Tab ile iki aktif silah arasında geçiş her zaman serbest.
 ## Aşama 5: run ırkın başlangıç silahıyla başlar; düşmanlar, sandıklar ve boss'lar loot düşürür (LootGenerator →
 ## LootDrop, nadirliğe göre ışık sütunu). Altın ve iksir yaklaşınca toplanır, silah/tılsım F ile. I: 4 slotluk envanter
@@ -26,15 +28,21 @@
 ##   --autoplay'da kalıcı kayıt user://save_autoplay.json'a yazılır (her smoke testinde sıfırdan) — oyuncunun kaydına dokunulmaz.
 ##   --grant-levels=N  Run başında N level'lik XP verir (level ödülü ekranı açılır; ekran görüntüsü/deneme için).
 ##   --end-run=SN      SN saniye sonra oyuncu ölür (run sonu özet ekranını denemek için).
+##   --kill-hits=N     Bot hızlandırması: düşman (boss dahil) N hasarlı vuruşta ölür. --autoplay'da varsayılan 4
+##                     (kullanıcı kararı, Aşama 10; --balance ve --boss-test'te 0 = kapalı), 0 kapatır.
 ##   --enemy-hp=X      Tüm düşmanların (boss'lar dahil) can çarpanı (smoke testini kısaltmak için).
 ##   --boss-rush       Her katta oyuncu boss odasının kapısında başlar (bot yalnızca boss'a gider).
 ##   --boss-test       --boss-rush + katın beklenen level ve silah gücü; her boss süre, saldırılar, 2. faz ve uyarı
 ##                     süreleri yönünden denetlenir (make bosses). Sorun varsa çıkış kodu 9.
-##   --open-bag        Envanter açık başlar.   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
+##   --balance         Aşama 10 denge simülasyonu: bot tam düşman sayısı ve canıyla, ölümsüz OLMADAN oynar; ölümcül hasarda
+##                     ölüm sayılıp tam canla sürer. Her kat sonunda "[Denge]" satırı (süre, level, ölüm, hasar, iksir, silahlar).
+##   --perf=SN         Aşama 10: SN saniye boyunca performans ölçer (FPS, kare süresi, çizim çağrısı; PerfProbe), sonra kapanır.
+##   --open-bag        Envanter açık başlar.   --open-pause  Duraklatma menüsü açık başlar (ekran görüntüsü için).   --open-ui=merchant|blacksmith  Katın tüccar/demirci paneli açık başlar.   --shots=KLASÖR --shot-times=…  Ekran görüntüsü.
 class_name DungeonRun
 extends Node2D
 
 const TEST_ROOM_SCENE := "res://scenes/test_room.tscn"
+const MAIN_MENU_SCENE := "res://scenes/main_menu.tscn"
 
 var layout: DungeonLayout
 var nav: DungeonNav
@@ -54,6 +62,7 @@ var minimap: Minimap
 var bag_ui: InventoryUI
 var reward_ui: RewardUI
 var summary: RunSummary
+var pause: PauseMenu
 var reward_rng := RandomNumberGenerator.new()
 var run_time: float = 0.0
 var last_summary: Dictionary = {}     ## son run sonu bilgisi (testler için)
@@ -80,6 +89,12 @@ var boss_rush: bool = false
 ## --boss-test (make bosses): boss_rush + her katta beklenen level/silah; boss'lar süre, saldırı ve uyarı yönünden denetlenir.
 var boss_test: bool = false
 var boss_test_failed: bool = false
+## --balance (Aşama 10): denge simülasyonu — kat başına süre ve level ölçülür (tools/dev/balance.py toplar)
+var balance: bool = false
+## --kill-hits=N (-1: bota göre seç). Enemy.bot_kill_hits'e yazılır.
+var kill_hits: int = -1
+var _floor_start := {}
+var _boss_time: float = 0.0
 var _boss_start_t: float = 0.0
 var start_floor: int = 1
 var fixed_seed: int = -1
@@ -102,6 +117,9 @@ var _last_inside: Vector2 = Vector2.INF
 var _custom_weapons: bool = false
 var _loot_rain: bool = false
 var _open_bag: bool = false
+var _open_pause: bool = false
+## Aşama 10 (performans): katın düşman/boss sprite'ları kat boyunca tutulur (bkz. _preload_floor_sprites)
+var _sprite_keep: Array = []
 var _open_ui: String = ""
 var _fill_bag: bool = false
 var _hover_bag: int = -1
@@ -133,6 +151,11 @@ func _ready() -> void:
 			enemy_mult = float(arg.get_slice("=", 1))
 		elif arg.begins_with("--enemy-hp="):
 			enemy_hp_mult = float(arg.get_slice("=", 1))
+		elif arg == "--balance":
+			autoplay = true
+			balance = true
+		elif arg.begins_with("--kill-hits="):
+			kill_hits = int(arg.get_slice("=", 1))
 		elif arg == "--boss-rush":
 			boss_rush = true
 		elif arg == "--boss-test":
@@ -147,6 +170,12 @@ func _ready() -> void:
 			_loot_rain = true
 		elif arg == "--open-bag":
 			_open_bag = true
+		elif arg == "--open-pause":
+			_open_pause = true
+		elif arg.begins_with("--perf="):
+			var probe := PerfProbe.new()
+			probe.duration = float(arg.get_slice("=", 1))
+			add_child(probe)
 		elif arg == "--fill-bag":
 			_fill_bag = true
 		elif arg.begins_with("--hover-bag="):
@@ -174,9 +203,12 @@ func _ready() -> void:
 		_show_data_error()
 		return
 	_dg = DataDB.table("dungeon")
+	if kill_hits < 0:
+		kill_hits = 4 if autoplay and not balance and not boss_test else 0
+	Enemy.bot_kill_hits = kill_hits
 	if autoplay:
 		# Smoke testi oyuncunun gerçek kaydına dokunmaz: ayrı dosya, her seferinde sıfırdan
-		SaveManager.save_path = "user://save_autoplay.json"
+		SaveManager.save_path = "user://save_autoplay.json" if not balance else "user://save_balance_%d.json" % OS.get_process_id()
 		SaveManager.wipe()
 	var cfg_error := TestRoom.validate_config(config)
 	if cfg_error != "":
@@ -199,12 +231,12 @@ func _ready() -> void:
 	add_child(juice)
 
 	hud = Hud.new()
-	hud.stage_text = "Aşama 9 · ses"
+	hud.stage_text = ""
 	hud.show_economy = true
 	add_child(hud)
 	hud.set_hints(PackedStringArray([
-		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · O ses · Esc çık",
-		"M: HATA AYIKLAMA MENÜSÜ (ırk, level, kat, loot testi, ölümsüz, test odası) · Çatlak duvarlara vur: gizli oda! · R: yeni run (ölünce)",
+		"WASD yürü · Fare nişan · Sol/Sağ tık saldırı · Q/E yetenek · Space atılma · Tab silah değiştir · 1 iksir · F al / etkileşim · I envanter · O ses · Esc menü",
+		"Çatlak duvarlara vur: gizli oda!",
 	]))
 
 	minimap = Minimap.new()
@@ -234,6 +266,10 @@ func _ready() -> void:
 	summary = RunSummary.new()
 	add_child(summary)
 	summary.new_run_requested.connect(func() -> void: new_run(1))
+	summary.main_menu_requested.connect(go_main_menu)
+	pause = PauseMenu.new()
+	add_child(pause)
+	pause.abandon_requested.connect(abandon_run)
 	Events.enemy_killed.connect(_on_enemy_killed_loot)
 	Events.xp_gained.connect(_on_xp_gained)
 
@@ -247,6 +283,8 @@ func _ready() -> void:
 		menu.open.call_deferred(TestRoom.config)
 	if _open_bag:
 		bag_ui.open_ui.call_deferred("bag", player)
+	if _open_pause:
+		pause.open.call_deferred()
 	if _hover_bag >= 0:
 		(func() -> void: bag_ui.on_slot_hover(bag_ui._slot_nodes[Inventory.SLOT_NAMES[clampi(_hover_bag, 0, 3)]], true)).call_deferred()
 	if _open_ui != "":
@@ -259,6 +297,23 @@ func _ready() -> void:
 		shots.dir = _shots_dir
 		shots.times = _shot_times
 		add_child(shots)
+	elif not autoplay:
+		_fade_in()
+
+
+## Açılışta kısa kararmadan açılma (ırk seçiminden gelirken).
+func _fade_in() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 50
+	var black := ColorRect.new()
+	black.color = Color.BLACK
+	black.set_anchors_preset(Control.PRESET_FULL_RECT)
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(black)
+	add_child(layer)
+	var tw := layer.create_tween()
+	tw.tween_property(black, "color:a", 0.0, 0.8)
+	tw.tween_callback(layer.queue_free)
 
 
 func _exit_tree() -> void:
@@ -274,9 +329,10 @@ func _exit_tree() -> void:
 
 ## Yeni run: yeni seed, from_floor. katından başlar. Oyuncu aynı ırk/silahlarla ve tam canla başlar.
 func new_run(from_floor: int = 1) -> void:
+	get_tree().paused = false
 	var seed_value := fixed_seed if fixed_seed >= 0 else randi()
 	fixed_seed = -1 if not autoplay else fixed_seed
-	GameState.start_run(str(TestRoom.config["race"]))
+	GameState.start_run(str(TestRoom.config["race"]), str(TestRoom.config.get("start_weapon", "")))
 	GameState.run_seed = seed_value
 	GameState.level = maxi(int(TestRoom.config.get("level", 1)), 1)
 	reward_rng.seed = hash([seed_value, "rewards"])
@@ -324,6 +380,7 @@ func enter_floor(index: int) -> void:
 	var fl: Dictionary = DataDB.table("floors")["floors"][str(index)]
 	layout = DungeonGenerator.generate(index, GameState.floor_seed(index), enemy_mult)
 	loot_rng.seed = hash([layout.seed_value, "loot"])
+	_preload_floor_sprites(index)
 	var ts := IsoTileset.for_floor(index)
 	Lighting.set_ambient(self, index)
 	floor_layer = TileMapLayer.new()
@@ -377,6 +434,9 @@ func enter_floor(index: int) -> void:
 	minimap.cleared = {}
 	minimap.secrets_open = false
 	_floor_elapsed = 0.0
+	_boss_time = 0.0
+	_floor_start = {"deaths": player.balance_deaths, "dmg": player.damage_taken, "potions": player.potions_used,
+		"kills": GameState.kills, "level": GameState.level}
 	Events.floor_entered.emit(index)
 	hud.show_message("%d. Kat\n%s" % [index, fl["name"]])
 	get_tree().create_timer(2.2).timeout.connect(func() -> void:
@@ -384,6 +444,30 @@ func enter_floor(index: int) -> void:
 			hud.show_message(""))
 	if _autopilot:
 		_autopilot.on_floor_entered()
+
+
+## Katın düşman, boss ve boss yardımcısı sprite'larını kata girerken yükler ve kat bitene kadar tutar. SpriteBody'nin
+## önbelleği zayıf referans tuttuğu için, yoksa bir düşman türü ilk kez (ya da hepsi ölüp yeniden) doğarken dokuları
+## diskten çözülür: dalga başında ~150 ms takılma (Aşama 10 performans ölçümü). Önceki katın dokuları bırakılır.
+func _preload_floor_sprites(index: int) -> void:
+	var keep: Array = []
+	var fl: Dictionary = DataDB.table("floors")["floors"][str(index)]
+	var en: Dictionary = DataDB.table("enemies")
+	var ids := {}
+	for e: Array in fl.get("spawn_pool", []):
+		ids[str(Enemy.resolve_variant(str(e[0]))[0])] = true
+	for id: String in fl.get("enemy_pool", []):
+		ids[id] = true
+	for id2: String in DataDB.records(en["boss_adds"]):
+		ids[id2] = true
+	for bid: String in fl.get("boss_pool", []):
+		ids[str(DataDB.table("bosses")["bosses"][bid].get("sprite", bid))] = true
+	for id3: String in ids.keys():
+		var rec: Dictionary = en["enemies"].get(id3, en["boss_adds"].get(id3, {}))
+		var sid := str(rec.get("sprite", id3))
+		if SpriteBody.has_sprites(sid):
+			keep.append(SpriteBody._load_char(sid))
+	_sprite_keep = keep
 
 
 ## Oyuncuyu boss odasının kapısının hemen dışına ışınlar (--boss-rush ve hata ayıklama menüsü). Savaşta çalışmaz.
@@ -405,6 +489,17 @@ func teleport_to_boss() -> bool:
 	camera.global_position = player.global_position
 	camera.reset_smoothing()
 	visited[int(nid)] = true
+	return true
+
+
+## Geliştirici menüsü (v0.10.1): run'ı bozmadan seçilen katın yeni haritasının girişine geçer; level, envanter, ödüller
+## ve altın korunur. Savaş sürerken yapılmaz (kilitli odadaki düşman ve tehlikeler yarım kalmasın).
+func teleport_to_floor(index: int) -> bool:
+	if GameState.in_combat or finished:
+		return false
+	enter_floor(clampi(index, 1, 4))
+	Audio.play("floor_enter")
+	print("[Zindan] Geliştirici: %d. kata ışınlandı" % GameState.floor_index)
 	return true
 
 
@@ -694,6 +789,8 @@ func _spawn_player(cfg: Dictionary, keep_state: bool = true) -> void:
 	player.inventory = GameState.inventory
 	player.autoplay = autoplay
 	player.invulnerable = god or bool(cfg.get("god", false))
+	player.balance_revive = balance
+	player.bot_dodge = balance
 	player.bot_nav = nav_dir
 	player.bot_los = has_line_of_sight
 	player.rng.seed = 7 if autoplay else randi()
@@ -838,6 +935,7 @@ func _check_boss_test(boss: Boss) -> void:
 
 
 func _on_boss_killed(room_id: int, enemy: Node2D) -> void:
+	_boss_time = _elapsed - _boss_start_t
 	if boss_test and enemy is Boss:
 		_check_boss_test(enemy as Boss)
 	hud.boss = null
@@ -864,6 +962,7 @@ func _on_boss_killed(room_id: int, enemy: Node2D) -> void:
 		if _autopilot:
 			_autopilot.report_floor()
 		print("[Zindan] ZAFER (%.1f sn)" % _elapsed)
+		report_balance()
 		_end_run(true)
 		if autoplay:
 			get_tree().create_timer(1.0).timeout.connect(func() -> void:
@@ -890,7 +989,7 @@ func _on_player_died() -> void:
 
 ## Run sonu (ölüm ya da zafer): ustalık XP'si hasar payına göre silah tiplerine işlenir ve kaydedilir; özet ekranı açılır.
 ## Bekleyen ödüller düşer (ödüller run bitince kaybolur).
-func _end_run(won: bool) -> void:
+func _end_run(won: bool, abandoned: bool = false) -> void:
 	GameState.pending_rewards.clear()
 	if reward_ui.visible:
 		reward_ui.close()
@@ -918,7 +1017,8 @@ func _end_run(won: bool) -> void:
 		rw = hud_txt.trim_prefix("Ödüller: ").split(" · ")
 	last_summary = {"victory": won, "floor": GameState.floor_index, "level": GameState.level, "time": run_time,
 		"kills": GameState.kills, "gold": GameState.inventory.gold, "xp": GameState.xp_earned, "depth_key": key,
-		"mastery": results, "first_kills": Array(first_names), "rewards": Array(rw), "saved": saved}
+		"mastery": results, "first_kills": Array(first_names), "rewards": Array(rw), "saved": saved, "abandoned": abandoned,
+		"subtitle": _end_subtitle(won, abandoned)}
 	summary.show_summary(last_summary)
 	Events.run_ended.emit(won, GameState.floor_index)
 	var parts: PackedStringArray = []
@@ -926,6 +1026,49 @@ func _end_run(won: bool) -> void:
 		parts.append("%s %%%d +%d XP Lv %d→%d" % [m2["type"], roundi(float(m2["share"]) * 100.0), roundi(float(m2["xp"])), int(m2["from_level"]), int(m2["to_level"])])
 	print("[Zindan] Run sonu: %s, %d. kat, level %d, %s ×%s · ustalık: %s · kayıt %s" % ["zafer" if won else "ölüm",
 		GameState.floor_index, GameState.level, key, str(Mastery.depth_multiplier(key)), ", ".join(parts), "tamam" if saved else "YAZILAMADI"])
+
+
+## Denge simülasyonu (--balance) kat özeti: tools/dev/balance.py bu satırı okur (anahtar=değer).
+func report_balance() -> void:
+	if not balance:
+		return
+	var ws: PackedStringArray = []
+	for w: Weapon in GameState.inventory.active_weapons():
+		ws.append("%s/%s/%d" % [w.type_id, w.rarity_id, w.level])
+	print("[Denge] race=%s floor=%d time=%.1f boss_time=%.1f level=%d level_start=%d kills=%d deaths=%d dmg_pct=%.2f potions=%d gold=%d weapons=%s" % [
+		player.race_id, GameState.floor_index, _floor_elapsed, _boss_time, GameState.level, int(_floor_start.get("level", 1)),
+		GameState.kills - int(_floor_start.get("kills", 0)), player.balance_deaths - int(_floor_start.get("deaths", 0)),
+		(player.damage_taken - float(_floor_start.get("dmg", 0.0))) / maxf(player.max_hp, 1.0),
+		player.potions_used - int(_floor_start.get("potions", 0)), GameState.inventory.gold, ",".join(ws)])
+
+
+func _end_subtitle(won: bool, abandoned: bool) -> String:
+	var fl: Dictionary = DataDB.table("floors")["floors"][str(GameState.floor_index)]
+	if won:
+		var last := str(GameState.bosses_killed.back()) if not GameState.bosses_killed.is_empty() else ""
+		var bname := str(DataDB.table("bosses")["bosses"][last]["name"]) if DataDB.table("bosses")["bosses"].has(last) else "Son boss"
+		return "%s düştü. Zindan temizlendi." % bname
+	return "%d. kat — %s%s" % [GameState.floor_index, fl["name"], " · ölüm sayıldı" if abandoned else ""]
+
+
+## Duraklatma menüsünden run'ı bırakma (kullanıcı kararı: ölüm sayılır). Ustalık o kattaki ölüm çarpanıyla işlenir ve
+## kaydedilir; quit ise oyun kapanır, değilse özet ekranı açılır (dünya durur).
+func abandon_run(quit: bool = false) -> void:
+	if not finished:
+		finished = true
+		hud.show_message("")
+		print("[Zindan] RUN BIRAKILDI (%d. kat, ölüm sayıldı)" % GameState.floor_index)
+		_end_run(false, true)
+	if quit:
+		get_tree().quit()
+		return
+	get_tree().paused = true
+
+
+## Ana menüye dön (run bitmişken; özet ekranından).
+func go_main_menu() -> void:
+	get_tree().paused = false
+	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
 
 # --- etkileşim ---
@@ -970,6 +1113,7 @@ func try_interact() -> bool:
 	var p := n as RoomProp
 	match p.kind:
 		"stairs":
+			report_balance()
 			Audio.play("stairs")
 			enter_floor(GameState.floor_index + 1)
 		"chest":
@@ -1007,7 +1151,8 @@ func _on_enemy_killed_loot(enemy: Node, is_elite: bool, is_boss: bool) -> void:
 	if not finished:
 		GameState.kills += 1
 		grant_xp(Leveling.enemy_xp(GameState.floor_index, kind))
-	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng):
+	var bid := str(enemy.get("boss_id")) if is_boss and enemy.get("boss_id") != null else ""
+	for d: Dictionary in LootGenerator.enemy_drops(GameState.floor_index, kind, loot_rng, bid):
 		_spawn_drop(d, pos)
 
 
@@ -1242,6 +1387,69 @@ func loot_rain(n: int) -> void:
 		_spawn_drop({"kind": "talisman", "item": t}, player.global_position, 2.6)
 
 
+# --- denge botu (--balance): silah seçimi ---
+
+## Silahın bu oyuncu için gücü (tooltip'teki DPS; kilitli silah 0).
+func bot_weapon_score(w: Variant) -> float:
+	if not w is Weapon or (w as Weapon).level > GameState.level:
+		return 0.0
+	return float(WeaponInfo.stats(w as Weapon, player.race_id, GameState.level)["dps"])
+
+
+## En güçlü iki silahı aktif slotlara taşır (savaş dışında).
+func bot_optimize_loadout() -> void:
+	if not balance or GameState.in_combat:
+		return
+	var inv := GameState.inventory
+	for i: int in 2:
+		var target: String = Inventory.ACTIVE_SLOTS[i]
+		var best := ""
+		var best_s := bot_weapon_score(inv.slots[target])
+		for s: String in Inventory.SLOT_NAMES:
+			if s in Inventory.ACTIVE_SLOTS.slice(0, i + 1):
+				continue
+			var sc := bot_weapon_score(inv.slots[s])
+			if sc > best_s * 1.02:
+				best_s = sc
+				best = s
+		if best != "":
+			inv.move(Inventory.slot_ref(best), Inventory.slot_ref(target), GameState.level, false)
+	_on_inventory_changed()
+
+
+## Slotlar doluyken yerdeki silah en zayıf silahtan güçlü mü (denge botu onu alıp en zayıfı bırakır)?
+func bot_is_upgrade(item: Variant) -> bool:
+	return balance and item is Weapon and bot_weapon_score(item) > _bot_worst()[1] * 1.05
+
+
+func _bot_worst() -> Array:
+	var worst := ""
+	var worst_s := INF
+	for s: String in Inventory.SLOT_NAMES:
+		var it: Variant = GameState.inventory.slots[s]
+		if it is Weapon and bot_weapon_score(it) < worst_s:
+			worst_s = bot_weapon_score(it)
+			worst = s
+	return [worst, worst_s]
+
+
+## En zayıf silahı yere bırakıp yerdekini alır (denge botu).
+func bot_take_better(d: LootDrop) -> bool:
+	if not bot_is_upgrade(d.item) or GameState.in_combat:
+		return false
+	var worst: String = _bot_worst()[0]
+	var old: Variant = GameState.inventory.remove(Inventory.slot_ref(worst))
+	if old == null:
+		return false
+	if not pick_up(d, false):
+		GameState.inventory.slots[worst] = old
+		return false
+	var dropped := _spawn_drop({"kind": "weapon", "item": old}, player.global_position, 0.3)
+	dropped.set_meta("bot_ignore", true)
+	bot_optimize_loadout()
+	return true
+
+
 # --- bot (zindan smoke testi) tüccar ve demircide ---
 
 ## Bot: Rezonans ve Esnek'tekini satar, iksir alır, altın yetiyorsa tezgâhtan bir eşya alır.
@@ -1254,10 +1462,13 @@ func bot_merchant(p: RoomProp) -> void:
 	if Shop.buy_potion(inv, f, player.race_id) == "":
 		loot_stats["bought"] = int(loot_stats["bought"]) + 1
 	for i2: int in p.stock.size():
+		if balance and not (p.stock[i2] is Weapon and bot_weapon_score(p.stock[i2]) > bot_weapon_score(player.weapon())):
+			continue
 		if Shop.item_price(p.stock[i2], f) <= inv.gold and Shop.buy(inv, p.stock, i2, f, GameState.level) == "":
 			loot_stats["bought"] = int(loot_stats["bought"]) + 1
 			break
 	_on_inventory_changed()
+	bot_optimize_loadout()
 
 
 ## Bot: aktif silahı level atlatır, olmazsa elementini yeniden çeker.
@@ -1280,14 +1491,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		if key == KEY_I and not bag_ui.visible and not menu.visible:
 			bag_ui.open_ui("bag", player)
 			get_viewport().set_input_as_handled()
-		elif key == KEY_M:
+		elif key == KEY_F5:
+			# Geliştirici menüsü (hata ayıklama; kullanıcı kararı: F5'te kalır)
 			menu.open(TestRoom.config)
 			menu.set_lock_reason("Savaş sürerken ırk ve silahlar değiştirilemez (oda dışında serbest)." if GameState.in_combat else "")
-		elif key == KEY_R and finished:
-			new_run(1)
 			get_viewport().set_input_as_handled()
 		elif key == KEY_ESCAPE:
-			get_tree().quit()
+			# Run bittiyse Esc/R'yi özet ekranı işler (RunSummary)
+			if not finished and not (bag_ui.visible or reward_ui.visible or menu.visible):
+				pause.open()
+			get_viewport().set_input_as_handled()
 
 
 # --- gizli oda ---
@@ -1362,7 +1575,9 @@ func _update_hud() -> void:
 			room_txt += " · Dalga %d / %d · Kalan düşman %d" % [maxi(rc.wave_index + 1, 1), rc.info.waves.size(), rc.alive_count()]
 		elif rc.state == RoomController.State.CLEARED and rc.has_enemies():
 			room_txt += " · temizlendi"
-	var slot_txt := "SAVAŞ: slot değişimi kapalı" if GameState.in_combat else "Savaş dışı: slot değişimi serbest (I: envanter)"
+	var slot_txt := "Savaş dışı: slot değişimi serbest (I: envanter)"
+	if GameState.in_combat:
+		slot_txt = "SAVAŞ: slot değişimi kapalı" if GameState.slots_locked() else "SAVAŞ: I ile silah değiştirebilirsin · yerden eşya alınmaz"
 	hud.wave_text = "%d. Kat — %s   ·   %s\n%s   ·   Seed %d%s" % [GameState.floor_index, fl["name"], room_txt, slot_txt,
 		GameState.run_seed, "   ·   ÖLÜMSÜZ (test)" if player.invulnerable else ""]
 
@@ -1385,6 +1600,11 @@ func _on_menu_action(action_name: String, c: Dictionary) -> void:
 	match action_name:
 		"new_map":
 			new_run(int(c.get("floor", 1)))
+		"floor_teleport":
+			if teleport_to_floor(int(c.get("floor", 1))):
+				hud.flash_note("%d. kata ışınlandın (level ve envanter korundu)" % GameState.floor_index)
+			else:
+				hud.flash_note("Savaş sürerken ışınlanılamaz")
 		"test_room":
 			get_tree().change_scene_to_file(TEST_ROOM_SCENE)
 		"add_weapons":

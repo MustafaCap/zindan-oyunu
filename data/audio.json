@@ -985,6 +985,11 @@
   "music": {
     "_default": "Müzik: kat başına ambiyans döngüsü, boss'ta boss müziği (çapraz geçişle). Boss kesilince return_delay_sec sonra katın ambiyansına dönülür; run bitince müzik söner ve zafer/yenilgi vurgusu çalar.",
     "tracks": {
+      "menu": {
+        "file": "menu.ogg",
+        "db": 0.0,
+        "_default": "Aşama 10: ana menü ve ırk seçimi müziği = kullanıcının menü videosunun sesi (make menu-video; sıçramasız döngü, düzeyi 1. kat ambiyansına eşit). Video sessizdir; menu.ogg yoksa müzik çalmaz."
+      },
       "floor_1": {
         "file": "floor_1.ogg",
         "db": 0.0

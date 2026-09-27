@@ -124,7 +124,7 @@ func test_tome_homing_pages_find_target() -> void:
 	var t := _enemy(Vector2(2, 3))
 	WeaponAttacks.heavy_pressed(p)
 	assert_eq(_count(Projectile), 4, "4 güdümlü sayfa")
-	assert_eq(p.kit.resource, p.kit.resource_max - 55.0, "Magical sağ tık 55 mana")
+	assert_eq(p.kit.resource, p.kit.resource_max - 45.0, "Magical sağ tık 45 mana (v0.10.2)")
 	_step(3.0)
 	assert_true(t.hits.size() >= 3, "sayfalar yandaki hedefi bulur (%d isabet)" % t.hits.size())
 
@@ -236,13 +236,12 @@ func test_foreign_spell_weapon_heavy_cooldown() -> void:
 	assert_true(not WeaponAttacks.heavy_pressed(p), "beklemedeyken olmaz")
 
 
-func test_magical_needs_mana_for_light() -> void:
+## v0.10.2 (kullanıcı kararı): Magical'ın normal vuruşu mana harcamaz.
+func test_magical_light_attack_is_free() -> void:
 	var p := _player("magical", "tome", "fire", 1)
-	p.kit.resource = 0.5
-	assert_true(not WeaponAttacks.light(p), "1 mana yoksa sol tık yok")
-	p.kit.resource = 1.0
-	assert_true(WeaponAttacks.light(p))
-	assert_eq(p.kit.resource, 0.0)
+	p.kit.resource = 0.0
+	assert_true(WeaponAttacks.light(p), "mana yokken de sol tık atılır")
+	assert_eq(p.kit.resource, 0.0, "mana harcanmadı")
 
 
 func test_dagger_backstab_lunges_behind_target() -> void:

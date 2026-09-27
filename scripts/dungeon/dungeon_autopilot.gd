@@ -28,6 +28,8 @@ var _status_t: float = 0.0
 var _break_t: float = 0.0
 var _combat_reported: bool = false
 var _ignored_drops: Dictionary = {}
+## Hedef değişince (ör. tüccarda slot boşalınca uzaktaki bir eşya alınabilir olur) takılma ölçüsü sıfırlanır
+var _goal_key: String = ""
 
 
 func _ready() -> void:
@@ -94,8 +96,9 @@ func _process(delta: float) -> void:
 	var p := run.player
 	if p == null or p.dead or run.finished:
 		return
-	if run._floor_elapsed > FLOOR_TIMEOUT_SEC:
+	if run._floor_elapsed > FLOOR_TIMEOUT_SEC * (2.0 if run.balance else 1.0):
 		print("[Otopilot] SÜRE DOLDU (%d. kat)" % GameState.floor_index)
+		run.report_balance()
 		get_tree().quit(3)
 		return
 	p.bot_attack_point = Vector2.INF
@@ -124,6 +127,12 @@ func _process(delta: float) -> void:
 	if goal.is_empty():
 		return
 	var goal_cell: Vector2i = goal["cell"]
+	var key := "%s%s" % [goal["kind"], goal_cell]
+	if key != _goal_key:
+		_goal_key = key
+		_best_dist = INF
+		_progress_t = 0.0
+		path.clear()
 	var here := run.world_to_cell(p.global_position)
 	var dist := Iso.tile_distance(p.global_position, run.cell_to_world(goal_cell))
 	if dist < float(goal.get("arrive", 0.8)):
@@ -204,8 +213,11 @@ func _on_arrived(goal: Dictionary) -> void:
 			run.try_interact()
 		"pickup":
 			var d: LootDrop = goal["drop"]
-			if is_instance_valid(d) and not d.picked and not run.pick_up(d, false):
-				_ignored_drops[d.get_instance_id()] = true
+			if is_instance_valid(d) and not d.picked:
+				if run.pick_up(d, false):
+					run.bot_optimize_loadout()
+				elif not run.bot_take_better(d):
+					_ignored_drops[d.get_instance_id()] = true
 		_:
 			pass
 
@@ -256,7 +268,9 @@ func _nearest_item_drop() -> LootDrop:
 	for d: LootDrop in run.drops:
 		if not is_instance_valid(d) or d.picked or not d.is_item() or _ignored_drops.has(d.get_instance_id()):
 			continue
-		if GameState.inventory.free_slot_for(d.item, GameState.level) == "":
+		if d.has_meta("bot_ignore"):
+			continue
+		if GameState.inventory.free_slot_for(d.item, GameState.level) == "" and not run.bot_is_upgrade(d.item):
 			continue
 		var rid := run.layout.room_at(run.world_to_cell(d.global_position))
 		if rid >= 0 and not run.visited.has(rid):

@@ -1,6 +1,6 @@
 ## AudioSettingsUI — ses ayarları paneli (Aşama 9): Ana ses, Müzik, Efektler ve Arayüz kaydırıcıları, "Sessiz" kutusu.
 ## O tuşuyla açılır/kapanır (Audio autoload'u açar); açıkken oyun durur. Değişiklik hemen duyulur, kapatınca
-## user://settings.json'a kaydedilir. Aşama 10'daki duraklatma menüsü de bu paneli kullanacak.
+## user://settings.json'a kaydedilir. Aşama 10: ana menü ve duraklatma menüsü de bu paneli açar; menülerle aynı tema.
 class_name AudioSettingsUI
 extends CanvasLayer
 
@@ -24,18 +24,12 @@ func _ready() -> void:
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	panel.grow_vertical = Control.GROW_DIRECTION_BOTH
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.07, 0.05, 0.06, 0.96)
-	sb.border_color = Color(0.45, 0.12, 0.1)
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(6)
-	sb.set_content_margin_all(26)
-	panel.add_theme_stylebox_override("panel", sb)
+	panel.theme = UiTheme.theme()   # Aşama 10: menülerle aynı karanlık tema
 	add_child(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	panel.add_child(box)
-	box.add_child(_label("Ses Ayarları", 30, Color(0.95, 0.75, 0.6)))
+	box.add_child(UiTheme.title("Ses ayarları", 36, Color(0.82, 0.66, 0.52)))
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 16)
@@ -61,9 +55,9 @@ func _ready() -> void:
 	_mute.add_theme_font_size_override("font_size", 18)
 	_mute.toggled.connect(func(on: bool) -> void: Audio.set_muted(on))
 	box.add_child(_mute)
-	var close_btn := Button.new()
-	close_btn.text = "Kapat (O / Esc)"
-	close_btn.add_theme_font_size_override("font_size", 18)
+	var close_btn := UiTheme.menu_button("Kapat  (O / Esc)", 300)
+	close_btn.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	close_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	close_btn.pressed.connect(close)
 	box.add_child(close_btn)
 

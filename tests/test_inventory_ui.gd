@@ -58,9 +58,9 @@ func test_drag_and_drop_moves_and_swaps() -> void:
 	assert_true(ui.can_drop(d2, ui._slot_nodes["resonance"]), "kilitli → Rezonans olur")
 	# Boş slot sürüklenmez
 	assert_eq(ui.drag_data_for(ui._slot_nodes["resonance"]), null)
-	# Savaşta slota bırakılamaz
+	# v0.10.1: savaşta da slota bırakılabilir (envanter savaşta düzenlenir)
 	GameState.set_in_combat(true)
-	assert_true(not ui.can_drop(d2, ui._slot_nodes["resonance"]), "savaşta slot kilitli")
+	assert_true(ui.can_drop(d2, ui._slot_nodes["resonance"]), "savaşta da slot değişir")
 	GameState.set_in_combat(false)
 	ui.close()
 	assert_true(not (Engine.get_main_loop() as SceneTree).paused, "kapanınca oyun devam eder")

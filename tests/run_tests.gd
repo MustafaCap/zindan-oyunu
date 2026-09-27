@@ -2,6 +2,7 @@
 ## Kullanım: godot --headless --path . -s tests/run_tests.gd
 ## tests/ içindeki tüm test_*.gd dosyalarını bulur, "test_" ile başlayan fonksiyonları çalıştırır.
 ## Hata varsa çıkış kodu 1 olur (make test başarısız sayılır).
+## Aşama 10: TEST_FILTER=menus ortam değişkeniyle yalnızca adı eşleşen dosyalar çalışır (geliştirirken kısa test).
 extends SceneTree
 
 const TEST_DIR := "res://tests"
@@ -20,6 +21,8 @@ func _run() -> void:
 	files.sort()
 	for file: String in files:
 		if not (file.begins_with("test_") and file.ends_with(".gd")) or file == "test_case.gd":
+			continue
+		if OS.get_environment("TEST_FILTER") != "" and not OS.get_environment("TEST_FILTER") in file:
 			continue
 		var script: GDScript = load("%s/%s" % [TEST_DIR, file])
 		var suite: Object = script.new()
