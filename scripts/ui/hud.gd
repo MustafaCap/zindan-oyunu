@@ -199,7 +199,14 @@ func _weapon_box(p: Vector2, w: Weapon, active: bool, slot: int) -> void:
 	var s := Vector2(540, 44)
 	_panel.draw_rect(Rect2(p, s), Color(0.12, 0.12, 0.16, 0.92 if active else 0.6))
 	_panel.draw_rect(Rect2(p, s), w.rarity_color() if active else Color(0.35, 0.35, 0.4), false, 3.0 if active else 1.0)
-	ElementIcons.draw_badge(_panel, w.element, p + Vector2(24, 22), 14.0)
+	# Aşama 8: silah ikonu (element rozeti köşede)
+	var icon := ItemIcons.weapon(str(w.type_data()["visual"]))
+	if icon:
+		_panel.draw_texture_rect(icon, Rect2(p + Vector2(4, 2), Vector2(40, 40)), false, Color(1, 1, 1, 1.0 if active else 0.6))
+		if w.is_elemental():
+			ElementIcons.draw_badge(_panel, w.element, p + Vector2(38, 34), 8.0)
+	else:
+		ElementIcons.draw_badge(_panel, w.element, p + Vector2(24, 22), 14.0)
 	var font := ThemeDB.fallback_font
 	var name_col := w.rarity_color().lightened(0.25) if active else Color(0.6, 0.6, 0.65)
 	_panel.draw_string(font, p + Vector2(48, 20), "%d. %s · Lv %d" % [slot, w.display_name(), w.level], HORIZONTAL_ALIGNMENT_LEFT, s.x - 56, 19, name_col)

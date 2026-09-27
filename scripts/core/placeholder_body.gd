@@ -29,6 +29,8 @@ var show_weapon: bool = true:
 ## Yere düşen gölge (Nyx'thar'ın sahte kopyalarında kapalı — Aşama 7).
 var show_shadow: bool = true
 var lean: float = 0.0            # saldırıda öne eğilme (0..1)
+## Silahın elementi var mı (Aşama 8: sprite'lı silahın parıltı maskesi weapon_color ile boyanır).
+var weapon_glow: bool = false
 
 var _flash_tween: Tween
 
@@ -48,6 +50,55 @@ func flash(duration: float, color: Color = Color.WHITE) -> void:
 		_flash_tween.kill()
 	_flash_tween = create_tween()
 	_flash_tween.tween_method(func(v: float) -> void: mat.set_shader_parameter("flash", v), 1.0, 0.0, duration)
+
+
+## Malzeme tonu (Aşama 8: taş, alevli, zehirli, hayalet varyantları). amount 0..1.
+func set_tint(color: Color, amount: float) -> void:
+	var mat := material as ShaderMaterial
+	if mat == null:
+		return
+	mat.set_shader_parameter("tint", color)
+	mat.set_shader_parameter("tint_amount", amount)
+
+
+## Dış hat (Aşama 8: elit aura rengi, öncelikli hedef sarı). width doku pikseli; 0 kapatır.
+func set_outline(color: Color, width: float) -> void:
+	var mat := material as ShaderMaterial
+	if mat == null:
+		return
+	mat.set_shader_parameter("outline_color", color)
+	mat.set_shader_parameter("outline_width", width)
+
+
+## Eriyerek yok olma (Aşama 8): 0 → 1 arasında duration saniyede; edge kaybolma kenarının rengi.
+func dissolve_out(duration: float, edge: Color, delay: float = 0.0) -> Tween:
+	var mat := material as ShaderMaterial
+	mat.set_shader_parameter("edge_color", edge)
+	var tw := create_tween()
+	if delay > 0.0:
+		tw.tween_interval(delay)
+	tw.tween_method(func(v: float) -> void: mat.set_shader_parameter("dissolve", v), 0.0, 1.0, duration)
+	return tw
+
+
+## Saldırı animasyonu (boss'lar saldırıyı başlatınca çağırır; SpriteBody'de). Placeholder'da yok.
+func play_attack() -> void:
+	pass
+
+
+## Yetenek animasyonu (SpriteBody'de; ör. Warrior Kalkan Hücumu "rush"). Placeholder'da yok.
+func play_action(_name: String, _duration: float = -1.0) -> void:
+	pass
+
+
+## Ölüm animasyonu (SpriteBody'de var); placeholder için false: çağıran kendi tween'ini oynatır.
+func play_death() -> bool:
+	return false
+
+
+## Atılma/ışınlanma izi için kopya.
+func make_afterimage() -> Node2D:
+	return duplicate() as Node2D
 
 
 func set_facing(f: Vector2) -> void:

@@ -30,6 +30,9 @@ var slow_duration: float = 0.0
 var wave_speed: float = 6.0       ## ring_wave: karo/sn
 var wave_thickness: float = 0.8
 var color: Color = Color(1.0, 0.15, 0.1)
+## Aşama 8: aktif alanın görünüşü: "lava", "liquid", "fog" ya da "" (türe göre: ateş lav, zehir/su sıvı, karanlık sis).
+var look: String = ""
+var _look_applied := false
 var label: String = ""            ## saldırı id'si (test kaydı)
 var source: Node2D                ## sahibi (boss ölünce temizlenir)
 
@@ -40,6 +43,7 @@ var _hit_once: bool = false
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = -2
 	add_to_group("enemy_hazards")
 	if log_enabled:
@@ -47,6 +51,9 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not _look_applied and mode == "zone" and _t >= warn:
+		_look_applied = true
+		_apply_look()
 	if _done:
 		return
 	_t += delta
@@ -187,3 +194,31 @@ func _draw() -> void:
 			else:
 				var r := (_t - warn) * wave_speed
 				draw_colored_polygon(Shapes.iso_ring(maxf(r - wave_thickness * 0.5, 0.01), r + wave_thickness * 0.5, 40), Color(color, 0.55))
+
+
+## Aşama 8: aktif alan shader'ı (lav, sıvı, sis). Uyarı sırasında düz işaret, aktifken yaşayan yüzey.
+const LAVA_SHADER := preload("res://assets/shaders/lava.gdshader")
+const LIQUID_SHADER := preload("res://assets/shaders/liquid.gdshader")
+const FOG_SHADER := preload("res://assets/shaders/fog.gdshader")
+
+
+func _apply_look() -> void:
+	var l := look
+	if l == "":
+		match kind:
+			"fire": l = "lava"
+			"poison", "water": l = "liquid"
+			"dark": l = "fog"
+	var m := ShaderMaterial.new()
+	match l:
+		"lava":
+			m.shader = LAVA_SHADER
+		"liquid":
+			m.shader = LIQUID_SHADER
+			m.set_shader_parameter("tint", color)
+		"fog":
+			m.shader = FOG_SHADER
+			m.set_shader_parameter("tint", color)
+		_:
+			return
+	material = m

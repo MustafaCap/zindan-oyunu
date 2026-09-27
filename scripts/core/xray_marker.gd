@@ -6,6 +6,8 @@ extends Node2D
 
 var color: Color = Color(0.6, 0.85, 1.0)
 var body: PlaceholderBody
+const SILHOUETTE := preload("res://assets/shaders/silhouette.gdshader")
+var _sil: ShaderMaterial
 var occluded: bool = false:
 	set(v):
 		if v != occluded:
@@ -14,6 +16,7 @@ var occluded: bool = false:
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = 60
 	z_as_relative = false
 	visible = false
@@ -26,6 +29,16 @@ func _process(_delta: float) -> void:
 
 func _draw() -> void:
 	if body == null:
+		return
+	if body is SpriteBody:
+		# Aşama 8: sprite'ın o anki karesinin tek renkli silüeti
+		if _sil == null:
+			_sil = ShaderMaterial.new()
+			_sil.shader = SILHOUETTE
+			_sil.set_shader_parameter("fill", Color(color, 0.4))
+			material = _sil
+		draw_set_transform(body.position, 0.0, body.scale)
+		(body as SpriteBody).draw_silhouette(self)
 		return
 	var h := body.body_height
 	var w := body.body_width * 0.5

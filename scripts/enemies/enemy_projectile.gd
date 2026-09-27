@@ -26,7 +26,13 @@ var _done: bool = false
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = 3
+	# Aşama 8: ateş topu ve gölge oku çevresini aydınlatır
+	if look == "fireball":
+		Lighting.add_projectile_light(self, Color(1.0, 0.5, 0.15))
+	elif look == "shadow":
+		Lighting.add_projectile_light(self, Color(0.6, 0.4, 1.0))
 	dir_cart = dir_cart.normalized()
 	add_to_group("enemy_hazards")
 	if EnemyHazard.log_enabled:

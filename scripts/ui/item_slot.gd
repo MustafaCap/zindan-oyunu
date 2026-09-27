@@ -109,12 +109,17 @@ static func draw_item(ci: CanvasItem, it: Variant, r: Rect2, player_level: int) 
 		ci.draw_rect(r, Color(rc.darkened(0.75), 0.9))
 		if w.is_legendary():
 			ci.draw_circle(c, s * 0.34, Color(rc, 0.25))
-		var ec := Weapon.kind_color(w.element)
-		var a := c + Vector2(-s * 0.26, s * 0.2)
-		var b := c + Vector2(s * 0.24, -s * 0.24)
-		ci.draw_line(a, b, Color(0, 0, 0, 0.7), s * 0.12)
-		ci.draw_line(a, b, ec, s * 0.07)
-		ci.draw_line(a + Vector2(-s * 0.06, -s * 0.12), a + Vector2(s * 0.1, s * 0.05), rc.lightened(0.2), s * 0.06)
+		# Aşama 8: silah tipinin ikonu, nadirlik renginde demir çerçeve; ikon yoksa eski çizim
+		var icon := ItemIcons.weapon(str(w.type_data()["visual"]))
+		if icon:
+			ItemIcons.draw(ci, icon, r, rc)
+		else:
+			var ec := Weapon.kind_color(w.element)
+			var a := c + Vector2(-s * 0.26, s * 0.2)
+			var b := c + Vector2(s * 0.24, -s * 0.24)
+			ci.draw_line(a, b, Color(0, 0, 0, 0.7), s * 0.12)
+			ci.draw_line(a, b, ec, s * 0.07)
+			ci.draw_line(a + Vector2(-s * 0.06, -s * 0.12), a + Vector2(s * 0.1, s * 0.05), rc.lightened(0.2), s * 0.06)
 		ci.draw_string(font, r.position + Vector2(3, 15), w.type_name(), HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 6, int(clampf(s * 0.16, 11, 15)), Color(0.92, 0.92, 0.95))
 		ci.draw_string(font, r.position + Vector2(3, r.size.y - 5), "Lv %d" % w.level, HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 6, int(clampf(s * 0.17, 11, 16)), Color(1, 0.95, 0.75))
 		if w.is_elemental():
@@ -130,10 +135,14 @@ static func draw_item(ci: CanvasItem, it: Variant, r: Rect2, player_level: int) 
 		var t := it as Talisman
 		var tc := t.color()
 		ci.draw_rect(r, Color(tc.darkened(0.8), 0.9))
-		var gem := PackedVector2Array([c + Vector2(0, -s * 0.3), c + Vector2(s * 0.22, -s * 0.05), c + Vector2(0, s * 0.25), c + Vector2(-s * 0.22, -s * 0.05)])
-		ci.draw_colored_polygon(gem, tc)
-		gem.append(gem[0])
-		ci.draw_polyline(gem, Color(1, 1, 1, 0.8), 1.5)
+		var ticon := ItemIcons.talisman(t.id)
+		if ticon:
+			ItemIcons.draw(ci, ticon, r, tc)
+		else:
+			var gem := PackedVector2Array([c + Vector2(0, -s * 0.3), c + Vector2(s * 0.22, -s * 0.05), c + Vector2(0, s * 0.25), c + Vector2(-s * 0.22, -s * 0.05)])
+			ci.draw_colored_polygon(gem, tc)
+			gem.append(gem[0])
+			ci.draw_polyline(gem, Color(1, 1, 1, 0.8), 1.5)
 		ci.draw_string(font, r.position + Vector2(3, r.size.y - 5), "Tılsım", HORIZONTAL_ALIGNMENT_LEFT, r.size.x - 6, 12, tc.lightened(0.4))
 
 

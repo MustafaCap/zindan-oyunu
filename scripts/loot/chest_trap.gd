@@ -12,6 +12,7 @@ var _done: bool = false
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = -2
 	var c: Dictionary = DataDB.table("economy")["chest"]
 	radius = float(c["trap_radius"])

@@ -44,7 +44,7 @@ static func create(id: String) -> Boss:
 func _setup_stats() -> void:
 	bdata = DataDB.table("bosses")["bosses"][boss_id]
 	var st: Dictionary = bdata["stats"]
-	data = {"name": bdata["name"], "placeholder_color": _body_color(), "ai": "boss"}
+	data = {"name": bdata["name"], "placeholder_color": _body_color(), "ai": "boss", "sprite": str(bdata.get("sprite", boss_id))}
 	ai = "boss"
 	attack = {"type": "none"}
 	attack_type = "none"
@@ -75,8 +75,9 @@ func _body_color() -> String:
 
 func _ready() -> void:
 	super._ready()
-	visual.body_height = 32.0 * clampf(radius_tiles / 0.35, 1.0, 2.6)
-	visual.body_width = 18.0 * clampf(radius_tiles / 0.35, 1.0, 2.6)
+	if not visual is SpriteBody:
+		visual.body_height = 32.0 * clampf(radius_tiles / 0.35, 1.0, 2.6)
+		visual.body_width = 18.0 * clampf(radius_tiles / 0.35, 1.0, 2.6)
 	visual.show_weapon = false
 	top_layer = TopLayer.new()
 	top_layer.boss = self
@@ -147,12 +148,15 @@ func _physics_process(delta: float) -> void:
 					_last_attack = id
 					(attack_log[id] as Array)[phase - 1] = int((attack_log[id] as Array)[phase - 1]) + 1
 					_busy_t = start_attack(id)
+					visual.play_attack()
 				_gap_t = float(bdata["attack_gap"])
 		move = move_dir(delta)
 		var to_t := Iso.to_cart(target.global_position - global_position)
 		if to_t.length() > 0.01 and _busy_t <= 0.0:
 			facing_cart = to_t.normalized()
 	visual.set_facing(facing_cart)
+	if visual is SpriteBody:
+		(visual as SpriteBody).variant = sprite_variant()
 	velocity = Iso.to_screen(move * Iso.tiles(current_speed() * status.speed_mult()))
 	move_and_slide()
 	_update_tint()
@@ -344,6 +348,11 @@ func _die(dir_cart: Vector2) -> void:
 	super._die(dir_cart)
 
 
+## Aşama 8: sprite durum varyantı (Morvath kapak kapalı "_closed", Kordrak plakasız "_p2"). Alt sınıflar verir.
+func sprite_variant() -> String:
+	return ""
+
+
 ## Gövdenin üstündeki ayrıntılar (TopLayer çağırır). Alt sınıflar çizer.
 func draw_top(_n: Node2D) -> void:
 	pass
@@ -355,7 +364,7 @@ class TopLayer:
 	var boss: Boss
 
 	func _draw() -> void:
-		if boss and not boss.dead:
+		if boss and not boss.dead and not boss.visual is SpriteBody:
 			boss.draw_top(self)
 
 

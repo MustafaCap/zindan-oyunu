@@ -110,5 +110,23 @@
     "knockback_tiles": 0.7,
     "knockback_heavy_tiles": 1.3,
     "knockback_duration": 0.16
+  },
+  "blood": {
+    "_note": "Aşama 8, kullanıcı kararı: kanlı oyun — düşmana (ve oyuncuya) vurunca kan fışkırır, yere leke düşer; ölünce büyük fışkırma ve kan gölü.",
+    "_default": "Tüm sayılar Aşama 8'de verildi; oyun testinde ayarlanır. Renk düşman malzemesinden (enemies.json > materials > blood) gelebilir.",
+    "color": "#8a0c0c",
+    "droplets_per_hit": 12,
+    "heavy_mult": 1.7,
+    "death_mult": 3.2,
+    "player_mult": 0.7,
+    "spray_speed": [120, 360],
+    "splats_per_hit": 2,
+    "splat_radius_tiles": [0.08, 0.2],
+    "pool_radius_tiles": [0.45, 0.7],
+    "decal_lifetime_sec": 30,
+    "decal_fade_sec": 4,
+    "max_decals": 90,
+    "dissolve_delay": 0.55,
+    "dissolve_sec": 0.7
   }
 }

@@ -12,9 +12,12 @@ var _trauma: float = 0.0
 var _hitstop_until_usec: int = 0
 var _last_usec: int = 0
 var _rng := RandomNumberGenerator.new()
+var _blood: Dictionary
+var _decals: Node2D
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	_feel = DataDB.get_value("progression", "feel")
 	z_index = 50
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -26,6 +29,14 @@ func _ready() -> void:
 	Events.chain_zap.connect(_on_chain_zap)
 	Events.area_pulse.connect(_on_area_pulse)
 	Events.combo_triggered.connect(_on_combo)
+	Events.blood_spilled.connect(_on_blood)
+	Events.floor_entered.connect(func(_i: int) -> void: clear_blood())
+	_blood = DataDB.get_value("progression", "blood")
+	# Yerdeki kan lekeleri zeminin hemen üstünde, karakterlerin altında çizilir
+	_decals = Node2D.new()
+	_decals.z_as_relative = false
+	_decals.z_index = -9
+	add_child(_decals)
 	_last_usec = Time.get_ticks_usec()
 
 
@@ -156,6 +167,112 @@ func _on_chain_zap(from: Vector2, to: Vector2, color: Color, jagged: bool) -> vo
 		var tw := l.create_tween()
 		tw.tween_property(l, "modulate:a", 0.0, 0.28)
 		tw.tween_callback(l.queue_free)
+
+
+## Aşama 8 (kullanıcı kararı: kanlı oyun): vuruş yönüne kan fışkırır, yere leke düşer; ölümde büyük fışkırma ve
+## kan gölü. Lekeler bir süre kalır, sonra solar (progression.json > blood).
+func _on_blood(pos: Vector2, dir_cart: Vector2, amount: float, color: Color) -> void:
+	var b := _blood
+	var n := int(float(b["droplets_per_hit"]) * amount)
+	var sp: Array = b["spray_speed"]
+	var p := CPUParticles2D.new()
+	p.one_shot = true
+	p.emitting = false
+	p.amount = maxi(n, 1)
+	p.lifetime = 0.55
+	p.explosiveness = 0.9
+	p.direction = (Iso.to_screen(dir_cart).normalized() + Vector2(0, -0.35)).normalized() if dir_cart.length() > 0.01 else Vector2.UP
+	p.spread = 38.0 if amount < 2.0 else 75.0
+	p.initial_velocity_min = float(sp[0]) * (0.8 + amount * 0.2)
+	p.initial_velocity_max = float(sp[1]) * (0.8 + amount * 0.2)
+	p.gravity = Vector2(0, 900)
+	p.damping_min = 40.0
+	p.damping_max = 120.0
+	p.scale_amount_min = 2.0
+	p.scale_amount_max = 4.5
+	var ramp := Gradient.new()
+	ramp.set_color(0, color.lightened(0.15))
+	ramp.set_color(1, Color(color.darkened(0.4), 0.0))
+	p.color_ramp = ramp
+	add_child(p)
+	p.global_position = pos + Vector2(0, -22)
+	p.emitting = true
+	get_tree().create_timer(0.9, true, false, true).timeout.connect(p.queue_free)
+	# Yere düşen lekeler: vuruş yönünde, biraz geride
+	var sr: Array = b["splat_radius_tiles"]
+	var splats := int(ceil(float(b["splats_per_hit"]) * amount * 0.6))
+	for i: int in splats:
+		var off := dir_cart.normalized() * _rng.randf_range(0.2, 0.9 + amount * 0.3) if dir_cart.length() > 0.01 else Vector2.ZERO
+		off += Vector2(_rng.randf_range(-0.35, 0.35), _rng.randf_range(-0.35, 0.35))
+		_add_decal(pos + Iso.to_screen(off * Iso.KARO), _rng.randf_range(float(sr[0]), float(sr[1])), color)
+	if amount >= float(b["death_mult"]) - 0.01:
+		var pr: Array = b["pool_radius_tiles"]
+		_add_decal(pos, _rng.randf_range(float(pr[0]), float(pr[1])), color.darkened(0.15))
+
+
+func _add_decal(pos: Vector2, radius_tiles: float, color: Color) -> void:
+	var d := BloodDecal.new()
+	d.radius_tiles = radius_tiles
+	d.color = Color(color.darkened(0.2), 0.85)
+	d.seed_value = _rng.randi()
+	d.lifetime = float(_blood["decal_lifetime_sec"])
+	d.fade = float(_blood["decal_fade_sec"])
+	_decals.add_child(d)
+	d.global_position = pos
+	while _decals.get_child_count() > int(_blood["max_decals"]):
+		var old := _decals.get_child(0)
+		_decals.remove_child(old)
+		old.queue_free()
+
+
+## Kat değişince yerdeki kanlar temizlenir.
+func clear_blood() -> void:
+	for c: Node in _decals.get_children():
+		c.queue_free()
+
+
+## Yerdeki kan lekesi: düzensiz izometrik leke ve birkaç damla; ömrü dolunca solar.
+class BloodDecal:
+	extends Node2D
+	var radius_tiles: float = 0.2
+	var color: Color = Color(0.5, 0.03, 0.03, 0.85)
+	var seed_value: int = 0
+	var lifetime: float = 30.0
+	var fade: float = 4.0
+	var _t: float = 0.0
+	var _grow: float = 0.0
+
+	func _process(delta: float) -> void:
+		_t += delta
+		if _grow < 1.0:
+			_grow = minf(_grow + delta * 6.0, 1.0)
+			queue_redraw()
+		if _t > lifetime:
+			modulate.a = 1.0 - (_t - lifetime) / fade
+			if _t > lifetime + fade:
+				queue_free()
+
+	func _draw() -> void:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var r := radius_tiles * (0.4 + 0.6 * _grow)
+		var pts := PackedVector2Array()
+		var n := 14
+		for i: int in n:
+			var a := TAU * i / n
+			var k := rng.randf_range(0.65, 1.15)
+			pts.append(Iso.to_screen(Vector2(cos(a), sin(a)) * Iso.tiles(r) * k))
+		draw_colored_polygon(pts, color)
+		draw_colored_polygon(_scaled(pts, 0.55), color.darkened(0.25))
+		for i: int in rng.randi_range(2, 5):
+			var dp := Iso.to_screen(Vector2.RIGHT.rotated(rng.randf() * TAU) * Iso.tiles(r) * rng.randf_range(1.15, 1.8))
+			draw_circle(dp, rng.randf_range(1.2, 2.6), color)
+
+	func _scaled(pts: PackedVector2Array, k: float) -> PackedVector2Array:
+		var out := PackedVector2Array()
+		for p: Vector2 in pts:
+			out.append(p * k)
+		return out
 
 
 ## Yerde genişleyen halka (alan kombo'ları).

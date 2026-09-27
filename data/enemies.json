@@ -23,9 +23,9 @@
   },
   "materials": {
     "stone": {"name": "Taş", "prefix": "Taş", "immune": ["lightning"], "resistant": [], "weak": ["ice"], "tint": "#8d8a86"},
-    "ghost": {"name": "Hayalet", "prefix": "Hayalet", "immune": ["physical"], "resistant": [], "weak": ["fire"], "tint": "#9fd6ff"},
+    "ghost": {"name": "Hayalet", "prefix": "Hayalet", "immune": ["physical"], "resistant": [], "weak": ["fire"], "tint": "#9fd6ff", "blood": "#3a2a5c"},
     "fire_elemental": {"name": "Ateş elementali", "prefix": "Alevli", "immune": ["fire"], "resistant": [], "weak": ["ice", "water"], "tint": "#ff8a4a"},
-    "toxic": {"name": "Zehirli", "prefix": "Zehirli", "immune": ["poison"], "resistant": [], "weak": ["fire"], "tint": "#8fd14f"}
+    "toxic": {"name": "Zehirli", "prefix": "Zehirli", "immune": ["poison"], "resistant": [], "weak": ["fire"], "tint": "#8fd14f", "blood": "#4a6a10"}
   },
   "variants": {
     "_default": "Katlar arası malzeme varyantları (21): önceki katların düşmanları yeni katın malzemesiyle gelir. 17 temel + 17 elit + 21 varyant = 55. Varyant = [temel düşman, malzeme]; katın spawn_pool'unda kullanılır.",

@@ -115,8 +115,9 @@ func _ready() -> void:
 		push_error("[TestRoom] " + cfg_error)
 		config = default_config()
 
-	var floor_color := Color(DataDB.table("floors")["floors"]["1"]["placeholder_color"])
-	var ts := IsoTileset.build(floor_color)
+	# Aşama 8: 1. katın karoları ve karanlığı (oyuncunun çevresindeki ışıkla)
+	var ts := IsoTileset.for_floor(1)
+	Lighting.set_ambient(self, 1)
 
 	floor_layer = TileMapLayer.new()
 	floor_layer.tile_set = ts
@@ -238,12 +239,11 @@ func _build_room() -> void:
 			var c := Vector2i(x, y)
 			var border := x == 0 or y == 0 or x == room_size - 1 or y == room_size - 1
 			if border:
-				wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, IsoTileset.WALL)
+				wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, IsoTileset.wall_tile(c))
 			else:
-				var alt := IsoTileset.FLOOR_A if (x + y) % 2 == 0 else IsoTileset.FLOOR_B
-				floor_layer.set_cell(c, IsoTileset.FLOOR_SOURCE, alt)
+				floor_layer.set_cell(c, IsoTileset.FLOOR_SOURCE, IsoTileset.floor_tile(c))
 	for p: Vector2i in pillars:
-		wall_layer.set_cell(p, IsoTileset.BLOCK_SOURCE, IsoTileset.PILLAR)
+		wall_layer.set_cell(p, IsoTileset.BLOCK_SOURCE, IsoTileset.pillar_tile(p))
 
 
 func _process(delta: float) -> void:

@@ -90,7 +90,7 @@ func start_attack(id: String) -> float:
 				var pt := arena.point_near(rng, target.global_position, float(a["spread"])) if i > 0 else target.global_position
 				_clouds.append(hazard(id, pt, "circle", float(a["warn"]), float(a["damage_mult"]),
 					{"mode": "zone", "radius": float(a["radius"]), "duration": float(a["duration"]), "tick": float(a["tick"]),
-					"kind": "poison", "color": Color(0.45, 0.85, 0.3)}))
+					"kind": "poison", "color": Color(0.45, 0.85, 0.3), "look": "fog"}))
 			return float(a["warn"])
 		"root_burst":
 			for i: int in int(a["count"]):

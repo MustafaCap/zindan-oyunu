@@ -69,8 +69,13 @@ bosses: import
 	if [ $$code -ne 0 ]; then echo "BOSSES: başarısız (kod $$code) — ayrıntı: build/bosses.log"; exit 1; fi; \
 	echo "BOSSES: geçti"
 
+# Aşama 8: tüm sprite'lar Blender'da (arka planda) üretilir: 4 ırk, 12 silah, 20 düşman + 4 boss, 4 katın karoları,
+# oda nesneleri, ikonlar. Yalnızca bazıları: make sprites SPRITE_ARGS=--only=warrior,blade,tiles1,icons,props
+# Bu bilgisayarda: make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe" (~35 dk)
+SPRITE_ARGS ?=
 sprites:
-	$(PYTHON) tools/blender/render_sprites.py
+	"$(BLENDER)" -b --factory-startup --python tools/blender/render_sprites.py -- $(SPRITE_ARGS)
+	@$(GODOT) --headless --path . --import > /dev/null 2>&1 || true
 
 sfx:
 	$(PYTHON) tools/audio/sfx_synth.py

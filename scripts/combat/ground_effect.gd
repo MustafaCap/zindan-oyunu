@@ -33,6 +33,7 @@ var _streaks: Array = []          ## Ok yağmuru çizgileri: [konum, kalan süre
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = -2
 	_next_pulse = delay if mode != "trap" else 0.0
 	_rng.seed = get_instance_id()

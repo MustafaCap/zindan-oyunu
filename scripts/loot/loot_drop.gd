@@ -29,6 +29,7 @@ static func make(p_kind: String, p_item: Variant = null, p_amount: int = 0) -> L
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	_t = randf() * 3.0
 
 
@@ -119,14 +120,23 @@ func _draw() -> void:
 			draw_circle(off + Vector2(-2, -10), 2.0, Color(1, 1, 1, 0.7))
 		"weapon":
 			var w := item as Weapon
-			var c2 := Weapon.kind_color(w.element)
-			draw_line(off + Vector2(-12, -2), off + Vector2(12, -14), Color(0, 0, 0, 0.6), 6.0)
-			draw_line(off + Vector2(-12, -2), off + Vector2(12, -14), c2, 3.5)
-			draw_line(off + Vector2(-8, -9), off + Vector2(-4, 1), w.rarity_color(), 3.0)
+			# Aşama 8: silahın ikonu yerde yatar
+			var wi := ItemIcons.weapon(str(w.type_data()["visual"]))
+			if wi:
+				draw_texture_rect(wi, Rect2(off + Vector2(-18, -30), Vector2(36, 36)), false)
+			else:
+				var c2 := Weapon.kind_color(w.element)
+				draw_line(off + Vector2(-12, -2), off + Vector2(12, -14), Color(0, 0, 0, 0.6), 6.0)
+				draw_line(off + Vector2(-12, -2), off + Vector2(12, -14), c2, 3.5)
+				draw_line(off + Vector2(-8, -9), off + Vector2(-4, 1), w.rarity_color(), 3.0)
 		"talisman":
 			var t := item as Talisman
-			draw_colored_polygon(PackedVector2Array([off + Vector2(0, -20), off + Vector2(8, -10), off + Vector2(0, 0), off + Vector2(-8, -10)]), t.color())
-			draw_polyline(PackedVector2Array([off + Vector2(0, -20), off + Vector2(8, -10), off + Vector2(0, 0), off + Vector2(-8, -10), off + Vector2(0, -20)]), Color(1, 1, 1, 0.7), 1.5)
+			var ti := ItemIcons.talisman(t.id)
+			if ti:
+				draw_texture_rect(ti, Rect2(off + Vector2(-14, -28), Vector2(28, 28)), false)
+			else:
+				draw_colored_polygon(PackedVector2Array([off + Vector2(0, -20), off + Vector2(8, -10), off + Vector2(0, 0), off + Vector2(-8, -10)]), t.color())
+				draw_polyline(PackedVector2Array([off + Vector2(0, -20), off + Vector2(8, -10), off + Vector2(0, 0), off + Vector2(-8, -10), off + Vector2(0, -20)]), Color(1, 1, 1, 0.7), 1.5)
 	if player_near and k >= 1.0 and kind != "gold":
 		var font := ThemeDB.fallback_font
 		var txt := label_text()

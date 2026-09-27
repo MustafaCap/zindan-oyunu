@@ -171,3 +171,8 @@ func draw_overlay(o: Node2D) -> void:
 		o.draw_colored_polygon(moved, Color(0.18, 0.1, 0.07, 0.75))
 		if glow > 0.0:
 			o.draw_colored_polygon(moved, Color(1.0, 0.45, 0.1, glow))
+
+
+## Aşama 8: plakalar kırıkken ya da 2. fazda düşmüşken sprite'ın plakasız (çekirdeği açık) varyantı.
+func sprite_variant() -> String:
+	return "_p2" if plates_gone or plates_off_t > 0.0 else ""

@@ -216,3 +216,8 @@ func draw_overlay(o: Node2D) -> void:
 	# Duvardaki gözlere uzanan damarlar
 	for e: Node2D in alive_minions("wall_eye"):
 		o.draw_line(o.to_local(global_position), o.to_local(e.global_position), Color(0.6, 0.1, 0.25, 0.6), 4.0)
+
+
+## Aşama 8: göz kapağı kapalıyken sprite'ın kapalı göz varyantı.
+func sprite_variant() -> String:
+	return "_closed" if closed else ""

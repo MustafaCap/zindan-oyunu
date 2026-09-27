@@ -24,6 +24,9 @@ signal area_pulse(position: Vector2, radius_tiles: float, color: Color)
 signal weapon_swapped(index: int)
 signal enemy_killed(enemy: Node, is_elite: bool, is_boss: bool)
 signal enemy_died_fx(position: Vector2, dir_cart: Vector2)
+## Aşama 8 (kullanıcı kararı: kanlı oyun): vuruşta ve ölümde kan. position zemindeki nokta, amount: 1 normal vuruş,
+## progression.blood.heavy_mult güçlü/kritik, death_mult ölüm (büyük fışkırma + kan gölü).
+signal blood_spilled(position: Vector2, dir_cart: Vector2, amount: float, color: Color)
 signal player_damaged(amount: float)
 signal player_dashed(position: Vector2)
 signal player_died()

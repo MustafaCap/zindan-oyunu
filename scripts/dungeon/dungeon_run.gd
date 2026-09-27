@@ -42,6 +42,10 @@ var player: Player
 var world: Node2D
 var floor_layer: TileMapLayer
 var wall_layer: TileMapLayer
+## Aşama 8: parlayan karo parçaları (ışıktan etkilenmez, eklenir) ve duvar meşaleleri
+var floor_glow: TileMapLayer
+var wall_glow: TileMapLayer
+var torches: Array[Node2D] = []
 var camera: Camera2D
 var juice: Juice
 var hud: Hud
@@ -319,7 +323,8 @@ func enter_floor(index: int) -> void:
 	var fl: Dictionary = DataDB.table("floors")["floors"][str(index)]
 	layout = DungeonGenerator.generate(index, GameState.floor_seed(index), enemy_mult)
 	loot_rng.seed = hash([layout.seed_value, "loot"])
-	var ts := IsoTileset.build(Color(str(fl["placeholder_color"])), Color(str(fl["wall_color"])), Color(str(fl["obstacle_color"])))
+	var ts := IsoTileset.for_floor(index)
+	Lighting.set_ambient(self, index)
 	floor_layer = TileMapLayer.new()
 	floor_layer.tile_set = ts
 	floor_layer.z_index = -10
@@ -329,6 +334,19 @@ func enter_floor(index: int) -> void:
 	wall_layer.tile_set = ts
 	wall_layer.y_sort_enabled = true
 	world.add_child(wall_layer)
+	var gts := IsoTileset.build_glow(index)
+	if gts:
+		floor_glow = TileMapLayer.new()
+		floor_glow.tile_set = gts
+		floor_glow.z_index = -10
+		floor_glow.material = Lighting.glow_material()
+		add_child(floor_glow)
+		move_child(floor_glow, 1)
+		wall_glow = TileMapLayer.new()
+		wall_glow.tile_set = gts
+		wall_glow.y_sort_enabled = true
+		wall_glow.material = Lighting.glow_material()
+		world.add_child(wall_glow)
 	var radius := int(_dg["door_clear_radius"])
 	for r: DungeonLayout.Room in layout.rooms:
 		_entry_zones[r.id] = layout.entry_zone(r.id, radius)
@@ -409,7 +427,11 @@ func _clear_floor() -> void:
 			if n is Projectile or n is GroundEffect or n is Enemy or n is ChestTrap:
 				n.queue_free()
 	# Eski karolar hemen kalksın: yeni katın ilk fizik adımında eski duvarlar oyuncuyu itmesin
-	for layer: TileMapLayer in [floor_layer, wall_layer]:
+	for t: Node2D in torches:
+		if is_instance_valid(t):
+			t.queue_free()
+	torches.clear()
+	for layer: TileMapLayer in [floor_layer, wall_layer, floor_glow, wall_glow]:
 		if layer and is_instance_valid(layer):
 			layer.get_parent().remove_child(layer)
 			layer.free()
@@ -429,19 +451,61 @@ func _clear_floor() -> void:
 func paint_tiles() -> void:
 	floor_layer.clear()
 	wall_layer.clear()
+	var glow := floor_glow != null and is_instance_valid(floor_glow)
+	if glow:
+		floor_glow.clear()
+		wall_glow.clear()
 	var fl := layout.visible_floor(secrets_open)
 	for c: Vector2i in fl.keys():
-		var alt := IsoTileset.FLOOR_A if (c.x + c.y) % 2 == 0 else IsoTileset.FLOOR_B
-		floor_layer.set_cell(c, IsoTileset.FLOOR_SOURCE, alt)
+		var ft := IsoTileset.floor_tile(c)
+		floor_layer.set_cell(c, IsoTileset.FLOOR_SOURCE, ft)
+		if glow:
+			floor_glow.set_cell(c, IsoTileset.FLOOR_SOURCE, ft)
 		if layout.is_obstacle(c):
-			wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, IsoTileset.PILLAR)
-	for c: Vector2i in layout.wall_cells(secrets_open):
-		wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, IsoTileset.WALL)
+			var pt := IsoTileset.pillar_tile(c)
+			wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, pt)
+			if glow:
+				wall_glow.set_cell(c, IsoTileset.BLOCK_SOURCE, pt)
+	var walls := layout.wall_cells(secrets_open)
+	for c: Vector2i in walls:
+		var wt := IsoTileset.wall_tile(c)
+		wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, wt)
+		if glow:
+			wall_glow.set_cell(c, IsoTileset.BLOCK_SOURCE, wt)
 	if not secrets_open:
 		for c: Vector2i in layout.secret_wall_cells:
 			wall_layer.set_cell(c, IsoTileset.BLOCK_SOURCE, IsoTileset.CRACKED)
+	_place_torches(walls, fl)
 	for rid: int in _locked.keys():
 		set_room_locked(rid, true)
+
+
+## Aşama 8: odaya bakan duvarlara belli aralıkla (konumdan hash) meşale asar. Meşale, önündeki zemine bakan yüze konur.
+func _place_torches(walls: Variant, fl: Dictionary) -> void:
+	for t: Node2D in torches:
+		if is_instance_valid(t):
+			t.queue_free()
+	torches.clear()
+	var every := int(Lighting.cfg()["torch_every"])
+	var fcol := Color(str(DataDB.table("floors")["floors"][str(GameState.floor_index)].get("light", {}).get("torch_color", "#ff8a3a")))
+	for c: Vector2i in walls:
+		if absi(hash([c, "torch", GameState.floor_index])) % every != 0:
+			continue
+		# Görünen yüzler: +x komşusu (sağ alt yüz) ve +y komşusu (sol alt yüz)
+		var dir := Vector2i.ZERO
+		if fl.has(c + Vector2i(1, 0)):
+			dir = Vector2i(1, 0)
+		elif fl.has(c + Vector2i(0, 1)):
+			dir = Vector2i(0, 1)
+		if dir == Vector2i.ZERO:
+			continue
+		var t := Lighting.Torch.new()
+		t.color = fcol
+		var face := (cell_to_world(c + dir) - cell_to_world(c)).normalized()
+		t.face_dir = face
+		world.add_child(t)
+		t.global_position = cell_to_world(c) + face * Iso.TILE_W * 0.28
+		torches.append(t)
 
 
 # --- RoomController'ın çağırdıkları ---

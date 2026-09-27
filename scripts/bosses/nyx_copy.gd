@@ -14,7 +14,7 @@ var _triggered: bool = false
 
 
 func _setup_stats() -> void:
-	data = {"name": boss.display_name, "placeholder_color": "#30284a", "ai": "inert"}
+	data = {"name": boss.display_name, "placeholder_color": "#30284a", "ai": "inert", "sprite": boss.boss_id}
 	ai = "inert"
 	attack = {"type": "none"}
 	attack_type = "none"
