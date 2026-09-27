@@ -3,6 +3,19 @@
 2D izometrik, öl-baştan-başla (roguelike) bir zindan oyunu. Godot 4 ile yapılıyor; hedef platform Windows.
 Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulama Rehberi**'ni adım adım takip ederek yapılıyor.
 
+## Oyunu indir (başka bir cihazda oynamak için)
+
+**⬇ [oyun.indir.zip](https://github.com/MustafaCap/zindan-oyunu/releases/latest/download/oyun.indir.zip)** — her zaman son sürümü indirir (şu an v0.1, oyun sürümü 0.10.2; Windows, ~80 MB).
+
+1. Repo özel olduğu için önce tarayıcıda GitHub hesabınla giriş yap.
+2. Yukarıdaki **oyun.indir.zip** bağlantısına tıkla (ya da sağdaki **Releases** bölümünden [son sürümü](https://github.com/MustafaCap/zindan-oyunu/releases/latest) aç ve
+   `oyun.indir.zip` dosyasını indir).
+3. Zipe sağ tık → **Tümünü ayıkla**, sonra `ZindanOyunu.exe`'ye çift tıkla. Kurulum gerekmez.
+4. Windows SmartScreen uyarırsa: **Ek bilgi → Yine de çalıştır** (.exe imzasız).
+
+Git ya da Godot kurmak gerekmez. İlerleme (ustalık, ilk kesişler, ses ayarları) her cihazın kendi
+`%APPDATA%\Godot\app_userdata\Zindan Oyunu\` klasöründe tutulur; cihazlar arasında taşınmaz.
+
 ## Durum
 
 | Aşama | Konu | Durum |
@@ -17,12 +30,13 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 8 | Sanat | ✅ Bitti (onaylandı, main'e birleştirildi) |
 | 9 | Ses | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 10 | Menüler, denge ve teslim | 🔶 Yapıldı; kullanıcı testi düzeltmeleri **v0.10.1** ve **v0.10.2** yerelde commit edildi, yeniden test bekleniyor (push ve `v0.1` etiketi onaydan sonra) |
+| 10 | Menüler, denge ve teslim | ✅ Bitti (v0.10.2 ile onaylandı, main'e birleştirildi, GitHub'da `v0.1` sürümü ve `oyun.indir.zip`) |
 
-**Kalınan yer:** Aşama 10 (sürüm 0.10.0) `main`'den açılan `asama-10` dalında yapıldı; kullanıcı oyunu oynadı ve istediği 10 düzeltme
-**sürüm 0.10.1**, ardından rün işareti ve Magical mana değişiklikleri **sürüm 0.10.2** olarak aynı dalda yapıldı, **yalnızca yerelde commit
-edildi** (en son derleme: `ZindanOyunu-Derlemeler\asama-10\ZindanOyunu-v0.10.2\` ve `zindan-oyunu-windows-v0.10.2.zip`; 0.10.0 ve 0.10.1 da duruyor). Kullanıcı oyunu baştan sona oynayıp onaylayınca: push, `main`'e birleştirme ve
-GitHub'da `v0.1` sürüm etiketi. Ana menü videosu eklendi (`make menu-video`; giriş + sakin döngü + menü müziği).
+**Kalınan yer:** GDD'deki 11 aşamanın (0-10) hepsi bitti. Aşama 10 `main`'den açılan `asama-10` dalında yapıldı; kullanıcı oyunu oynadı ve
+istediği 10 düzeltme **sürüm 0.10.1**, ardından rün işareti ve Magical mana değişiklikleri **sürüm 0.10.2** olarak yapıldı. Kullanıcı 0.10.2'yi
+onayladı (27 Eyl 2026): `asama-10` push edildi, `main`'e birleştirildi, GitHub'da **`v0.1`** etiketi ve sürüm sayfasına **`oyun.indir.zip`**
+(Windows zip'i) eklendi (derlemeler: `ZindanOyunu-Derlemeler\asama-10\`). Sıradaki iş kullanıcının isteğine bağlı: GDD'nin **Açık Kararlar**'ı
+(oyunun adı, kalan 16 boss, hikâye, ayrıntılı arayüz) ya da yeni oyun testi düzeltmeleri. Ana menü videosu eklendi (`make menu-video`; giriş + sakin döngü + menü müziği).
 
 **Aşama 10 kullanıcı testi düzeltmeleri 2 (v0.10.2, kullanıcının isteği):**
 - **Rün işareti:** rünün normal vuruşunda (ve rün tuzağında) yere çizilen **altı köşeli yıldız kaldırıldı**. Yerine içe dönük dişlerle
@@ -305,7 +319,7 @@ Aşama 0-9'da verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 
 ## Oyunu çalıştırma (Windows)
 
-1. `zindan-oyunu-windows-vX.Y.Z.zip` dosyasını bir klasöre çıkar.
+1. `oyun.indir.zip` dosyasını ([son sürüm](https://github.com/MustafaCap/zindan-oyunu/releases/latest/download/oyun.indir.zip); ya da `zindan-oyunu-windows-vX.Y.Z.zip`) bir klasöre çıkar.
 2. `ZindanOyunu.exe`'ye çift tıkla.
 3. Hata olursa log dosyası: `%APPDATA%\Godot\app_userdata\Zindan Oyunu\logs\godot.log`
 
