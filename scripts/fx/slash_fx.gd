@@ -1,6 +1,10 @@
 ## SlashFx — kılıç izi: zeminde parlayıp sönen bir yay (normal vuruş) ya da halka (Dönen kesik).
 extends Node2D
 
+
+func _init() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur
+
 const LIFETIME := 0.16
 
 var _facing: Vector2 = Vector2.RIGHT

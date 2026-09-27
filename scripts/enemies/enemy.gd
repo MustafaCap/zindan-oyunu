@@ -21,6 +21,8 @@ const AURA_REFRESH := 0.25
 
 var enemy_id: String = "skeleton_warrior"
 var material_id: String = ""
+## Aşama 8: kan rengi (progression.blood.color; düşman ya da malzeme "blood" alanıyla değişir: hayalet, zehirli)
+var blood_color: Color = Color(0.54, 0.05, 0.05)
 var floor_index: int = 1
 var is_boss: bool = false
 var is_elite: bool = false
@@ -185,6 +187,7 @@ func _setup_stats() -> void:
 	var resistant: Array = (data["resistant"] as Array).duplicate()
 	var weak: Array = (data["weak"] as Array).duplicate()
 	display_name = str(data["name"])
+	blood_color = Color(str(data.get("blood", DataDB.get_value("progression", "blood.color"))))
 	if material_id != "":
 		var mat: Dictionary = DataDB.table("enemies")["materials"][material_id]
 		for k: Variant in mat["immune"]:
@@ -194,6 +197,8 @@ func _setup_stats() -> void:
 		for k: Variant in mat["weak"]:
 			if not k in weak: weak.append(k)
 		display_name = "%s %s" % [mat["prefix"], display_name]
+		if mat.has("blood"):
+			blood_color = Color(str(mat["blood"]))
 		if material_id == "ghost":
 			_base_modulate = Color(1, 1, 1, 0.72)
 	# Bağışık olunan element zayıflık/direnç listesinde kalmaz (ör. Alevli Sporlu Böcek ateşe bağışık)
@@ -217,18 +222,38 @@ func _setup_body() -> void:
 	var body_col := Color(str(data.get("placeholder_color", "#d1ccb8")))
 	if material_id != "":
 		body_col = body_col.lerp(Color(str(DataDB.table("enemies")["materials"][material_id]["tint"])), 0.7)
-	visual = PlaceholderBody.new()
+	# Aşama 8: düşmanın (boss'ta boss'un) sprite'ı varsa Blender sprite'larıyla çizilir, yoksa placeholder şekil
+	material = Lighting.unshaded()   # can barı ve saldırı uyarıları karanlıkta da okunur (gövde ışıkla aydınlanır)
+	visual = SpriteBody.create(str(data.get("sprite", enemy_id)))
+	var sprite_body := visual is SpriteBody
 	visual.body_color = body_col
 	visual.head_color = body_col.lightened(0.25)
-	visual.body_height = 32.0 * clampf(radius_tiles / 0.35, 0.55, 1.6)
-	visual.body_width = 18.0 * clampf(radius_tiles / 0.35, 0.6, 1.6)
-	visual.weapon_length = 26.0 * clampf(attack_range / 1.1, 0.5, 1.2)
-	visual.show_weapon = attack_type in ["arc", "lunge", "slam"]
+	if sprite_body:
+		# Silah modele gömülüdür; uzak saldırılar "cast" animasyonunu oynatır
+		visual.show_weapon = false
+		(visual as SpriteBody).attack_kind = "ranged" if attack_type in ["projectile", "beam", "cone"] else "melee"
+	else:
+		visual.body_height = 32.0 * clampf(radius_tiles / 0.35, 0.55, 1.6)
+		visual.body_width = 18.0 * clampf(radius_tiles / 0.35, 0.6, 1.6)
+		visual.weapon_length = 26.0 * clampf(attack_range / 1.1, 0.5, 1.2)
+		visual.show_weapon = attack_type in ["arc", "lunge", "slam"]
 	add_child(visual)
+	if sprite_body:
+		# Aşama 8: elit aura renginde, öncelikli hedef sarı dış hatla parlar
+		if is_elite and elite_aura != "":
+			visual.set_outline(Color(str(DataDB.table("enemies")["elite_auras"][elite_aura]["color"])), 2.0)
+		elif priority:
+			visual.set_outline(Color(1.0, 0.85, 0.2), 2.0)
+	if sprite_body and material_id != "":
+		var mt2: Dictionary = DataDB.table("enemies")["materials"][material_id]
+		visual.set_tint(Color(str(mt2["tint"])), float(mt2.get("tint_amount", 0.55)))
 	visual.scale = Vector2(1, 0.05)
 	visual.modulate = Color(_base_modulate, 0.0)
 	var tw := create_tween()
+	# Sprite'lı boss gerçek boyutunda modellenir (büyütülmez); elitler biraz büyür
 	var vis := 1.0 + (body_scale - 1.0) * 0.6
+	if sprite_body and is_boss:
+		vis = 1.0
 	tw.tween_property(visual, "scale", Vector2.ONE * vis, SPAWN_TIME).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(visual, "modulate:a", _base_modulate.a, SPAWN_TIME * 0.5)
 
@@ -736,6 +761,7 @@ func apply_damage(amount: float, info: Dictionary) -> void:
 		_set_state(State.RECOVER)  # güçlü vuruş hazırlığı böler
 	if not secondary:
 		Events.hit_landed.emit(global_position + Vector2(0, -20), amount, crit, heavy, dir)
+		Events.blood_spilled.emit(global_position, dir, float(DataDB.get_value("progression", "blood.heavy_mult")) if (heavy or crit) else 1.0, blood_color)
 	var off := Vector2(randf_range(-14, 14), -44 if not secondary else -58)
 	Events.damage_number.emit(global_position + off, amount, crit, false, kind)
 	after_damage(amount, info)
@@ -774,8 +800,17 @@ func _die(dir_cart: Vector2) -> void:
 			(s as Node2D).call("dissolve")
 	Events.enemy_killed.emit(self, is_elite, is_boss)
 	Events.enemy_died_fx.emit(global_position + Vector2(0, -16), dir_cart)
+	Events.blood_spilled.emit(global_position, dir_cart, float(DataDB.get_value("progression", "blood.death_mult")), blood_color)
 	visual.modulate = _base_modulate
 	var tw := create_tween()
+	if visual.play_death():
+		# Aşama 8: ölüm animasyonu (yığılır), sonra kan kırmızısı kenarla eriyerek yok olur
+		tw.tween_property(visual, "position", Iso.to_screen(dir_cart * 10.0), 0.25).set_ease(Tween.EASE_OUT)
+		var bl: Dictionary = DataDB.get_value("progression", "blood")
+		var d := visual.dissolve_out(float(bl["dissolve_sec"]), blood_color.darkened(0.2), float(bl["dissolve_delay"]))
+		d.tween_callback(queue_free)
+		queue_redraw()
+		return
 	tw.tween_interval(0.05)
 	tw.tween_property(visual, "position", Iso.to_screen(dir_cart * 14.0), 0.3).set_ease(Tween.EASE_OUT)
 	tw.parallel().tween_property(visual, "scale", Vector2(1.3, 0.1), 0.3).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
@@ -812,6 +847,7 @@ func _on_death_effect() -> void:
 			h.duration = float(od["duration"])
 			h.kind = str(od.get("kind", "poison"))
 			h.color = Weapon.kind_color(h.kind)
+			h.look = "fog"
 		_:
 			h.mode = "burst"
 			h.kind = attack_kind

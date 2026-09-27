@@ -136,11 +136,15 @@ func _ready() -> void:
 	_shape.polygon = Shapes.iso_ellipse(radius_tiles)
 	add_child(_shape)
 
-	visual = PlaceholderBody.new()
+	# Aşama 8: ırkın sprite'ı varsa (races.json > sprite) Blender sprite'larıyla çizilir, yoksa placeholder şekil
+	visual = SpriteBody.create(str(_race.get("sprite", "")))
 	visual.body_color = Color(str(_race["placeholder_color"]))
 	visual.head_color = Color(0.93, 0.8, 0.66)
 	add_child(visual)
 	refresh_weapon_visual()
+	# Aşama 8: oyuncunun çevresindeki ışık; kendi çizimleri (Kalkan Hücumu halkası, yay dolumu) ışıktan etkilenmez
+	material = Lighting.unshaded()
+	Lighting.add_player_light(self)
 	aim_point = global_position + Vector2(40, 0)
 	health_changed.emit(hp, max_hp)
 
@@ -412,7 +416,7 @@ func move_override(vel_screen: Vector2, duration: float, done: Callable = Callab
 
 
 func afterimage(color: Color) -> void:
-	var ghost := visual.duplicate() as Node2D
+	var ghost := visual.make_afterimage()
 	ghost.modulate = color
 	get_parent().add_child(ghost)
 	ghost.global_position = global_position
@@ -499,6 +503,8 @@ func start_rush(ab: Dictionary, w: Weapon, attack_id: int) -> void:
 	_rush = {"ab": ab, "weapon": w, "id": attack_id, "dir": dir, "hit": {}}
 	iframes = maxf(iframes, dur + 0.05)
 	busy_t = maxf(busy_t, dur)
+	# Aşama 8 (kullanıcı kararı): sol koldaki demir bileklikten kalkan açılır, hücum biterken geri çekilip kaybolur
+	visual.play_action("rush", dur + 0.15)
 	move_override(Iso.to_screen(dir * Iso.tiles(float(ab["distance"]))) / dur, dur, func() -> void:
 		rush_t = 0.0
 		Events.area_pulse.emit(global_position, float(ab["hit_radius"]) * 1.4, Color(0.95, 0.8, 0.45)))
@@ -547,6 +553,7 @@ func swap_weapon() -> void:
 func refresh_weapon_visual() -> void:
 	var w := weapon()
 	visual.weapon_color = Weapon.kind_color(w.element)
+	visual.weapon_glow = w.element != "" and w.element != DamageCalc.PHYSICAL
 	visual.weapon_style = str(w.type_data()["visual"])
 	visual.show_weapon = not (w.type_id == "spear" and is_instance_valid(spear_out))
 
@@ -816,6 +823,7 @@ func take_damage(amount: float, _from_dir_cart: Vector2, kind: String = DamageCa
 	iframes = float(_combat["player_hurt_iframes"])
 	visual.flash(float(_feel["flash_duration"]) * 1.5, Color(1.0, 0.25, 0.25))
 	Events.player_damaged.emit(dmg)
+	Events.blood_spilled.emit(global_position, _from_dir_cart, float(DataDB.get_value("progression", "blood.player_mult")), Color(str(DataDB.get_value("progression", "blood.color"))))
 	Events.damage_number.emit(global_position + Vector2(0, -40), dmg, false, true, kind)
 	health_changed.emit(hp, max_hp)
 	if hp <= 0.0 and not _try_second_chance():
@@ -842,8 +850,11 @@ func _die() -> void:
 	collision_layer = 0
 	charging = false
 	var tw := create_tween()
-	tw.tween_property(visual, "rotation", deg_to_rad(80), 0.35).set_trans(Tween.TRANS_BACK)
-	tw.parallel().tween_property(visual, "modulate", Color(0.6, 0.6, 0.6, 0.8), 0.35)
+	if visual.play_death():
+		tw.tween_property(visual, "modulate", Color(0.75, 0.75, 0.75, 1.0), 0.8)
+	else:
+		tw.tween_property(visual, "rotation", deg_to_rad(80), 0.35).set_trans(Tween.TRANS_BACK)
+		tw.parallel().tween_property(visual, "modulate", Color(0.6, 0.6, 0.6, 0.8), 0.35)
 	Events.player_died.emit()
 	died.emit()
 

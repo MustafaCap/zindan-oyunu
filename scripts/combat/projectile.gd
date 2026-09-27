@@ -43,7 +43,11 @@ var _home_target: Node2D
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = 3
+	# Aşama 8: büyü mermileri çevrelerini element renginde aydınlatır
+	if kind in ["orb", "big_orb", "page", "wave"]:
+		Lighting.add_projectile_light(self, color)
 	dir_cart = dir_cart.normalized()
 	# Boss özel etkisi Delici: delmeyen mermiler 1 düşman deler (patlayan küre ve saplanan mızrak hariç)
 	var pd := GameState.special("piercing")

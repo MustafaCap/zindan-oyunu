@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 26 Eyl 2026 (Aşama 7)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 26 Eyl 2026 (Aşama 8)
 
 Bu doküman oyunun tam tasarımı ve yapım rehberidir. Yeni bir sohbette oyunu yapmaya başlamak için bu dosyayı ekle ve en alttaki **Uygulama Rehberi**'nde verilen başlangıç mesajını gönder. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -12,7 +12,7 @@ Tamamen emekle ilerlenen, öl-baştan-başla (roguelike) bir 2D izometrik zindan
 | --- | --- |
 | Motor | Godot 4 |
 | Kamera | İzometrik |
-| Görsel | Blender'da modellenip 8 yönden render edilen 3D görünümlü sprite'lar, normal map ile dinamik ışık |
+| Görsel | Blender'da modellenip 8 yönden render edilen 3D görünümlü sprite'lar, normal map ile dinamik ışık. Görsel yön: karanlık, kanlı, vahşi (Aşama 8 kullanıcı kararı) |
 | Platform | Windows .exe |
 | Hedef içerik | \~100 silah, 4 ırk, 55 sıradan düşman, 20 boss, 4 etap |
 
@@ -514,6 +514,7 @@ Tam bir run (4 kat, zafer) hedefi 30-45 dakikadır. Harita boyutu ve düşman sa
 
 Oyun 2D ama 3D gibi görünmeli ve vuruşlar iyi hissettirmelidir.
 
+- **Görsel yön (kullanıcı kararı, Aşama 8):** Bu bir şövalye oyunu değil; karanlık, kanlı, vahşi ve kana susamış bir dünya. Soluk ve kirli renkler, kan lekeli giysiler ve silahlar, karanlıkta yanan gözler, karanlık zindan ve meşale ışığı. Her vuruşta kan fışkırır, yere leke düşer; ölen düşman büyük bir fışkırmayla yığılır, yerde kan gölü kalır. Referans: kapüşonlu, gözleri yanan, kanlı kılıçlı iri savaşçı.
 - **Sprite üretimi:** Karakter ve düşmanlar Blender'da low-poly modellenir, animasyonlanır ve 8 yönden render alınarak sprite sheet'e dönüştürülür. Aynı render'dan normal map de çıkarılır.
 - **Işık:** Meşaleler ve büyüler normal map sayesinde karakterleri dinamik olarak aydınlatır.
 - **Shader'lar:** Vuruşta beyaz flaş, eriyerek ölme, outline, sis, su ve lav.
@@ -567,6 +568,11 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 6 | Aşama 5'teki GEÇİCİ "kata inince level katın alt sınırına çıkar" kuralı, gerçek XP gelince kaldırıldı (kullanıcının isteği) |
 | 6 | Warrior'ın Q yeteneği Zırh (oynarken kullanma gereği duyulmadı) kaldırıldı, yerine **Kalkan Hücumu** geldi: ileri 4 karo atılıp yolundaki düşmanlara ×1,5 vurur, iter ve 0,6 sn sersemletir (boss'ta yavaşlatır); 40 enerji |
 | 6 | İksir düşme oranı azaltıldı: normal düşman %1,5 → %1, elit %25 → %10 (kat başına ortalama ~1,4 yerine ~0,8 iksir); tüccar aynı |
+| 8 | İlk Warrior (çelik zırhlı, mavi tabardlı şövalye) reddedildi: **görsel yön karanlık, kanlı, vahşi** ("laylaylom şövalye değil, kana susamış savaşçı"; referans resimle). Warrior: kapüşonlu, gözleri yanan, kül tenli kaslı savaşçı; kolsuz deri yelek, kanlı yırtık etek, kanlı kılıç. Bu tarz tüm ırklara, düşmanlara, boss'lara ve silahlara uygulandı. |
+| 8 | **Demir yumruk her ırkta iki ele giydirilir**; saldırıda sağ ve sol yumruk sırayla vurur (tek elde değil). |
+| 8 | **Warrior Kalkan Hücumu:** sol koldaki demir bileklikten kalkan açılır, kalkan önde hücum edilir, yetenek bitince kalkan bilekliğe çekilip kaybolur (sırtta kalkan yok). |
+| 8 | **Daha fazla kan:** düşmana (ve oyuncuya) her vuruşta kan fışkırır ve yere leke düşer; ölümde büyük fışkırma ve kan gölü. |
+| 8 | Warrior'ın tarzı bu değişikliklerle onaylandı; diğer ırklara ve sanatın geri kalanına geçildi. |
 
 ### Teknik ve his (Aşama 0-1)
 
@@ -931,6 +937,78 @@ Sayıların hepsi `data/enemies.json`, `data/bosses.json`, `data/floors.json` (s
 - Botun yeni davranışları (yalnızca testler için): öncelikli hedefe (14 karo içinde) önce saldırır; kalkanlı düşmanın önündeyse yanından dolanır.
 - Rastgeleliğe bağlı kalan bir eski test (Kalkan Hücumu'nun ×1,5 hasarı; %5 kritik ihtimali) oyuncunun zar tohumu sabitlenerek düzeltildi.
 
+### Sanat (Aşama 8)
+
+Kod: `tools/blender/` (sprite üretimi), `scripts/core/sprite_body.gd` (8 yönlü sprite gövdesi), `scripts/fx/lighting.gd` (ışık), `scripts/dungeon/iso_tileset.gd` (karolar), `scripts/ui/item_icons.gd` (ikonlar), `assets/shaders/`. Sayılar `data/progression.json > blood`, `data/dungeon.json > lighting`, `data/floors.json > light`, `data/enemies.json > materials` içinde (`_default` notlarıyla). Görsel yön kullanıcı kararıdır (Kullanıcının onayladığı değişiklikler, Aşama 8).
+
+**Üretim hattı (`make sprites`)**
+
+- Blender 5.2 komut satırından çalışır (`blender -b --factory-startup --python tools/blender/render_sprites.py`); `bpy` ayrıca kurulmaz, Pillow gerekmez (paketleme ve PNG yazımı Blender'ın Python'u ve numpy ile). Bu bilgisayarda: `make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"` (her şey ~35 dk; `SPRITE_ARGS=--only=warrior,blade,tiles1,icons,props` ile bir kısmı).
+- Modeller koddan düşük poligonlu parçalarla kurulur: kutu, silindir, küre, dışbükey kabuk ve (yırtık kumaş için) içbükey levha. Parçalar eklemlere (boş nesneler) bağlıdır; iskelet yok, animasyon eklem açılarıyla (Python'da poz fonksiyonları). Organik parçalar yumuşak, zırh ve taş köşeli gölgelenir.
+- Kamera: ortografik, 30° yükseklik (2:1 izometri; zemin ekranda ×0,5, yükseklik ×0,866). 8 yön tek render'da (koleksiyon örnekleri; yön d = cart açısı d × 45°, 0 = doğu, saat yönünde).
+- Her kare üç geçiş: albedo (nesne uzayında gürültüyle kirletilmiş renk: deri, pas, kir; kareler arasında kaymaz), kamera uzayı normali, özellik maskesi (ışıma, metal/ıslak kan parlaması, element parıltısı). Gölgeleme numpy'de: yarım-Lambert ışık (sol üst önden) 7 kademeye yuvarlanır (ortam 0,16), speküler parlama (yalnızca metal ve kan), hafif çerçeve ışığı, 2 piksellik koyu dış çizgi. Işıyan parçalar (gözler, lav, kristal, mantar) gölgelenmez ve ayrı bir katmana (`_e.png`) yazılır.
+- Çözünürlük: karakter/silah/nesne sayfaları dünya pikselinin 2 katı (oyunda 0,5 ölçekle, doğrusal süzgeçle çizilir), normal haritaları 1× (bellek). Karolar 1×. Modeller ekranda **%15 büyük** çizilir (`MODEL_SCALE` 1,15; çarpışma gövdeleri değişmedi).
+- Her animasyon ayrı sayfa (satırlar yön, sütunlar kare); sayfa, animasyonun tüm karelerini kapsayan en küçük kutuya kırpılır. `meta.json`: kare boyu, ayak çapası, fps, döngü, iki elin (her yön ve kare için) ekran konumu, cart açısı, eğimi ve derinliği, karakter boyu ve adım uzunluğu.
+- Geliştirme önizlemesi: `build/sprites_preview/<id>.png` (tüm sayfalar) ve `tools/blender/make_preview.py` (8 yönü animasyonlu gösteren tek dosyalık HTML).
+
+**Oyuncu ırkları (4)** — animasyonlar: bekleme 6 kare, yürüme 8 (fps oyuncunun hızına uyar: adım uzunluğu 1,4 × 1,15 karo), saldırı 6 (sağdan sola ağır savuruş), atış/büyü 6 (iki kol öne), sağ yumruk 5 ve sol yumruk 5 (demir yumruk), hasar 4, ölüm 8 (geriye düşüp yatar; 3. kareden sonra silah elden düşer); Warrior'da ayrıca Kalkan Hücumu 6.
+
+| Irk | Görünüş |
+| --- | --- |
+| Warrior | Kapüşonlu, yüzü gölgede, gözleri turuncu yanan, kül tenli iri savaşçı; çıplak kaslı göğüs, önü açık kolsuz deri yelek, çapraz kılıç kayışı, kanlı yırtık keten etek, zincir zırh, diz boyu çizme ve çelik dizlik; sağda deri, solda demir bileklik |
+| Ghost | Uzun ve sıska hayalet-suikastçı: kemik maske, mor yanan gözler, arkaya dökülen siyah saç, yırtık uzun cübbe ve pelerin, kızıl kuşak, göğüste zincir, sargılı soluk kollar, pençe eller, omuzlarda kemik diken |
+| Archer | Savaş boyalı, kızıl mohikanlı yırtıcı avcı: kürk omuzluk ve yaka, deri zırh, çapraz kayış, sırtta ok dolu sadak, yeşil yırtık pelerin, kemerde kemik ganimetler, ağzında kanlı bez |
+| Magical | Kan büyücüsü: koyu kızıl uzun cübbe ve pelerin, yüksek yaka, boynuzlu kemik taç, soluk ten; yüzde, ellerde ve cübbede eflatun (ırk rengi) yanan rünler, kafatası kemer tokası |
+
+- Irk renkleri kıyafette değil arayüzde kalır (Warrior'ın mavisi gibi).
+- **Kalkan Hücumu (kullanıcı kararı):** Q'da `rush` animasyonu yeteneğin süresine (+0,15 sn) sığdırılır: sol demir bileklikten çivili demir kalkan açılır (ölçek 0,35 → 1), kalkan öne bakarak hücum, sonra bilekliğe çekilip kaybolur. Kalkan her zaman öne bakar (eklemin dünya yönü ayarlanır).
+
+**Silahlar (12) — ayrı katman**
+
+- Her ırk her silahı taşıyabildiği için silahlar karakterden ayrı sprite'tır: 16 dönüş (22,5°) × 4 eğim (−60°, −20°, 20°, 60°). Oyunda karakterin elindeki konuma, elin o karedeki açısına en yakın hücre çizilir; silahın ortası gövdenin arkasındaysa gövdeden önce çizilir.
+- **Demir yumruk iki ele giydirilir** (kullanıcı kararı); saldırıda `punch_r` ve `punch_l` sırayla oynar (Seri yumruk da sırayla).
+- Element: silahın ağzı/ucu (kılıç ve balta ağzı, tırpan ve mızrak ucu, gürz topuzu, yay kolları, arbalet kolları, kitap sayfaları, asa küresi, rün oyukları, yumruk çivileri) ayrı bir maskeyle element renginde boyanır (%60 örtme). Yaygın (elementsiz) silahta yok.
+- Görünüş: koyu çelik, kararmış ahşap, pirinç balçak; kılıç, balta, tırpan, hançer, mızrak ve gürz kanlı.
+- Arayüz ikonları aynı modellerden (önden, çapraz) üretilir.
+
+**Düşmanlar (17 + 3 yardımcı) ve boss'lar (4)**
+
+- İskeletler: insansı (iskeletler, mantar düşmanları, golemcik, büyücüler, muhafız, Gölge, Boşluk Kulu/Çağırıcı), sürüngen/böcek (fare, böcek, Kor Köpeği, Sürünen Göz: 4 ya da 6 bacak, baş, çene, kuyruk; çapraz yürüyüş, atılıp ısırma, yan yatarak ölüm), et kütlesi (Göz Yavrusu, Damar Kütlesi, Duvar Gözü, Mantar Totemi, Morvath: nefes alan gövde, sallanan dokunaçlar, yayılarak ölüm). Süzülenler (Feryatçı, Nyx'thar) bacaksız, cübbeleri yere değmez.
+- Animasyonlar: bekleme 4, yürüme 6, saldırı ya da atış 5, hasar 3, ölüm 6 kare (boss'larda 6 / 8 / 6 / 3 / 8). Uzak saldıranlar (mermi, ışın, çığlık) atış, diğerleri saldırı animasyonunu oynatır. Hareketsizlerde (duvar gözleri, totem, Morvath) yürüme yok.
+- Silahlar modele gömülüdür (iskeletin paslı kılıcı ve kemik yayı, muhafızın kule kalkanı ve gürzü, Kordrak'ın örs çekici…).
+- **Malzeme varyantları** sprite'ın rengini parlaklığı koruyarak malzemenin rengine çeker (%55): Taş gri, Alevli turuncu, Zehirli yeşil, Hayalet mavi (+ yarı saydam). **Elitler** ×1,35 × 0,6 oranında büyür (1,21) ve aura renginde, **öncelikli hedefler** sarı dış hatla parlar.
+- **Ölüm:** ölüm animasyonu, 0,55 sn sonra 0,7 sn'de kan kırmızısı (kanın rengi) kenarla **eriyerek yok olma** (shader).
+- **Boss'lar** gerçek boyutlarında modellenir (sprite büyütülmez): Morvath ~3,5 karo yüksekliğinde duvara gömülü göz kütlesi (kapak kapalıyken `_closed` varyantı: göz etle örtülü); Mycela ~2,4 karo, altı parlayan geniş mantar şapka; Kordrak ~2,4 karo, zırh plakaları (plakalar kırıkken ya da 2. fazda `_p2` varyantı: plakasız, çekirdek açık); Nyx'thar ~2,6 karo, süzülen yırtık pelerin, yüzünde tek ışık. Boss saldırı başlatınca saldırı animasyonunu oynatır. Nyx'thar'ın sahte kopyaları aynı sprite'ı gölgesiz kullanır.
+
+**Kan (kullanıcı kararı; `progression.json > blood`)**
+
+- Her vuruşta vuruş yönüne kan fışkırır (12 damla × güç; güçlü/kritik ×1,7, ölüm ×3,2, oyuncuya vurulunca ×0,7; hız 120-360) ve yere 1-3 leke düşer (0,08-0,2 karo). Ölümde ayrıca kan gölü (0,45-0,7 karo).
+- Lekeler zeminin hemen üstünde (karakterlerin altında) çizilir, 30 sn kalır, 4 sn'de solar; en fazla 90 leke (eskiler silinir). Kat değişince temizlenir.
+- Kanın rengi: kırmızı (#8a0c0c); Hayalet malzemesi koyu mor (#3a2a5c), Zehirli malzemesi yeşil (#4a6a10). Düşman kaydına `blood` alanı eklenerek değiştirilebilir.
+
+**Karolar ve dekor (4 kat)**
+
+- Karo = 64×32 elmas (1×). Zemin 4 varyant (%52 düz taş levha, %26 çatlaklı, %12 kemik/kafatası · mantar · kristal, %10 kan ve kata özgü: damar · lav); duvar 3 varyant (%72 düz tuğla, %20 küçük süs, %8 büyük süs); engel sütunu 2 varyant; demir parmaklıklı kapı; çatlak (gizli oda) duvar. Varyant hücre konumundan (hash) seçilir: aynı harita hep aynı görünür.
+- Kata özgü görünüş: 1 Damarlı Mağara — kızıl-mor kaya, duvarlarda damarlar ve gömülü gözler, yerde kemikler; 2 Mantar Mağaraları — yosunlu yeşil taş, parlayan mor mantarlar, iri mantar sütunu; 3 Kül Dökümhanesi — is kara taş, aralarından lav parlar, demir plakalar, korlu mangal; 4 Boşluk — mor-kara taş, parlayan boşluk kristalleri.
+- Parlayan parçalar ayrı ışıma katmanıdır (ışıktan etkilenmez, eklenir). Koddan üretilen eski karolar sanat dosyası yoksa kullanılır (aynı atlas koordinatları).
+- **Oda nesneleri:** kapalı/açık sandık (demir kuşaklı, kanlı), fenerli kambur tüccar (sarı ışık), örs ve korlu ocakla demirci (turuncu ışık), karanlığa inen taş merdiven (mavi ışık). Yerdeki silah ve tılsım ikonlarıyla görünür.
+
+**Işık (`dungeon.json > lighting`, `floors.json > light`)**
+
+- Katın ortamı karanlıktır (CanvasModulate): 1. kat #7a6a74, 2. kat #687466, 3. kat #7a6a60, 4. kat #5c5674. Karakterler, zemin, duvarlar ve nesneler normal haritalarıyla aydınlanır.
+- Oyuncunun çevresinde ışık (8,5 karo, enerji 1,1, #ffe6c8). Odaya bakan duvarlarda 7 duvar hücresinden birine (hash) meşale: 5 karo, enerji 1,15, ±%15 titreme; renk 1-3. kat turuncu tonları, 4. kat mor boşluk ateşi. Büyü mermileri (küre, sayfa, kılıç dalgası) ve düşmanın ateş topu/gölge oku kendi renginde küçük ışık yayar (2,2 karo).
+- **Karanlıkta okunurluk:** saldırı uyarıları, tehlike alanları, mermiler, kılıç izi, hasar sayıları, can barları, loot ve ışık sütunları, oda nesnelerinin etiketleri ve arayüz ışıktan etkilenmez (unshaded).
+
+**Shader'lar (`assets/shaders/`)**
+
+- `hit_flash` (karakter): vuruş flaşı, malzeme tonu, eriyerek ölme, dış hat (elit/öncelikli). `lava`: akan, çatlaklarından parlayan lav (ateş birikintileri, Kordrak'ın lav kanalları). `liquid`: dalgalanan parlak birikinti (zehir yeşil, su mavi). `fog`: sürüklenen delikli bulut (Sporlu Böcek ve Mycela'nın spor bulutları, karanlık alanlar). `silhouette`: duvar arkasında kalan karakterin sprite biçimli silüeti. Tehlike alanları uyarı süresince düz işaret, aktifken bu yüzeylerle çizilir.
+
+**Arayüz ikonları**
+
+- 12 silah ve 3 tılsım ikonu (Kan Taşı: demir pençeli kan kırmızısı taş · Rüzgâr Tüyü · Element Kalbi: kehribar kalp kristali) ve dövme demir nadirlik çerçevesi (nadirlik ya da tılsım rengine boyanır). Envanter, tüccar, demirci, HUD silah satırları ve yerdeki eşyalarda kullanılır.
+
+**Hata düzeltmesi:** vuruş flaşı shader'ı dokuyu iki kez çarpıyordu (Godot 4'te `COLOR` zaten doku rengini içerir); düz renkli placeholder'larda görünmüyordu, sprite'ları kararttığı için düzeltildi.
+
 ## Uygulama Rehberi
 
 Bu bölüm, oyunu sıfırdan yapacak bir geliştirici oturumu için yazıldı. Oyun 11 aşamada (0-10) yapılır; her aşama oynanabilir ya da test edilebilir bir sonuçla biter ve kullanıcının onayıyla bir sonrakine geçilir. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
@@ -964,16 +1042,18 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | 5 — Loot ve envanter | ✅ Bitti, onaylandı (`asama-5` dalı, sürüm 0.5.0) |
 | 6 — İlerleme | ✅ Bitti, main'e birleştirildi (`asama-6` dalı, sürüm 0.6.0; Warrior Kalkan Hücumu ve iksir oranı değişiklikleriyle) |
 | 7 — Düşmanlar ve boss'lar | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-7` dalı, sürüm 0.7.0) |
-| 8-10 | Sırada: Aşama 8 — Sanat |
+| 8 — Sanat | ✅ Bitti, yerelde commit edildi (`asama-8` dalı, sürüm 0.8.0); kullanıcının testi ve onayı bekleniyor, sonra push ve main'e birleştirme |
+| 9-10 | Sırada: Aşama 9 — Ses |
 
-- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapılır.
+- **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-8\`); onaydan sonra push edilip main'e birleştirilir. Aşama 9 `main`'den açılan `asama-9` dalında yapılır.
 - **Çalışma düzeni (Aşama 6'dan itibaren): geliştirme ortamı.** Kullanıcı devamını kendi bilgisayarında, yerel klonda (`C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler\zindan-oyunu`) geliştirme ortamı ile, aşama aşama yapar. geliştirme ortamı reponun kökündeki `GELISTIRME.md`'yi otomatik okur; kurallar orada da yazılıdır. Her aşama: önceki aşamanın dalından yeni `asama-N` dalı → kod → testler → README Durum + GDD (`docs/GDD.md`) güncellemesi → commit → **push** → kullanıcı onaylayınca PR ile main'e birleştirme. Kullanıcı **Git Bash** kullanır: git komutlarında yol ayıracı `/` olmalıdır.
 - **Push kuralı (kullanıcı kararı, 25 Eyl 2026; Aşama 6 sonunda güncellendi):** geliştirici GitHub'a yazabiliyor: bilgisayardaki geliştirici (geliştirme ortamı ya da bilgisayara bağlı geliştirici) kullanıcının git hesabıyla, bulut oturumu da GitHub bağlantısına yazma izni verildiğinde doğrudan. geliştirici aşama sonunda **yalnızca yerelde commit eder; push'tan önce kullanıcının uygulamayı test edip onaylamasını bekler.** Onaydan sonra push eder, GitHub'a ulaştığını kontrol eder (`git ls-remote origin`) ve `main`'e birleştirir (kullanıcı izin verdi; `gh` kurulu olmadığı için yerel merge + `git push origin main`). Kendisi push edemezse (izin/erişim hatası) kullanıcıya Git Bash komutlarını verir (`git push -u origin asama-N`; bulut oturumundan ise aşağıdaki bundle yoluyla).
 - **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır; geliştirme ortamı yoksa kurulumunu kullanıcıya adım adım anlatır. **Kullanıcının bilgisayarında (Aşama 6'da kuruldu):** Godot `C:\Users\mcap5\Godot\Godot_v4.7.2-stable_win64.exe` (komut satırı için `..._win64_console.exe`; PATH'te değil, `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`), export şablonları `%APPDATA%\Godot\export_templates\4.7.2.stable\`, `make` MSYS2'den (`C:\msys64\ucrt64\bin\make`), Python `C:\msys64\ucrt64\bin\python3`. `zip` yok: `make export-windows` bu durumda PowerShell `Compress-Archive` kullanır. `make` yoksa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
 - **Yedek teslim yolu (Aşama 0-4'te kullanıldı; push edilemezse hâlâ geçerli):** geliştiricinin GitHub bağlantısı yalnızca okuyabildiğinde kod `git bundle` olarak `ZindanOyunu-Derlemeler` klasörüne `zindan-oyunu-asama-N.bundle` adıyla bırakıldı (`git fetch ../zindan-oyunu-asama-N.bundle asama-N:asama-N` ve `git push -u origin asama-N`); 30 MB'tan büyük zip 19 MB'lık parçalara bölünüp `asama-N\` klasörüne `birlestir-ve-ac.bat` ile kondu.
 - **Test:** `make test` beş adımı çalıştırır: birim testleri (206 test; Aşama 7: 55 düşman, kat ölçeklemesi, elit/aura, varyantlar, dalgalar, tehlike şekilleri ve uyarı, kalkan, çağrılanların ödülsüzlüğü, 4 boss'un mekanikleri; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8; Aşama 7'den beri düşman canı ×0,25) ve boss testi (`make bosses`: 4 boss katın beklenen gücüyle 240 sn içinde kesilir, her saldırı kullanılır, 2. faz görülür, her uyarı ≥ 0,4 sn; sorun varsa çıkış kodu 9).
 - **Test süresi (kullanıcı kararı, 26 Eyl 2026):** testler uzun sürmemeli. Geliştirme sırasında yalnızca ilgili birim testleri ya da `make quick` (birim + smoke, ~1 dk); uzun bot testleri (`make dungeon`, `make bosses`, `make matrix`) tekrar tekrar çalıştırılmaz; tam `make test` (~3,5 dk) aşama sonunda bir kez, arka planda.
-- **Bilinen:** `bpy` paket deposunda bulunamadı (Aşama 8'de yeniden denenecek). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
+- **Boyut (Aşama 8):** sprite'lar (~110 MB PNG) nedeniyle .exe ~210 MB, zip ~138 MB; gerekirse Aşama 10'da doku sıkıştırmasıyla küçültülür.
+- **Bilinen:** `bpy` ayrıca kurulmadı: sprite'lar Blender 5.2'nin kendisiyle komut satırından üretilir (`C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`; `make sprites BLENDER=...`, ~35 dk). .exe imzasız olduğu için SmartScreen uyarısında "Ek bilgi → Yine de çalıştır".
 
 **Kaldığın yerden devam mesajı (geliştirme ortamı, repo klasöründe):** "Bu repo zindan oyunum. Önce docs/GDD.md'nin tamamını (özellikle 'Uygulamada Verilen Kararlar' ve 'Proje Durumu ve Çalışma Düzeni'), README'deki Durum bölümünü ve GELISTIRME.md'yi oku. Aşama N'den devam et; bu aşamayı bitirince dur ve bana neyi test etmem gerektiğini yaz."
 
@@ -984,7 +1064,7 @@ Bu bölüm her aşama sonunda güncellenir; yeni bir sohbet bu dosyayla başlat�
 | Godot 4 (kullanılan: 4.7.2) | Motor; Linux headless sürümü testler ve export için | GitHub releases (godotengine/godot) |
 | Godot export şablonları | Linux'tan Windows .exe derlemek | Aynı sürümün GitHub release'i |
 | GDScript | Tüm oyun kodu | — |
-| Blender (Python `bpy`) | Low-poly modeller, 8 yönlü sprite render'ı, normal map | `pip install bpy` |
+| Blender (kullanılan: 5.2, Python `bpy` içinde) | Low-poly modeller, 8 yönlü sprite render'ı, normal map, karolar, ikonlar (komut satırından: `blender -b --python`) | blender.org (`pip install bpy` gerekmez) |
 | Python + numpy + Pillow | Sprite sheet paketleme, ses efekti sentezi | pip |
 | GitHub | Kod deposu; kullanıcının GitHub bağlantısı varsa repo onunla açılır | Kullanıcının hesabı |
 
@@ -1010,11 +1090,17 @@ zindan-oyunu/
     bosses/               # Boss, BossArena, BossOverlay, Morvath, Mycela, Kordrak, Nyxthar, NyxCopy
     dungeon/              # DungeonRun (ana sahne), DungeonGenerator, DungeonLayout, RoomController, DungeonNav, RoomProp, test odası
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
-    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, RewardUI, RunSummary
+    ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary
     progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı)
-  assets/                 # sprites, normals, audio/sfx, audio/music, fonts, shaders
+    core/                 # Iso, Shapes, PlaceholderBody, SpriteBody (Aşama 8: 8 yönlü sprite gövdesi), XRayMarker
+    fx/                   # Juice (vuruş hissi, kan), SlashFx, Lighting (Aşama 8: ortam, oyuncu ışığı, meşaleler)
+  assets/
+    sprites/              # characters/<id>/ (4 ırk, 20 düşman, 4 boss), weapons/, tiles/, props/, icons/ (Aşama 8)
+    shaders/              # hit_flash (karakter), lava, liquid, fog, silhouette, noise.gdshaderinc
+    audio/sfx, audio/music, fonts
   tools/
-    blender/render_sprites.py
+    blender/              # render_sprites.py (giriş), sprite_lib.py, humanoid.py, characters.py, enemies.py,
+                          # weapons.py, tiles.py, props.py, icons.py, make_preview.py (HTML önizleme)
     audio/sfx_synth.py
     dev/print_dungeon.gd  # bir katın haritasını ASCII olarak basar (geliştirme aracı)
   tests/                  # headless birim testleri
@@ -1026,7 +1112,7 @@ zindan-oyunu/
 | `make test` | Birim testleri + test odası smoke + ırk×silah matrisi + zindan smoke testi + boss testi |
 | `make dungeon` | Zindan smoke testi: bot 4 katı baştan sona yürür, loot toplar, tüccar/demirci kullanır (Aşama 4-5 kabulü) |
 | `make bosses` | Boss testi: bot her katın boss'unu katın beklenen gücüyle keser; saldırılar, 2. faz ve uyarı süreleri denetlenir (Aşama 7 kabulü) |
-| `make sprites` | Blender script'iyle tüm sprite ve normal map'leri yeniden üretir |
+| `make sprites` | Blender'la (komut satırından) tüm sprite, normal map, karo, nesne ve ikonları yeniden üretir (`BLENDER=...`, `SPRITE_ARGS=--only=...`; hepsi ~35 dk) |
 | `make sfx` | Ses efektlerini sentezleyip `assets/audio/sfx` içine yazar |
 | `make export-windows` | `build/windows/` içine .exe üretir ve zip'ler |
 | `make all` | Hepsini sırayla çalıştırır |
@@ -1037,7 +1123,7 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 
 | Dosya | İçerik | GDD kaynağı |
 | --- | --- | --- |
-| `races.json` | Can, hız, zırh, kaynak, Q/E, pasif | Irklar, Skill Sistemi |
+| `races.json` | Can, hız, zırh, kaynak, Q/E, pasif; `sprite` (Aşama 8: sprite klasörü) | Irklar, Skill Sistemi |
 | `race_weapon_matrix.json` | Irk-silah ailesi ceza ve bonusları | Irklar |
 | `weapon_types.json` | 12 tip: aile, hız, menzil, çarpan, sağ tık | Skill Sistemi |
 | `rarities.json` | Temel hasar, element/özellik sayısı | Nadirlik |
@@ -1046,13 +1132,13 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 | `traits.json` | 5 özellik | Elementler |
 | `legendaries.json` | 12 efsanevi silah; pasif ve sağ tık eki şablonları | Nadirlik |
 | `talismans.json` | 3 tılsım (etki sayıları, renk) | Rezonans ve Esnek Slot |
-| `enemies.json` | 17 düşman (rol, yapay zekâ, statlar, saldırı, yetenek, ölüm etkisi), malzemeler (Taş, Hayalet, Alevli, Zehirli), 21 varyant, kat ölçeklemesi, elit ve 4 aura, boss yardımcıları | Düşmanlar, Uygulamada Verilen Kararlar |
+| `enemies.json` | 17 düşman (rol, yapay zekâ, statlar, saldırı, yetenek, ölüm etkisi), malzemeler (Taş, Hayalet, Alevli, Zehirli; Aşama 8: kan rengi `blood`), 21 varyant, kat ölçeklemesi, elit ve 4 aura, boss yardımcıları | Düşmanlar, Uygulamada Verilen Kararlar |
 | `bosses.json` | 4 boss: can, hasar, saldırı sayıları ve uyarı süreleri, mekanikler, 2. fazlar; boss testi ayarları | Boss'lar, Uygulamada Verilen Kararlar |
 | `rewards.json` | Level ve boss ödül havuzları, özel etkilerin sayıları, ödül zamanlaması | Run İçi Ödüller, Uygulamada Verilen Kararlar |
-| `progression.json` | XP eğrisi, düşman XP'leri, ustalık eğrisi ve başlangıç leveli, derinlik çarpanları, stat tavanları (Space tavanı dahil) | Level, Ustalık, Denge |
-| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu (enemy_pool: elitler), dalga havuzu (spawn_pool: düşman ve varyant ağırlıkları), placeholder renk paleti; oda tipleri | Zindan, Run Süresi, Ekonomi |
+| `progression.json` | XP eğrisi, düşman XP'leri, ustalık eğrisi ve başlangıç leveli, derinlik çarpanları, stat tavanları (Space tavanı dahil); vuruş hissi; kan (Aşama 8: damla, leke, kan gölü, eriyerek ölme) | Level, Ustalık, Denge, Görsel Stil |
+| `floors.json` | 4 kat: tema, oda sayıları, düşman havuzu (enemy_pool: elitler), dalga havuzu (spawn_pool: düşman ve varyant ağırlıkları), placeholder renk paleti, ışık (Aşama 8: ortam ve meşale rengi); oda tipleri | Zindan, Run Süresi, Ekonomi |
 | `economy.json` | Çanta boyu (0: yalnızca 4 slot), başlangıç silahları, altın ve düşme oranları, toplama, sandık tuzağı, tüccar fiyatları, demirci, silah XP'si (geçici kat level kuralı Aşama 6'da silindi) | Ekonomi, Uygulamada Verilen Kararlar |
-| `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, duvara gömülü boss yerleşimi, gizli duvar (prototip düşmanlar ve yer tutucu elit/boss Aşama 7'de kaldırıldı) | Zindan, Uygulamada Verilen Kararlar |
+| `dungeon.json` | Harita üretimi: ızgara, koridor, oda şablonları, engeller, dalgalar, duvara gömülü boss yerleşimi, gizli duvar (prototip düşmanlar ve yer tutucu elit/boss Aşama 7'de kaldırıldı); ışık (Aşama 8: oyuncu ışığı, meşale sıklığı/ışığı, mermi ışığı) | Zindan, Uygulamada Verilen Kararlar |
 
 **Autoload'lar:** `Events` (sinyal merkezi), `DataDB` (JSON'ları yükler ve doğrular; ödül havuzundaki statları ve özel etkileri de denetler), `GameState` (aktif run: level ve XP — `add_xp` —, envanter — `Inventory`: 4 slot, altın, iksir —, ödül buff'ları ve özel etkiler, bekleyen ödül ekranları, kesilen boss'lar, silah tipine göre hasar, kat, seed, savaşta mı), `SaveManager` (kalıcı veri: ustalıklar, boss ilk kesişleri; `user://save.json`; bozuk kayda dayanıklı).
 
@@ -1180,6 +1266,8 @@ Oyun veri odaklıdır: denge sayılarının hiçbiri koda yazılmaz, hepsi `data
 6. Silah ve tılsım ikonları, nadirlik renk çerçeveleri.
 
 Önce tek bir ırkın karakteri yapılıp kullanıcıya gösterilir; tarz onaylanınca diğerlerine geçilir.
+
+**Yapıldı (Aşama 8):** Warrior'ın ilk hali reddedildi, karanlık-kanlı tarzla yeniden yapılıp onaylandı; ardından 4 ırk, 12 silah, 20 düşman, 4 boss, 4 katın karoları, oda nesneleri, ışık, kan, shader'lar ve ikonlar (ayrıntılar: Uygulamada Verilen Kararlar > Sanat).
 
 **Kabul:** Kullanıcı görsel tarzı onaylar ve tüm placeholder'lar değişir.
 

@@ -15,14 +15,52 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md) içinde; oyun oradaki **Uygulam
 | 5 | Loot ve envanter | ✅ Bitti (onaylandı) |
 | 6 | İlerleme | ✅ Bitti (main'e birleştirildi) |
 | 7 | Düşmanlar ve boss'lar | ✅ Bitti (onaylandı, main'e birleştirildi) |
-| 8 | Sanat | — |
+| 8 | Sanat | ✅ Bitti (yerelde commit edildi; test ve onay bekleniyor) |
 | 9 | Ses | — |
 | 10 | Menüler, denge ve teslim | — |
 
-**Kalınan yer:** Aşama 7 (sürüm 0.7.0) bitti, onaylandı; `asama-7` GitHub'a push edildi ve `main`'e birleştirildi.
-Sırada Aşama 8 (sanat): `main`'den `asama-8` dalı açılır.
+**Kalınan yer:** Aşama 8 (sürüm 0.8.0) bitti ve `asama-8` dalında **yalnızca yerelde** commit edildi (derleme:
+`ZindanOyunu-Derlemeler\asama-8\`). Kullanıcı test edip onaylayınca push edilir ve `main`'e birleştirilir; sonra Aşama 9 (ses)
+`main`'den açılan `asama-9` dalında yapılır.
 
 **Test süresi (kullanıcı kararı):** geliştirme sırasında `make quick` (birim + smoke, ~1 dk); tam `make test` (~3,5 dk) aşama sonunda bir kez.
+
+**Aşama 8'de yapılanlar (sanat):**
+- **Görsel yön (kullanıcı kararı): karanlık, kanlı, vahşi.** İlk Warrior (çelik zırhlı, mavi tabardlı şövalye) reddedildi; referans
+  resimle yeniden yapıldı: kapüşonlu, gözleri turuncu yanan, kül tenli kaslı savaşçı, kolsuz deri yelek, kanlı yırtık etek, kanlı kılıç.
+  Tarz onaylanınca aynı yönle Ghost (kemik maskeli hayalet-suikastçı), Archer (savaş boyalı mohikanlı avcı) ve Magical (boynuzlu taçlı,
+  eflatun rünlü kan büyücüsü) yapıldı.
+- **Sprite hattı (`make sprites`):** Blender 5.2 komut satırından; modeller koddan düşük poligonlu parçalar ve eklemlerle, 8 yön,
+  animasyonlar (bekleme, yürüme, saldırı, atış/büyü, sağ/sol yumruk, hasar, ölüm; Warrior'da Kalkan Hücumu), karanlık sert gölgeleme,
+  kirli yüzey dokusu, metal/ıslak kan parlaması, koyu dış çizgi, normal haritası ve karanlıkta yanan gözler için ayrı ışıma katmanı.
+- **12 silah** ayrı katman (16 dönüş × 4 eğim): elin o anki konumu ve açısıyla çizilir, element rengi ağzını boyar; çoğu kanlı.
+  **Demir yumruk her ırkta iki elde (kullanıcı kararı)**, yumruklar sağ-sol sırayla.
+- **Warrior Kalkan Hücumu (kullanıcı kararı):** sol demir bileklikten kalkan açılır, kalkan önde hücum, bitince kaybolur.
+- **Kan (kullanıcı kararı):** her vuruşta vuruş yönüne kan fışkırır ve yere leke düşer; ölümde büyük fışkırma ve kan gölü (30 sn kalır).
+  Hayalet düşmanların kanı koyu mor, zehirlilerin yeşil.
+- **20 düşman + 4 boss** sprite'lı: insansı, sürüngen/böcek ve et kütlesi iskeletleri; malzeme varyantları renk tonuyla, elitler aura
+  renginde, öncelikli hedefler sarı dış hatla; ölünce yığılıp kan kırmızısı kenarla **eriyerek** yok olur. Morvath'ın kapalı göz ve
+  Kordrak'ın plakasız hali ayrı sprite; boss'lar saldırı animasyonu oynatır.
+- **4 katın karoları ve dekoru** (normal haritalı): damarlı kızıl mağara (gözler, damarlar, kemikler), yosunlu mantar mağarası (parlayan
+  mantarlar), kül dökümhanesi (lav çatlakları, demir plakalar), mor boşluk (kristaller); 4 zemin, 3 duvar, 2 sütun varyantı, parmaklıklı
+  kapı, çatlak duvar. **Oda nesneleri:** sandık (kapalı/açık), fenerli tüccar, örsle demirci, karanlığa inen merdiven.
+- **Işık:** karanlık zindan (kata özgü ortam rengi), oyuncunun çevresinde ışık, odaya bakan duvarlarda titreyen meşaleler (4. katta mor),
+  tüccar feneri, demirci ocağı, büyü mermileri ve ateş topları ışık yayar. Uyarı işaretleri, mermiler, hasar sayıları, loot ve arayüz
+  karanlıkta da okunur.
+- **Shader'lar:** vuruş flaşı, malzeme tonu, eriyerek ölme, dış hat, lav (ateş birikintisi, Kordrak'ın lav kanalları), sıvı (zehir), sis
+  (spor bulutları, karanlık alanlar), duvar arkası silüeti.
+- **İkonlar:** 12 silah ve 3 tılsım ikonu, nadirlik renginde dövme demir çerçeve (envanter, tüccar, demirci, HUD, yerdeki eşyalar).
+- **Hata düzeltmesi:** vuruş flaşı shader'ı dokuyu iki kez çarpıp sprite'ları karartıyordu.
+
+**Aşama 8'de GDD'de olmayan ayrıntılar için verilen kararlar** (sayılar `data/progression.json > blood`, `data/dungeon.json > lighting`,
+`data/floors.json > light` içinde `_default` notuyla; tam liste GDD > Uygulamada Verilen Kararlar > Sanat):
+- Silahlar ayrı katman (her ırk her silahı taşıyabilsin); modeller ekranda %15 büyük (çarpışma aynı); sayfalar 2×, normaller 1×, karolar 1×.
+- Kare sayıları (ırk: 6/8/6/6/5/5/4/8, düşman: 4/6/5/3/6, boss: 6/8/6/3/8); ölürken silah 3. karede elden düşer.
+- Irk rengi kıyafette değil arayüzde; malzeme tonu %55; elit ×1,21 boy; eriyerek ölme 0,55 sn gecikme + 0,7 sn.
+- Kan sayıları (12 damla/vuruş, güçlü ×1,7, ölüm ×3,2, oyuncu ×0,7; leke 30 sn, en fazla 90).
+- Işık sayıları (ortam renkleri, oyuncu ışığı 8,5 karo, her 7 duvardan birine meşale, 5 karo, ±%15 titreme).
+- Karo varyant oranları (zemin %52/26/12/10, duvar %72/20/8) ve konumdan hash ile seçim.
+- `bpy` ayrıca kurulmadı, Pillow gerekmedi: Blender'ın kendi Python'u ve numpy kullanıldı.
 
 **Aşama 7'de yapılanlar (düşmanlar ve boss'lar):**
 - **55 düşman:** 17 temel düşman (5 rol) + her birinin eliti + 21 malzeme varyantı (yeni **Zehirli** malzemesi; Taş, Alevli, Hayalet).
@@ -119,18 +157,20 @@ notuyla; ayrıntılı liste GDD > Uygulamada Verilen Kararlar > İlerleme):
   oda ×2 için Yaygın yetmediğinden kalan Ender'den düşülür; silah XP eğrisi oyuncununkiyle aynı; Rezonans ek hasarı element durumu
   bırakmaz ve kombo yapmaz; 12 efsanevi silah önerildi (kullanıcı değiştirebilir).
 
-Aşama 0-7'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
+Aşama 0-8'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar bölümündedir.
 
 **Bilinen durumlar / notlar:**
 - Denge (düşman ve boss sayıları, kat ölçeklemesi) ilk değerlerdir; Aşama 10'da simülasyon ve oyun testleriyle ayarlanır. Boss testi
   ölümsüz botla yapılır (bot saldırılardan kaçmaz); gerçek zorluk oynayarak değerlendirilmeli.
-- Görseller hâlâ renkli şekiller (boss'lar büyük gövdeler, üstlerinde göz/çekirdek); sanat Aşama 8'de.
+- Sprite'lar `make sprites` ile yeniden üretilir (Blender 5.2, ~35 dk); tek bir karakter ya da kat için `SPRITE_ARGS=--only=...`.
+  Sprite'ı olmayan bir şey eklenirse (yeni düşman vb.) eski renkli şekille çizilir.
 - Ustalık ve boss ilk kesişleri `%APPDATA%\Godot\app_userdata\Zindan Oyunu\save.json` dosyasına kaydedilir. Sıfırlamak için M menüsü →
   "Ustalıkları sıfırla". Testler ve bot (autoplay) ayrı dosya kullanır, oyuncunun kaydına dokunmaz.
 - Test için M menüsünden level seçilebilir (XP'siz, ödül vermez) ya da "+1/+5 level (XP)" ile gerçek XP verilir; "Ölümsüz (test)" açılabilir.
   "Loot (test)" satırı loot yağdırır, altın ve silah XP'si verir.
 - Hata ayıklama menüsünden level düşürülürse aktif slottaki yüksek levelli silah kullanılmaya devam eder (yalnızca test durumu).
-- `bpy` (Blender Python) çalışma ortamının paket deposunda bulunamadı. Aşama 8'e kadar gerekmiyor; o aşamada tekrar denenecek ya da başka yol bulunacak.
+- `bpy` ayrıca kurulmadı: sprite'lar Blender'ın kendisiyle (`C:\Program Files\Blender Foundation\Blender 5.2\blender.exe`) komut satırından üretilir.
+- Aşama 8'den beri .exe ~210 MB (zip ~138 MB): sprite'lar kayıpsız saklanıyor; gerekirse Aşama 10'da sıkıştırılır.
 - .exe imzasız olduğu için Windows SmartScreen "Windows bilgisayarınızı korudu" uyarısı gösterebilir: **Ek bilgi → Yine de çalıştır**.
 - Ghost iksir kullanamaz (Aşama 3'te onaylandı); iksir toplamaz, tüccar ona iksir satmaz, Yedek iksir ödülü sunulmaz.
 - Hata ayıklama menüsü ve test odası geçicidir; Aşama 10'da gerçek menüler gelir.
@@ -166,7 +206,7 @@ Aşama 0-7'de verilen kararların tamamı GDD > Uygulamada Verilen Kararlar böl
 
 Aşama 6'dan itibaren geliştirme bu klasörde yapılıyor; kurallar [`GELISTIRME.md`](GELISTIRME.md) dosyasında.
 
-Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, Python 3. `zip` yoksa `make export-windows`
+Gerekenler: Godot 4.7.2 (headless çalışır), aynı sürümün export şablonları, `make`, Python 3. Sprite üretimi için Blender (Aşama 8; bu bilgisayarda 5.2). `zip` yoksa `make export-windows`
 PowerShell'in `Compress-Archive`'ini kullanır. Bu bilgisayarda Godot `C:\Users\mcap5\Godot\` klasöründe
 (`Godot_v4.7.2-stable_win64_console.exe` komut satırı için), şablonlar `%APPDATA%\Godot\export_templates\4.7.2.stable\` içinde.
 
@@ -174,7 +214,7 @@ PowerShell'in `Compress-Archive`'ini kullanır. Bu bilgisayarda Godot `C:\Users\
 make quick           # geliştirirken hızlı kontrol: birim testleri + test odası smoke (~1 dk)
 make test            # aşama sonunda bir kez: birim testleri (206) + test odası smoke + ırk×silah matrisi + zindan smoke + boss testi (make unit / smoke / matrix / dungeon / bosses ayrı da çalışır)
 make export-windows  # build/ içine ZindanOyunu.exe üretir ve zip'ler
-make sprites         # sprite'ları üretir (Aşama 8)
+make sprites BLENDER="/c/Program Files/Blender Foundation/Blender 5.2/blender.exe"   # tüm sprite'lar (~35 dk); SPRITE_ARGS=--only=warrior,tiles1,icons
 make sfx             # ses efektlerini üretir (Aşama 9)
 make all             # hepsi
 ```
@@ -206,8 +246,8 @@ data/                  tüm denge sayıları (JSON) — koda sayı yazılmaz
 scripts/autoload/      Events, DataDB, GameState, SaveManager
 scripts/...            combat, player, enemies (Enemy, EnemyHazard, EnemyProjectile), bosses (Boss, Morvath, Mycela, Kordrak, Nyxthar…), dungeon, loot, progression, ui
 scenes/                sahneler
-assets/                sprite, normal map, ses, font, shader
-tools/                 Blender sprite üretici, ses sentezleyici
+assets/                sprites (characters/, weapons/, tiles/, props/, icons/: renk + normal + ışıma), shader, ses, font
+tools/                 blender/ (sprite üretici: modeller, animasyonlar, karolar, ikonlar; make_preview.py), ses sentezleyici
 tests/                 headless birim testleri (run_tests.gd çalıştırıcı)
 docs/GDD.md            tasarım dokümanı
 ```

@@ -1,4 +1,18 @@
 {
+  "lighting": {
+    "_note": "Aşama 8: dinamik ışık. Kat ortam rengi ve meşale rengi floors.json > light. Karakterler, zemin ve duvarlar normal haritalarıyla aydınlanır; uyarı işaretleri, mermiler, hasar sayıları ve loot ışıktan etkilenmez (karanlıkta da okunur).",
+    "_default": "Tüm sayılar Aşama 8 kararı; oyun testinde ayarlanır.",
+    "player_light_radius_tiles": 8.5,
+    "player_light_energy": 1.1,
+    "player_light_color": "#ffe6c8",
+    "torch_every": 7,
+    "torch_radius_tiles": 5.0,
+    "torch_energy": 1.15,
+    "torch_flicker": 0.15,
+    "light_height": 40.0,
+    "projectile_light_radius_tiles": 2.2,
+    "projectile_light_energy": 0.8
+  },
   "_note": "Aşama 4 — zindan üretimi. Harita her run yeni seed ile üretilir. Oda sayıları floors.json > rooms (boss dahil; giriş odası ve gizli oda bu sayıya ek). Sayılar _default: oyun testlerinde ayarlanır.",
   "grid_cell_tiles": 28,
   "corridor_width": 3,

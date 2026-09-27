@@ -7,6 +7,62 @@ extends Node2D
 
 signal used(prop: RoomProp)
 
+
+## Aşama 8: nesnenin Blender sprite'ı (ışıkla aydınlanır). Etiketler bu düğümde (ışıktan etkilenmez) çizilir.
+const PROP_DIR := "res://assets/sprites/props/"
+static var _meta: Dictionary = {}
+var _ct: CanvasTexture
+var _ct_key: String = ""
+var _art: Node2D
+
+func _init() -> void:
+	material = Lighting.unshaded()   # Aşama 8: etkileşimli nesneler karanlıkta da okunur
+
+
+func _ready() -> void:
+	if _meta.is_empty() and FileAccess.file_exists(PROP_DIR + "props.json"):
+		_meta = JSON.parse_string(FileAccess.get_file_as_string(PROP_DIR + "props.json"))
+	if not _meta.has(_art_name()):
+		return
+	_art = Node2D.new()
+	_art.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	_art.show_behind_parent = true   # etiketler gövdenin önünde kalsın
+	_art.draw.connect(_draw_art)
+	add_child(_art)
+	var light := ""
+	match kind:
+		"merchant": light = "#ffc870"
+		"blacksmith": light = "#ff7a2a"
+		"stairs": light = "#7a9aff"
+	if light != "":
+		var l := Lighting.make_light(Color(light), 3.5, 1.0)
+		l.position = Vector2(0, -20)
+		add_child(l)
+
+
+func _art_name() -> String:
+	if kind == "chest":
+		return "chest_open" if opened else "chest_closed"
+	return kind
+
+
+func _draw_art() -> void:
+	var m: Dictionary = _meta.get(_art_name(), {})
+	if m.is_empty():
+		return
+	var key := _art_name()
+	if _ct_key != key:
+		_ct_key = key
+		_ct = CanvasTexture.new()
+		_ct.diffuse_texture = load(PROP_DIR + str(m["file"]))
+		_ct.normal_texture = load(PROP_DIR + str(m["normal"]))
+	var tex := _ct
+	var s := 1.0 / float(m["scale"])
+	var size := Vector2(m["size"][0], m["size"][1]) * s
+	var anchor := Vector2(m["anchor"][0], m["anchor"][1]) * s
+	_art.draw_colored_polygon(Shapes.iso_ellipse(0.5, 16), Color(0, 0, 0, 0.35))
+	_art.draw_texture_rect(tex, Rect2(-anchor, size), false)
+
 var kind: String = "chest"     ## chest, merchant, blacksmith, stairs
 var room_id: int = -1
 var opened: bool = false
@@ -47,11 +103,20 @@ func use() -> String:
 
 func _process(delta: float) -> void:
 	_t += delta
+	if _art:
+		_art.queue_redraw()
 	if kind == "stairs":
 		queue_redraw()
 
 
 func _draw() -> void:
+	if _art:
+		# Sprite'lı nesne: yalnızca etiket ve merdivenin parlayan halkası
+		match kind:
+			"merchant": _draw_label(Color(0.9, 0.75, 0.25), "Tüccar")
+			"blacksmith": _draw_label(Color(0.55, 0.62, 0.75), "Demirci")
+			"stairs": _draw_stairs(true)
+		return
 	match kind:
 		"chest":
 			_draw_chest()
@@ -87,9 +152,9 @@ func _draw_npc(color: Color, label: String) -> void:
 	draw_string(font, Vector2(-60, -68), label, HORIZONTAL_ALIGNMENT_CENTER, 120, 16, color.lightened(0.3))
 
 
-func _draw_stairs() -> void:
+func _draw_stairs(art: bool = false) -> void:
 	var pulse := 0.75 + 0.25 * sin(_t * 4.0)
-	for i: int in 4:
+	for i: int in (0 if art else 4):
 		var r := 1.2 - i * 0.25
 		var col := Color(0.25 - i * 0.05, 0.2 - i * 0.04, 0.3, 1.0)
 		draw_colored_polygon(Shapes.iso_ellipse(r, 24), col)
@@ -100,3 +165,9 @@ func _draw_stairs() -> void:
 	var text := "Aşağı in" if GameState.floor_index < 4 else "Çıkış"
 	draw_string_outline(font, Vector2(-60, -30), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 18, 4, Color.BLACK)
 	draw_string(font, Vector2(-60, -30), text, HORIZONTAL_ALIGNMENT_CENTER, 120, 18, Color(0.7, 0.9, 1.0, pulse))
+
+
+func _draw_label(color: Color, label: String) -> void:
+	var font := ThemeDB.fallback_font
+	draw_string_outline(font, Vector2(-60, -84), label, HORIZONTAL_ALIGNMENT_CENTER, 120, 16, 4, Color.BLACK)
+	draw_string(font, Vector2(-60, -84), label, HORIZONTAL_ALIGNMENT_CENTER, 120, 16, color.lightened(0.3))

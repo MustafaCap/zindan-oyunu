@@ -7,6 +7,7 @@ var boss: Boss
 
 
 func _ready() -> void:
+	material = Lighting.unshaded()   # Aşama 8: karanlıkta da okunur (ışıktan etkilenmez)
 	z_index = -3
 
 
