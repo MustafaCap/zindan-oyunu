@@ -1,6 +1,6 @@
 # Zindan Oyunu — Tasarım Dokümanı (GDD)
 
-Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (Aşama 11, Android v0.11.0)
+Sep 23, 2026 · @Mustafa · Son güncelleme: 27 Eyl 2026 (v0.11.1: Mycela'nın Spor Sisi, run kaydı)
 
 Bu doküman oyunun tam tasarımı ve yapım planıdır. Tüm sayılar başlangıç değerleridir ve oyun testlerinde ayarlanır.
 
@@ -60,7 +60,7 @@ WASD ile yürünür, saldırılar farenin gösterdiği yöne gider. Oyuncunun 4 
 | I | Envanter: 4 slot (Aşama 5; açıkken oyun durur; v0.10.1'den beri savaşta da düzenlenir) |
 | 1 / 2 (ödül ekranında) | Level ya da boss ödülünden birini seçme (Aşama 6; kartlara tıklamak da olur, açıkken oyun durur). v0.10.1: ekran açıldıktan sonra 1,2 sn tıklama ve tuşlar çalışmaz (kartlar soluk/kilitli) |
 | O | Ses ayarları: ana ses, müzik, efektler, arayüz, sessiz (Aşama 9; açıkken oyun durur, O ya da Esc kapatır) |
-| Esc | Duraklatma menüsü: devam, ses ayarları, ana menüye dön, oyundan çık (Aşama 10; açıkken oyun durur) |
+| Esc | Duraklatma menüsü: devam, ses ayarları, ~~ana menüye dön, oyundan çık~~ **v0.11.1:** kaydet ve ana menüye dön, kaydet ve oyundan çık, run'ı bırak (ölüm sayılır) (Aşama 10; açıkken oyun durur) |
 | F5 | Geliştirici (hata ayıklama) menüsü — gizli kısayol (Aşama 10; eskiden M). v0.10.1: kat düğmeleri ve "Bu kata ışınlan" |
 
 **Dokunmatik (Android, Aşama 11):** ekranın sol tarafı yüzen joystick (dokunulan yerde belirir; parmağın gösterdiği ekran
@@ -367,7 +367,7 @@ Boss'lar dondurulduktan sonra 8 sn donmaya bağışık olur. İki aktif silah ar
 
 **Özel mekanik — İyileştiren Mantarlar:** Mycela arenaya 3 mantar totemi diker; totemler yaşadıkça onu iyileştirir. Totemler öncelikli hedeftir. **v0.10.1:** totemler savaşta **yalnızca bir kez**, Mycela'nın canı **%20**'ye inince dikilir; kırılınca yeniden dikilmez. Ateş, spor bulutlarını yakıp yok eder; üzerinde zehir olan bulut ateşle vurulursa Zehir Patlaması tetiklenir ve boss'a da hasar verir.
 
-**2. faz (%50):** Arena yavaşça sporla dolar; temiz hava alanları küçülür. Mycela köklerini çekip arenada hızla yer değiştirmeye başlar.
+**2. faz (%50):** ~~Arena yavaşça sporla dolar; temiz hava alanları küçülür.~~ **v0.11.1:** arena aralıklarla **3 sn** sporla dolar (**Spor Sisi**; önce 1,5 sn işaretlenir, yalnızca 3 temiz hava alanı güvenli), sonra kalkar ve 10 sn sonra yeniden gelir. Sis sürerken oyuncunun altından kök fışkırmaz (Kök Patlaması yok) ve Spor Bulutu yalnızca **tek, küçük** bir bulut bırakır. Mycela köklerini çekip arenada hızla yer değiştirmeye başlar.
 
 ### 3. Kat — Kordrak, Erimiş Demirci
 
@@ -533,7 +533,7 @@ Tam bir run (4 kat, zafer) hedefi 30-45 dakikadır. Harita boyutu ve düşman sa
 
 İlk sürümde yalnızca iki ekran var: Başla tuşu olan ana menü ve ırk seçim ekranı. Ustalık levelleri ve boss ilk kesiş bonusları otomatik kaydedilir. 4. kat boss'u kesilince "Kazandın" ekranı çıkar ve ana menüye dönülür. Ayrıntılı arayüz tasarımı ve hikâye sonraya bırakıldı.
 
-**Yapıldı (Aşama 10):** Oyun ana menüyle açılır: **oyunun adı yazılmaz** (henüz ad yok), arka plan bir videodur (açılışta kanlı giriş bir kez, sonra kansız sakin döngü; müzik videonun sesi); düğmeler videoya gömülü YENİ OYUN, AYARLAR, ÇIKIŞ yazılarıdır (YÜKLE soluk, kayıtlı run yok). Başla → ırk seçimi (4 kart: animasyonlu sprite, statlar, Q/E, pasif, silah ailesi, başlangıç silahının ustalığı; v0.10.1'den beri her kartın altında başlangıç silahını seçen 3 düğme) → zindan. Esc duraklatma menüsünü açar; "Ana menüye dön" run'ı bırakır ve **ölüm sayılır**. Run bitince önce büyük "KAZANDIN" / "ÖLDÜN" başlığı (altından kan damlar), sonra run özeti; oradan yeni run ya da ana menü. Görünüş oyunun karanlık, kanlı tarzındadır (ayrıntılar: Uygulamada Verilen Kararlar > Menüler, denge ve teslim).
+**Yapıldı (Aşama 10):** Oyun ana menüyle açılır: **oyunun adı yazılmaz** (henüz ad yok), arka plan bir videodur (açılışta kanlı giriş bir kez, sonra kansız sakin döngü; müzik videonun sesi); düğmeler videoya gömülü YENİ OYUN, AYARLAR, ÇIKIŞ yazılarıdır (~~YÜKLE soluk, kayıtlı run yok~~; **v0.11.1:** kayıtlı run varsa YÜKLE onu sürdürür, bkz. Uygulamada Verilen Kararlar > Mycela ve run kaydı). Başla → ırk seçimi (4 kart: animasyonlu sprite, statlar, Q/E, pasif, silah ailesi, başlangıç silahının ustalığı; v0.10.1'den beri her kartın altında başlangıç silahını seçen 3 düğme) → zindan. Esc duraklatma menüsünü açar; "Ana menüye dön" run'ı bırakır ve **ölüm sayılır**. Run bitince önce büyük "KAZANDIN" / "ÖLDÜN" başlığı (altından kan damlar), sonra run özeti; oradan yeni run ya da ana menü. Görünüş oyunun karanlık, kanlı tarzındadır (ayrıntılar: Uygulamada Verilen Kararlar > Menüler, denge ve teslim).
 
 ## Görsel Stil ve Efektler
 
@@ -621,6 +621,8 @@ Yapım sırasında dokümanda sayısı ya da ayrıntısı olmayan yerler için v
 | 10 (v0.10.2) | **Rün işareti:** rünün normal vuruşunda (ve rün tuzağında) yere çizilen **altı köşeli yıldız kaldırıldı**; yerine içe dönük dişlerle çevrili, yavaşça dönen bir halka ve ortada dikey göz bebekli, nabız gibi açılıp kapanan bir göz ("yutan göz" mührü) — oyunun karanlık, vahşi tarzına uygun, hiçbir dinî ya da siyasi sembole benzemez |
 | 10 (v0.10.3) | **Linux sürümü:** oyun Linux'ta da oynanabilir (x86_64, tek dosya, pck gömülü). Sürüm sayfasına `oyun.indir.linux.tar.gz` (çalıştırma izni korunur); arayüz yazı tipine Linux'taki Palatino benzeri ve serif fontlar eklendi |
 | 10 (v0.10.2) | **Magical mana:** normal vuruş (sol tık) **mana harcamaz** (1 → 0; her silahta); skill bedelleri düşürüldü: sağ tık 55 → **45**, Q 65 → **55**, E 90 → **75** (maks levelde arka arkaya karışık 7 skill, eskiden 5-6) |
+| 11 (v0.11.1) | **Mycela'nın Spor Sisi** ("ekranı yeşile boyayan" 2. faz mekaniği) çok güçlüydü: arena 2. fazın sonuna kadar sporla dolu kalıyor, temiz hava alanları 30 sn'de 4 → 2 karo küçülüyordu. Artık sis **3 sn** sürer (önce 1,5 sn işaret), 10 sn arayla tekrarlar; temiz alanlar küçülmez (4 karo). Sis sürerken **Kök Patlaması yok** (oyuncunun altında kırmızı işaret çıkmaz), **Spor Bulutu tek ve küçük** (3 × 1,6 karo yerine 1 × 0,9 karo); sis başlarken yerdeki bulutlar ve kök işaretleri dağılır |
+| 11 (v0.11.1) | **Kayıt sistemi:** run kendiliğinden kaydedilir, ana menüdeki **YÜKLE** kaldığın yerden sürdürür. **Ölüm run'ı yine bitirir** (kayıt yalnızca oyunu kapatıp sonra devam etmek için; ölüm, zafer ve run'ı bırakmak kaydı siler). Esc menüsünde "Kaydet ve ana menüye dön" ve "Kaydet ve oyundan çık" (run sürer); eski "Ana menüye dön" artık "Run'ı bırak" (ölüm sayılır). Kayıtlı run varken YENİ OYUN önce sorar, o run bırakılmış (ölüm) sayılır |
 | 10 (v0.10.1) | **Sandık nadirliği:** sandığın kendi tablosu — 1. kat %70 / %25 / %4 / %1, 2. kat en az Ender (— / %70 / %27 / %3), 3. kat en az Destansı (— / — / %70 / %30), 4. kat **%100 Efsanevi**; gizli oda sandığı üstüne ×2 (`loot_tables.chest_rarity_weights`) |
 
 ### Teknik ve his (Aşama 0-1)
@@ -964,7 +966,7 @@ Sayıların hepsi `data/enemies.json`, `data/bosses.json`, `data/floors.json` (s
   - Spor Oku: 50°'lik yelpazede 5 spor (hız 8, 11 karo), yolları 0,6 sn çizilir (×0,8).
   - İyileştiren Mantarlar: ~~dövüş başında~~ **v0.10.1: canı %20'ye inince yalnızca bir kez** (`mechanic.plant_at_hp_pct`) 3 Mantar Totemi dikilir (1 sn işaretli, "MANTAR TOTEMLERİ!"; 1.200 can × kat ölçeği, öncelikli hedef; merkezden 5,5 karo). Her totem saniyede boss'un maks canının %0,2'sini iyileştirir; ~~üçü kırılınca 30 sn sonra yeniden dikilir~~ kırılınca yeniden dikilmez. HUD'da önceden "Canı %20'ye inince 3 mantar totemi dikecek" yazar.
   - Ateş bulutu yakar: bir buluta ateş mermisi/alanı ya da menzile uzanan ateşli yakın saldırı değerse bulut Zehir Patlaması'yla yok olur ve 2,5 karo içindeki düşmanlara (Mycela ve totemler dahil) Mycela'nın maks canının %2,5'i kadar hasar verir (oyuncuya dokunmaz).
-  - 2. faz: arena sporla dolar — 3 temiz hava alanı kalır (yarıçap 30 sn'de 4 → 2 karo küçülür); 3 sn uyarıdan sonra dışarıdaki oyuncu 0,5 sn'de bir ×0,25 zehir hasarı alır. Mycela 6 sn'de bir 0,7 sn işaretli bir yere ışınlanır.
+  - 2. faz: ~~arena sporla dolar — 3 temiz hava alanı kalır (yarıçap 30 sn'de 4 → 2 karo küçülür); 3 sn uyarıdan sonra dışarıdaki oyuncu 0,5 sn'de bir ×0,25 zehir hasarı alır.~~ **v0.11.1 Spor Sisi:** 2. faz başında ve her sis kalkışından 10 sn sonra (`phase2.fog_every_sec`) 3 temiz hava alanı (4 karo, küçülmez) 1,5 sn işaretlenir (`fog_warn`; arena hafifçe yeşillenir, çemberler çizilir, "SPOR SİSİ!"), sonra sis 3 sn sürer (`fog_sec`): dışarıdaki oyuncu 0,5 sn'de bir ×0,25 zehir hasarı alır. Sis başlarken Mycela'nın yerdeki spor bulutları ve kök işaretleri dağılır; sis sürerken (işaret dahil) Kök Patlaması seçilmez, sıradaki kökler çıkmaz, Spor Bulutu sis başına bir kez ve tek küçük bulut (0,9 karo, `fog_cloud_count` / `fog_cloud_radius`) bırakır; Spor Oku değişmedi. Mycela 6 sn'de bir 0,7 sn işaretli bir yere ışınlanır.
 - **Kordrak** (oyuncuya yavaşça yürür):
   - Örs Darbesi: 1,1 sn işaret — çarpma alanı (1,6 karo, ×1) ve şok halkasının varacağı sınır; halka saniyede 6 karo genişleyerek 9 karoya kadar gider (0,8 kalınlık, ×1,2; Space'le atlanır).
   - Lav Dolumu: arenada hep görünen 4 lav kanalı ("#" şekli, merkezden ±4,5 karo, 1,3 genişlik) 1,6 sn parlar, sonra 6 sn lavla dolar (0,5 sn'de bir ×0,4 ateş).
@@ -1190,6 +1192,38 @@ Masaüstü oyun değişmedi: dokunmatik mod yalnızca Android'de (ya da `--touch
 
 **Boyut:** ışıma katmanlarında (`_e.png`) saydam piksellerin altındaki gereksiz renk verisi temizlendi (`make clean-alpha`; 38,7 → 2,4 MB, görüntü aynı; sprite hattı artık temiz yazar): .exe 220 → ~189 MB. **Doku sıkıştırması**: renk ve normal sayfaları %85 kaliteli kayıplı WebP olarak içe aktarılır, ışıma katmanları kayıpsız (`make textures`, `tools/dev/texture_compress.py`: yalnızca `.import` dosyalarındaki `compress/mode` ve `compress/lossy_quality`; kaynak PNG'ler kayıpsız kalır; `make sprites` sonunda kendisi çalışır). Menü videosu ve müziği ~5,3 MB ekler. **.exe ~153 MB, zip ~80 MB.**
 
+### Mycela ve run kaydı (v0.11.1)
+
+Kod: `scripts/bosses/mycela.gd` (Spor Sisi), `scripts/progression/run_save.gd` (RunSave), `SaveManager` (run dosyası),
+`DungeonRun` (run_snapshot, load_run, save_run, save_and_leave), `PauseMenu`, `MainMenu`. Sayılar `data/bosses.json > mycela.phase2`
+ve `data/dungeon.json > run_save` (`_default` notlarıyla). Android dalı (0.11.0) bu dala birleştirildi.
+
+- **Spor Sisi:** Mycela'nın 2. fazı artık kalıcı sis değil, döngüdür: işaret (1,5 sn) → sis (3 sn) → ara (10 sn). HUD'da
+  "Spor sisi geliyor — temiz hava alanına geç! (sn)" ve "Spor sisi — temiz havada kal! (sn)". Sis kalkınca yeşil 0,4 sn'de söner.
+  Bütün saldırılar yine yerde önceden işaretli (en kısa uyarı 0,6 sn; sisin kendisi 1,5 sn).
+- **Kayıt dosyası:** `user://run.json` (Windows'ta `%APPDATA%\Godot\app_userdata\Zindan Oyunu\run.json`), ustalık kaydından ayrı.
+  Kaydedilenler: GameState (ırk, level, XP, kat, seed, ödüller, özel etkiler, bekleyen ödüller, kesilen boss'lar, silah tipine
+  göre hasar, öldürme, İkinci şans), envanter (4 slot, altın, iksir ve iksir kapasitesi), run süresi, ödül ve loot rastgeleliğinin
+  durumu, oyuncunun yeri ve canı, katın durumu: gezilen ve temizlenen odalar, gizli oda, açılan sandıklar, tüccarın tezgâhı,
+  merdiven, yerdeki eşyalar. **Harita kaydedilmez**: run seed'inden aynısı üretilir; kayıttaki oda sayısı ya da tipleri bu sürümün
+  ürettiğiyle uyuşmazsa (üretici değişmişse) katın girişinden devam edilir, oyuncunun eşyaları ve leveli yine gelir.
+- **Ne zaman:** yalnızca savaş dışında — kata girince, oda temizlenince, ödül seçilince, düşmanlı bir odaya girmeden hemen önce,
+  10 sn'de bir (`run_save.autosave_sec`), Esc menüsündeki "Kaydet ve …" düğmelerinde, pencere kapanırken ve telefonda oyun arka
+  plana alınınca. Savaş sürerken kaydedilmez: kilitli odadayken çıkılırsa YÜKLE o odanın kapısından sürdürür (savaş baştan).
+  Ödül ekranı açıkken kaydedilirse yüklenince aynı ödül aynı seçeneklerle yeniden açılır. Kaynaklar (enerji, mana) ve bekleme
+  süreleri yüklenince dolu başlar.
+- **Silinir:** ölüm, zafer ve "Run'ı bırak". Kayıtlı run varken YENİ OYUN sorar; onaylanırsa o run bırakılmış sayılır (ustalık
+  XP'si o kattaki ölüm çarpanıyla işlenir, `RunSave.discard_saved`). Bozuk kayıt `.bozuk` olarak yedeklenip silinir, YÜKLE soluk kalır.
+- **Ana menü:** kayıt varsa YÜKLE tıklanır ve yanında "Irk · N. kat · Level L" yazar; yoksa eskisi gibi soluk. Videosuz yedek
+  menüde "Devam et" düğmesi.
+- **Test ve bot:** komut satırında oyun bayrağı varsa (bot, boss testi, ekran görüntüsü…) kayıt kapalıdır; birim testleri
+  `user://run_unit_tests.json` kullanır. Oyuncunun `run.json`'ına dokunulmaz.
+- **Denendi:** `TEST_FILTER=enemies make unit` (14 test; Spor Sisi testi dahil), `make bosses` (4 boss TAMAM; Mycela 73 sn, en kısa
+  uyarı 0,60 sn), `TEST_FILTER=save` / `menus` / `project` / `data` / `touch` birim testleri geçti (kayıt için 10 yeni test:
+  `tests/test_run_save.gd`). Mycela dövüşünün ekran görüntüleri alındı (sis uyarısı, sis, sis sonrası). `make export-windows export-linux export-android` ile üç sürüm derlendi:
+  zip ve tar.gz hatasız açılıyor, APK v2/v3 imzalı (sürüm kodu 1101, 0.11.1, arm64); Windows .exe'si ve Linux sürümü (WSL)
+  başsız açılıp run başlatıyor. Elle oynanarak denenmedi.
+
 ## Uygulama Rehberi
 
 Oyun 11 aşamada (0-10) yapıldı, Aşama 11'de Android'e taşındı; her aşama oynanabilir ya da test edilebilir bir sonuçla bitti ve oyun testinden sonra bir sonrakine geçildi. Tasarımın kaynağı bu dokümandır; yukarıdaki tablolar oyundaki veri dosyalarının birebir karşılığıdır.
@@ -1211,11 +1245,12 @@ Bu bölüm her aşama sonunda güncellenir. Kısa durum README'nin "Durum" böl�
 | 8 — Sanat | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-8` dalı, sürüm 0.8.0) |
 | 9 — Ses | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-9` dalı, sürüm 0.9.0) |
 | 11 — Android | 🔄 Yapıldı, telefonda oyun testi bekliyor (`claude/mobile-game-release-wh9lmf` dalı, sürüm 0.11.0; APK `make export-android`) |
+| 11 (v0.11.1) — Mycela ve kayıt | 🔄 Yapıldı, oyun testi bekliyor (`mycela-kayit` dalı, Android dalı birleştirildi; sürüm 0.11.1, Android `version/code` 1101) |
 | 10 — Menüler, denge ve teslim | ✅ Bitti, onaylandı, main'e birleştirildi (`asama-10` dalı; Linux sürümü 0.10.3 `linux` dalında yapıldı, main'e birleştirildi ve v0.1 sürüm sayfasına eklendi; 0.10.0 → oyun testi düzeltmeleri 0.10.1 ve 0.10.2). GitHub'da `v0.1` etiketi ve sürüm sayfasında `oyun.indir.zip` |
 
 - **Repo:** https://github.com/MustafaCap/zindan-oyunu (özel). Her aşama kendi dalında (`asama-N`), bitince main'e birleştirilir. `asama-0` … `asama-4` main'e birleştirildi (Pull Request #1-#5); `asama-5` ve `asama-6` Aşama 6 sonunda yerel merge ile main'e birleştirildi. Aşama 7 `main`'den açılan `asama-7` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-7\`), onaylandı ve main'e birleştirildi. Aşama 8 `main`'den açılan `asama-8` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-8\`), onaylandı ve main'e birleştirildi. Aşama 9 `main`'den açılan `asama-9` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-9\`), onaylandı ve main'e birleştirildi. Aşama 10 `main`'den açılan `asama-10` dalında yapıldı (derleme: `ZindanOyunu-Derlemeler\asama-10\`: `ZindanOyunu-v0.10.0` ve oyun testi düzeltmeleriyle `ZindanOyunu-v0.10.1`, `ZindanOyunu-v0.10.2` + zip'leri); 0.10.2 onaylandı (27 Eyl 2026), push edildi ve main'e birleştirildi; `main` üzerinde `v0.1` etiketi ve GitHub sürümü (Release) oluşturuldu.
 - **Çalışma düzeni:** geliştirme yerel klonda (`C:\Users\mcap5\Git_Dosyaları\ZindanOyunu-Derlemeler\zindan-oyunu`) yapılır. Her aşama: önceki aşamanın dalından yeni `asama-N` dalı → kod → testler → README Durum + GDD güncellemesi → yerelde commit → oyun testi → onaydan sonra push ve `main`'e birleştirme (`gh` kurulu olmadığından yerel merge: `git switch main`, `git merge --no-ff asama-N`, `git push origin main`).
-- **Dağıtım (27 Eyl 2026):** oyun başka cihazlarda Git'siz oynansın diye her sürüm GitHub'ın **Releases** sayfasına **`oyun.indir.zip`** (Windows, içinde yalnızca `ZindanOyunu.exe`) ve v0.10.3'ten beri **`oyun.indir.linux.tar.gz`** (Linux) adıyla eklenir. README'nin en üstündeki "Oyunu indir" bağlantısı (`releases/latest/download/oyun.indir.zip`) hep son sürümü indirir; repo özel olduğu için diğer cihazda GitHub'a giriş gerekir. .exe (153 MB) GitHub'ın 100 MB dosya sınırı yüzünden repoya konmaz; sürüm dosyası repoyu büyütmez. İlk sürüm: `v0.1` (oyun sürümü 0.10.2). Sürüm GitHub'ın web arayüzünden oluşturulur, zip sürükle-bırakla eklenir.
+- **Dağıtım (27 Eyl 2026):** oyun başka cihazlarda Git'siz oynansın diye her sürüm GitHub'ın **Releases** sayfasına **`oyun.indir.zip`** (Windows, içinde yalnızca `ZindanOyunu.exe`) ve v0.10.3'ten beri **`oyun.indir.linux.tar.gz`** (Linux) adıyla eklenir. README'nin en üstündeki "Oyunu indir" bağlantısı (`releases/latest/download/oyun.indir.zip`) hep son sürümü indirir; repo özel olduğu için diğer cihazda GitHub'a giriş gerekir. .exe (153 MB) GitHub'ın 100 MB dosya sınırı yüzünden repoya konmaz; sürüm dosyası repoyu büyütmez. İlk sürüm: `v0.1` (oyun sürümü 0.10.2). Sürüm GitHub'ın web arayüzünden oluşturulur, zip sürükle-bırakla eklenir. **v0.11.1'den beri** GitHub Actions (`.github/workflows/android.yml`, "Derlemeler") her push'ta Windows zip'ini, Linux tar.gz'sini ve APK'yı derleyip artifact olarak yükler; `v*` etiketi push'lanınca üçünü o etiketin sürümüne `oyun.indir.zip`, `oyun.indir.linux.tar.gz` ve `oyun.indir.apk` adlarıyla ekler (sürüm yoksa açar).
 - **Windows'ta araçlar:** Godot 4.7.2 (Windows sürümü) ve aynı sürümün export şablonları kurulu olmalıdır. **Geliştirme bilgisayarında (Aşama 6'da kuruldu):** Godot `C:\Users\mcap5\Godot\Godot_v4.7.2-stable_win64.exe` (komut satırı için `..._win64_console.exe`; PATH'te değil, `make test GODOT=/c/Users/mcap5/Godot/Godot_v4.7.2-stable_win64_console.exe`), export şablonları `%APPDATA%\Godot\export_templates\4.7.2.stable\`, `make` MSYS2'den (`C:\msys64\ucrt64\bin\make`), Python `C:\msys64\ucrt64\bin\python3`. `zip` yok: `make export-windows` bu durumda PowerShell `Compress-Archive` kullanır. `make` yoksa Makefile'daki komutlar doğrudan çalıştırılır (ör. `godot --headless --path . -s tests/run_tests.gd`). `.exe`, `godot --headless --path . --export-release "Windows Desktop" build/windows/ZindanOyunu.exe` ile üretilir; Windows'ta doğrudan çalıştırıldığı için parçalamaya gerek yoktur.
 - **Test:** `make test` beş adımı çalıştırır: birim testleri (220 test; Aşama 9: her sesin dosyaları, müziklerin döngüsü, koddaki her ses çağrısının var olan bir sese gitmesi, silah/yetenek/element/kombo sesleri, bozuk ses eşlemesinde açık hata, kanallar ve sınırlayıcı, çalma sınırları ve havuz, gövdeye göre vuruş sesleri, tehlike sesleri, olay sesleri, müzik akışı, ayar kaydı ve onarımı, ayar paneli; Aşama 7: 55 düşman, kat ölçeklemesi, elit/aura, varyantlar, dalgalar, tehlike şekilleri ve uyarı, kalkan, çağrılanların ödülsüzlüğü, 4 boss'un mekanikleri; loot oranları 10.000 düşüşlük simülasyonla; Aşama 6: kat XP toplamları hedef levellere birebir, ustalık 114 maç, ödüller, tavanlar, 11 özel etki, kayıt dayanıklılığı), test odası smoke testi (`make smoke`), 48 ırk × silah kombinasyonu (`make matrix`) ve zindan smoke testi (`make dungeon`: sabit seed'le ölümsüz bot 4 katın her odasına girer, gizli duvarı kırar, loot toplar, tüccar ve demirciyi kullanır, level ve boss ödüllerini seçer, boss'ları keser, merdivenle iner; zaferde ustalık kaydedilip geri okunur, yazılamazsa çıkış kodu 8; Aşama 7'den beri düşman canı ×0,25) ve boss testi (`make bosses`: 4 boss katın beklenen gücüyle 240 sn içinde kesilir, her saldırı kullanılır, 2. faz görülür, her uyarı ≥ 0,4 sn; sorun varsa çıkış kodu 9).
 - **Test (27 Eyl 2026'dan beri):** testler (`make test`, `make quick`, bot testleri ve `make balance`) her aşamada çalıştırılmıyor; oyun elle oynanarak test ediliyor (bot testleri çok uzun sürüyordu), en azından .exe derleniyor. Testler kodla birlikte güncel tutuluyor. (Önceden: geliştirirken `make quick`, aşama sonunda bir kez `make test`.)
@@ -1246,7 +1281,7 @@ zindan-oyunu/
   data/                   # tüm denge sayıları (JSON)
   scenes/                 # main_menu, race_select, game, player, enemies, bosses, rooms, ui
   scripts/
-    autoload/             # Events, DataDB, GameState, SaveManager, Audio (Aşama 9), Mobile (Aşama 11: dokunmatik mod, arayüz ölçeği)
+    autoload/             # Events, DataDB, GameState, SaveManager (v0.11.1: run kaydı dosyası da), Audio (Aşama 9), Mobile (Aşama 11: dokunmatik mod, arayüz ölçeği)
     combat/               # DamageCalc, StatusEffects, Combos
     player/
     enemies/              # Enemy (17 düşman, elit, aura), EnemyHazard (işaretli yer tehlikeleri), EnemyProjectile
@@ -1256,7 +1291,7 @@ zindan-oyunu/
     loot/                 # Weapon, Talisman, LootGenerator, Inventory, Shop, ItemEffects, WeaponInfo, LootDrop, ChestTrap
     ui/                   # Hud, Minimap, DebugMenu, InventoryUI, ItemSlot, ElementIcons, ItemIcons, RewardUI, RunSummary, AudioSettingsUI (Aşama 9), TouchControls (Aşama 11),
                           # MainMenu, RaceSelect, PauseMenu, UiTheme, BloodDrips (Aşama 10)
-    progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı)
+    progression/          # Leveling (oyuncu XP'si), Mastery (ustalık), Rewards (ödül havuzları), RunBonuses (stat toplamı), RunSave (v0.11.1: run kaydı)
     core/                 # Iso, Shapes, PlaceholderBody, SpriteBody (Aşama 8: 8 yönlü sprite gövdesi), XRayMarker
     fx/                   # Juice (vuruş hissi, kan), SlashFx, Lighting (Aşama 8: ortam, oyuncu ışığı, meşaleler)
   assets/

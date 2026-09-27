@@ -138,6 +138,10 @@
     "reach_tiles": 1.2
   },
   "interact_range_tiles": 1.6,
+  "run_save": {
+    "autosave_sec": 10.0,
+    "_default": "v0.11.1: run kaydı (user://run.json). Savaş dışındayken her autosave_sec sn'de, kata girince, oda temizlenince, ödül seçilince ve düşmanlı bir odaya girmeden hemen önce kendiliğinden yazılır; Esc menüsündeki 'Kaydet ve …' düğmeleri ve pencereyi kapatmak da kaydeder. Savaş sürerken yazılmaz. Ölüm, zafer ve run'ı bırakmak kaydı siler."
+  },
   "templates": {
     "square": {
       "name": "Kare salon",

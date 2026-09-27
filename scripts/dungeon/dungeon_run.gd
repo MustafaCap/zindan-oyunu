@@ -16,6 +16,10 @@
 ## da XP alır. Her 5 levelde level ödülü, her boss'ta boss ödülü (1 büyük stat + 1 özel etki) RewardUI ile seçilir; ödül
 ## ekranı savaş bitince açılır. Boss ilk kesişi hemen kaydedilir (kalıcı +%0,3 hasar). Ölünce ya da kazanınca ustalık XP'si
 ## hasar payına göre silah tiplerine işlenir, kaydedilir (SaveManager) ve RunSummary özet ekranı açılır.
+## v0.11.1 run kaydı (RunSave, user://run.json): savaş dışındayken kendiliğinden kaydedilir (kata girince, oda temizlenince,
+## ödül seçilince, düşmanlı odaya girmeden hemen önce ve dungeon.run_save.autosave_sec'te bir); Esc menüsünde "Kaydet ve
+## ana menüye dön / oyundan çık". Ana menüdeki YÜKLE load_request'i doldurur, _ready yeni run yerine kaydı kurar. Ölüm,
+## zafer ve run'ı bırakmak kaydı siler. Komut satırında oyun bayrağı varsa (testler, bot) kayıt kapalıdır.
 ## Komut satırı ("--" sonrasına):
 ##   --autoplay        Bot oynar: her odayı gezer, gizli duvarı kırar, boss'ları keser, 4 katı bitirir (çıkış 0).
 ##                     Ölürse 2, süre dolarsa 3, takılırsa 6, gezilemeyen oda kalırsa 7.
@@ -45,6 +49,9 @@ extends Node2D
 
 const TEST_ROOM_SCENE := "res://scenes/test_room.tscn"
 const MAIN_MENU_SCENE := "res://scenes/main_menu.tscn"
+
+## Ana menüdeki YÜKLE doldurur (SaveManager.read_run); _ready yeni run yerine bu kaydı kurar ve boşaltır.
+static var load_request: Dictionary = {}
 
 var layout: DungeonLayout
 var nav: DungeonNav
@@ -128,6 +135,12 @@ var _fill_bag: bool = false
 var _hover_bag: int = -1
 var _grant_levels: int = 0
 var _end_run_at: float = -1.0
+## v0.11.1 run kaydı: yalnızca menüden açılan oyunda (komut satırında oyun bayrağı yokken) açık.
+var saves_enabled: bool = false
+var _autosave_t: float = 0.0
+var _safe_pos: Vector2 = Vector2.INF  ## oyuncunun savaş dışındaki son yeri (kayıt oyuncuyu buraya koyar)
+var _reward_entry: String = ""        ## açık ödül ekranının girdisi ("level:15"); ekran açıkken kaydedilirse geri konur
+var _reward_state: String = ""        ## o ekran açılmadan önceki reward_rng durumu (yüklenince aynı seçenekler gelir)
 
 
 func _ready() -> void:
@@ -206,6 +219,10 @@ func _ready() -> void:
 		_show_data_error()
 		return
 	_dg = DataDB.table("dungeon")
+	# Run kaydı yalnızca menüden açılan oyunda: test/geliştirme bayraklarıyla (bot, boss testi, ekran görüntüsü…)
+	# oyuncunun kaydına dokunulmaz. Dokunmatik deneme bayrakları oyun bayrağı sayılmaz (MainMenu ile aynı).
+	saves_enabled = Array(OS.get_cmdline_user_args()).filter(func(a: String) -> bool:
+		return a != "--touch" and a != "--menu" and not a.begins_with("--ui-scale=")).is_empty()
 	if kill_hits < 0:
 		kill_hits = 4 if autoplay and not balance and not boss_test else 0
 	Enemy.bot_kill_hits = kill_hits
@@ -291,10 +308,16 @@ func _ready() -> void:
 	pause = PauseMenu.new()
 	add_child(pause)
 	pause.abandon_requested.connect(abandon_run)
+	pause.save_exit_requested.connect(save_and_leave)
 	Events.enemy_killed.connect(_on_enemy_killed_loot)
 	Events.xp_gained.connect(_on_xp_gained)
 
-	new_run(start_floor)
+	var req := load_request
+	load_request = {}
+	if not req.is_empty():
+		load_run(req)
+	else:
+		new_run(start_floor)
 
 	if autoplay:
 		_autopilot = DungeonAutopilot.new()
@@ -448,6 +471,7 @@ func enter_floor(index: int) -> void:
 		teleport_to_boss()
 	if boss_test:
 		_apply_boss_test_loadout(index)
+	_safe_pos = player.global_position
 	camera.global_position = player.global_position
 	camera.reset_smoothing()
 	minimap.layout = layout
@@ -465,6 +489,8 @@ func enter_floor(index: int) -> void:
 			hud.show_message(""))
 	if _autopilot:
 		_autopilot.on_floor_entered()
+	# Kareden sonra: yeni run'da başlangıç ayarları, yüklemede katın durumu da kurulmuş olsun
+	_autosave.call_deferred()
 
 
 ## Katın düşman, boss ve boss yardımcısı sprite'larını kata girerken yükler ve kat bitene kadar tutar. SpriteBody'nin
@@ -844,6 +870,10 @@ func _process(delta: float) -> void:
 	_update_prompt()
 	_update_hud()
 	_try_open_reward()
+	if saves_enabled and not finished:
+		_autosave_t -= delta
+		if _autosave_t <= 0.0:
+			_autosave()
 
 
 func _attach_xray(n: Node2D, color: Color) -> void:
@@ -891,16 +921,23 @@ func _track_room() -> void:
 	current_room = rid
 	minimap.current_room = rid
 	if rid < 0:
+		if not GameState.in_combat:
+			_safe_pos = player.global_position
 		return
 	if not visited.has(rid):
 		visited[rid] = true
 		Events.room_entered.emit(rid)
 	var rc := rooms[rid]
 	if rc.state == RoomController.State.IDLE and not (_entry_zones[rid] as Dictionary).has(cell):
+		# Savaş başlamadan hemen önce kaydet: yüklenince oyuncu bu odanın kapısında başlar
+		if rc.has_enemies():
+			_autosave()
 		rc.enter()
 		if rc.state == RoomController.State.ACTIVE:
 			_active_room = rid
 			_last_inside = player.global_position
+	if not GameState.in_combat:
+		_safe_pos = player.global_position
 
 
 func _on_room_cleared(room_id: int) -> void:
@@ -908,6 +945,7 @@ func _on_room_cleared(room_id: int) -> void:
 	if room_id == _active_room:
 		_active_room = -1
 		_last_inside = Vector2.INF
+	_autosave.call_deferred()
 	var r := layout.rooms[room_id]
 	if r.has_enemies() and r.type != "boss":
 		hud.show_message("Oda temizlendi!")
@@ -1012,6 +1050,9 @@ func _on_player_died() -> void:
 ## Run sonu (ölüm ya da zafer): ustalık XP'si hasar payına göre silah tiplerine işlenir ve kaydedilir; özet ekranı açılır.
 ## Bekleyen ödüller düşer (ödüller run bitince kaybolur).
 func _end_run(won: bool, abandoned: bool = false) -> void:
+	# Ölüm run'ı bitirir: kaldığın yerden devam kaydı silinir (zafer ve run'ı bırakmak da)
+	if saves_enabled:
+		SaveManager.clear_run()
 	GameState.pending_rewards.clear()
 	if reward_ui.visible:
 		reward_ui.close()
@@ -1091,6 +1132,180 @@ func abandon_run(quit: bool = false) -> void:
 func go_main_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+
+# --- run kaydı (v0.11.1) ---
+
+## Esc menüsü: "Kaydet ve ana menüye dön / oyundan çık". Run bitmez. Savaş sürerken kaydedilmez; son kayıt kalır
+## (en geç bu odaya girmeden önceki an).
+func save_and_leave(quit: bool) -> void:
+	var ok := save_run()
+	print("[Zindan] %s (%s)" % ["Kaydedildi" if ok else "Kaydedilmedi, son kayıt geçerli", "oyundan çıkış" if quit else "ana menü"])
+	get_tree().paused = false
+	if quit:
+		get_tree().quit()
+	else:
+		get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+
+## Run'ı kaydeder; yazıldıysa true. Savaş sürerken, run bitmişken, oyuncu ölüyken ya da kayıt kapalıyken yazmaz.
+func save_run() -> bool:
+	if not saves_enabled or finished or layout == null or player == null or not is_instance_valid(player) or player.dead:
+		return false
+	if GameState.in_combat or not GameState.in_run:
+		return false
+	return SaveManager.write_run(run_snapshot())
+
+
+func _autosave() -> void:
+	if not saves_enabled or _dg.is_empty():
+		return
+	_autosave_t = float(_dg["run_save"]["autosave_sec"])
+	save_run()
+
+
+## Pencere kapanırken (ya da telefonda oyun arka plana alınınca) son durum kaydedilir.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST or what == NOTIFICATION_APPLICATION_PAUSED:
+		save_run()
+
+
+## Kayda yazılan her şey: GameState (RunSave), run'ın sayaçları ve rastgelelik durumları, oyuncunun yeri ve canı, katın
+## durumu. Harita kaydedilmez (seed'den yeniden üretilir); odalar kimlikleriyle eşlenir.
+func run_snapshot() -> Dictionary:
+	var st := RunSave.capture_state()
+	var reward_state := str(reward_rng.state)
+	if reward_ui.visible and _reward_entry != "":
+		# Açık ödül ekranı: yüklenince aynı ödül aynı seçeneklerle yeniden açılır
+		(st["pending_rewards"] as Array).push_front(_reward_entry)
+		reward_state = _reward_state
+	var props_out: Array = []
+	var stairs := false
+	for p: RoomProp in props:
+		if not is_instance_valid(p):
+			continue
+		if p.kind == "stairs":
+			stairs = true
+			continue
+		props_out.append({"kind": p.kind, "room": p.room_id, "opened": p.opened, "stock_ready": p.stock_ready,
+			"stock": RunSave.items_to_array(p.stock)})
+	var drops_out: Array = []
+	for d: LootDrop in drops:
+		if is_instance_valid(d) and not d.picked:
+			drops_out.append({"kind": d.kind, "amount": d.amount, "item": RunSave.item_to_dict(d.item),
+				"pos": [d.global_position.x, d.global_position.y]})
+	var cleared: Array = []
+	for rc: RoomController in rooms:
+		if rc.state == RoomController.State.CLEARED:
+			cleared.append(rc.info.id)
+	var pos := _safe_pos if _safe_pos != Vector2.INF else player.global_position
+	return {
+		"version": RunSave.VERSION,
+		"game_version": str(ProjectSettings.get_setting("application/config/version", "")),
+		"saved_at": int(Time.get_unix_time_from_system()),
+		"start_weapon": str(TestRoom.config.get("start_weapon", "")),
+		"state": st,
+		"run": {"time": run_time, "loot_stats": loot_stats.duplicate(), "first_kills": Array(_run_first_kills),
+			"reward_rng": reward_state, "loot_rng": str(loot_rng.state)},
+		"player": {"pos": [pos.x, pos.y], "hp": player.hp},
+		"floor": {"rooms": layout.rooms.size(), "types": _room_types(), "visited": visited.keys(), "cleared": cleared,
+			"secrets_open": secrets_open, "props": props_out, "stairs": stairs, "drops": drops_out},
+	}
+
+
+## Kattaki odaların tipleri sırayla (kayıttaki harita bu sürümün ürettiğiyle aynı mı diye bakılır).
+func _room_types() -> String:
+	var t: PackedStringArray = []
+	for r: DungeonLayout.Room in layout.rooms:
+		t.append(r.type)
+	return ",".join(t)
+
+
+## Kayıtlı run'ı kurar: GameState, oyuncu, katın haritası (seed'den yeniden) ve katın durumu; oyuncu kaydedildiği yerde,
+## kaydedildiği canla başlar (kaynaklar ve bekleme süreleri dolu).
+func load_run(d: Dictionary) -> void:
+	get_tree().paused = false
+	RunSave.apply_state(d["state"])
+	TestRoom.config["race"] = GameState.race_id
+	TestRoom.config["start_weapon"] = str(d.get("start_weapon", ""))
+	var r: Dictionary = d.get("run", {})
+	reward_rng.seed = hash([GameState.run_seed, "rewards"])
+	if str(r.get("reward_rng", "")) != "":
+		reward_rng.state = str(r["reward_rng"]).to_int()
+	run_time = maxf(float(r.get("time", 0.0)), 0.0)
+	last_summary = {}
+	_run_first_kills.clear()
+	for b: Variant in r.get("first_kills", []):
+		_run_first_kills.append(str(b))
+	var ls: Dictionary = r.get("loot_stats", {})
+	for k: String in loot_stats.keys():
+		loot_stats[k] = int(ls.get(k, 0))
+	if summary:
+		summary.hide_summary()
+	if reward_ui and reward_ui.visible:
+		reward_ui.close()
+	finished = false
+	victory = false
+	_spawn_player(TestRoom.config, false)
+	enter_floor(GameState.floor_index)
+	if str(r.get("loot_rng", "")) != "":
+		loot_rng.state = str(r["loot_rng"]).to_int()
+	var restored := _restore_floor(d.get("floor", {}), d.get("player", {}))
+	var hp := float((d.get("player", {}) as Dictionary).get("hp", player.max_hp))
+	player.hp = clampf(hp, 1.0, player.max_hp)
+	player.health_changed.emit(player.hp, player.max_hp)
+	Audio.play("floor_enter")
+	hud.flash_note("Kayıt yüklendi" if restored else "Kayıt yüklendi — kat girişinden devam")
+	print("[Zindan] Kayıt yüklendi: %s, seed %d%s" % [RunSave.describe(d), GameState.run_seed, "" if restored else " (kat girişinden)"])
+
+
+## Katın kayıttaki durumunu kurar. Harita bu sürümde farklı üretildiyse (oda sayısı ya da tipleri uyuşmuyor) katın
+## girişinden devam edilir ve false döner.
+func _restore_floor(f: Dictionary, pl: Dictionary) -> bool:
+	if int(f.get("rooms", -1)) != layout.rooms.size() or str(f.get("types", "")) != _room_types():
+		push_warning("[Zindan] Kayıttaki kat bu sürümün haritasıyla uyuşmuyor; kat girişinden devam ediliyor.")
+		return false
+	for v: Variant in f.get("visited", []):
+		visited[int(v)] = true
+	for c: Variant in f.get("cleared", []):
+		var id := int(c)
+		if id >= 0 and id < rooms.size():
+			rooms[id].state = RoomController.State.CLEARED
+			minimap.cleared[id] = true
+	if bool(f.get("secrets_open", false)) and not layout.secret_wall_cells.is_empty():
+		open_secret(true)
+	for pd: Variant in f.get("props", []):
+		if typeof(pd) != TYPE_DICTIONARY:
+			continue
+		for p: RoomProp in props:
+			if p.kind == str(pd.get("kind", "")) and p.room_id == int(pd.get("room", -1)):
+				p.opened = bool(pd.get("opened", false))
+				if bool(pd.get("stock_ready", false)):
+					p.stock = RunSave.items_from_array(pd.get("stock", []))
+					p.stock_ready = true
+				p.queue_redraw()
+	if bool(f.get("stairs", false)):
+		_add_prop("stairs", layout.boss_id, layout.rooms[layout.boss_id].center())
+	for dd: Variant in f.get("drops", []):
+		if typeof(dd) != TYPE_DICTIONARY or typeof(dd.get("pos")) != TYPE_ARRAY or (dd["pos"] as Array).size() < 2:
+			continue
+		var kind := str(dd.get("kind", ""))
+		var item: Variant = RunSave.item_from_dict(dd.get("item"))
+		if (kind in ["weapon", "talisman"] and item == null) or not kind in ["gold", "potion", "weapon", "talisman"]:
+			continue
+		var drop := LootDrop.make(kind, item, int(dd.get("amount", 0)))
+		world.add_child(drop)
+		drop.global_position = Vector2(float(dd["pos"][0]), float(dd["pos"][1]))
+		drops.append(drop)
+	var pp: Variant = pl.get("pos")
+	if typeof(pp) == TYPE_ARRAY and (pp as Array).size() >= 2:
+		var pos := Vector2(float(pp[0]), float(pp[1]))
+		if _walk_cache.has(world_to_cell(pos)):
+			player.global_position = pos
+	_safe_pos = player.global_position
+	camera.global_position = player.global_position
+	camera.reset_smoothing()
+	return true
 
 
 # --- etkileşim ---
@@ -1352,7 +1567,9 @@ func _try_open_reward() -> void:
 		return
 	if GameState.in_combat and bool(DataDB.get_value("rewards", "reward_after_combat")):
 		return
+	_reward_state = str(reward_rng.state)
 	var entry: String = GameState.pending_rewards.pop_front()
+	_reward_entry = entry
 	var kind := entry.get_slice(":", 0)
 	var n := int(entry.get_slice(":", 1))
 	var totals := player.stat_totals()
@@ -1387,6 +1604,8 @@ func apply_reward(choice: Dictionary) -> void:
 		player.refresh_bonuses()
 	hud.flash_note("Ödül: %s — %s" % [choice["name"], choice["text"]])
 	print("[Zindan] Ödül (%s): %s" % [choice["source"], choice["text"]])
+	_reward_entry = ""
+	_autosave.call_deferred()
 
 
 ## XP silahlara da gider (oyuncunun kazandığı XP; hata ayıklama menüsündeki "Silahlara +1000 XP" de bunu kullanır).
@@ -1563,7 +1782,8 @@ func _check_secret_wall() -> void:
 			Events.floating_text.emit(mid + Vector2(0, -60), "Çatlak!", Color(0.85, 0.8, 0.7), 22)
 
 
-func open_secret() -> void:
+## quiet: kayıt yüklenirken (ses, yazı ve olay yok).
+func open_secret(quiet: bool = false) -> void:
 	if secrets_open:
 		return
 	secrets_open = true
@@ -1571,6 +1791,8 @@ func open_secret() -> void:
 	paint_tiles()
 	nav = DungeonNav.new(layout, true)
 	_walk_cache = layout.walkable(true)
+	if quiet:
+		return
 	var mid := cell_to_world(layout.secret_wall_cells[1])
 	Audio.play("wall_break")
 	Events.enemy_died_fx.emit(mid + Vector2(0, -20), player.facing_cart)

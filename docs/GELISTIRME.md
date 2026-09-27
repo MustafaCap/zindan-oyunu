@@ -52,7 +52,8 @@ Test çıktısında "SCRIPT ERROR" varsa test başarısızdır.
   Geliştirici (hata ayıklama) menüsü F5'te, Esc duraklatma menüsü.
 - Zindan botunda (`--autoplay`) düşmanlar 4 hasarlı vuruşta ölür (`Enemy.bot_kill_hits`, `--kill-hits=N`); `--balance` ve
   `--boss-test`'te kapalı. Oyuncunun oyununu etkilemez.
-- Testler ve bot oyuncunun dosyalarına (`user://save.json`, `settings.json`, `menu.json`) dokunmaz, ayrı dosyalar kullanır.
+- Testler ve bot oyuncunun dosyalarına (`user://save.json`, `run.json`, `settings.json`, `menu.json`) dokunmaz, ayrı dosyalar kullanır.
+  Run kaydı (`run.json`, v0.11.1) komut satırında oyun bayrağı varken hiç yazılmaz; birim testleri `run_unit_tests.json` kullanır.
 - Godot'nun içe aktarması `.import` dosyalarını yalnızca satır sonu farkıyla yeniden yazabilir (`git diff` boş, `git status` "M").
   Sprite PNG'leri de değiştiyse `git checkout -- assets/sprites` kullanılmaz (PNG'ler de geri gider). Yalnızca `.import`'ları
   geri almak için: `git diff --name-only | grep '\.import$' | xargs -r git checkout --`
@@ -85,9 +86,13 @@ minor*100 + patch`) ve sürüm her değiştiğinde elle güncellenir; artmazsa t
 **Telefonda denemek:** APK'yı telefona at (USB, Drive) ve dokun; ya da USB hata ayıklama açıkken `adb install -r build/android/ZindanOyunu.apk`.
 Log: `adb logcat -s godot`. Performans ölçümü (`--perf`) telefonda yok; kare hızı sorunu olursa önce ışık sayısı ve çözünürlük denenir.
 
-**GitHub Actions (`.github/workflows/android.yml`):** `main`'e, `claude/` dallarına ve `v*` etiketlerine push'ta APK'yı GitHub'ın
-makinesinde derler (Android SDK orada hazır); Actions → "Android APK" → çalıştırma → Artifacts → `ZindanOyunu-apk` (zip, içinde
-APK). Actions sekmesinden "Run workflow" ile elle de çalışır. Bu bilgisayara Android SDK kurmadan APK almanın yolu.
+**GitHub Actions (`.github/workflows/android.yml`, "Derlemeler"; v0.11.1'den beri üç sürüm):** her dala ve `v*` etiketlerine
+push'ta Windows zip'ini, Linux tar.gz'sini ve APK'yı GitHub'ın makinesinde derler (`make export-windows export-linux
+export-android`; Android SDK orada hazır), zip ve tar.gz'nin içini ve APK imzasını denetler. Actions → "Derlemeler" → çalıştırma
+→ Artifacts → `ZindanOyunu-windows`, `ZindanOyunu-linux`, `ZindanOyunu-apk` (her biri zip, içinde dosya; 30 gün durur).
+`v*` etiketi push'lanınca üç dosya o etiketin sürümüne `oyun.indir.zip`, `oyun.indir.linux.tar.gz` ve `oyun.indir.apk` adlarıyla
+eklenir (sürüm yoksa açılır, aynı adlı dosya varsa yenisi konur). Actions sekmesinden "Run workflow" ile elle de çalışır.
+Derlemeler 30 MB'tan büyük olduğu için dosyaları sohbet ya da e-postayla göndermek yerine bu yol kullanılır.
 
 **Bulut oturumu (Claude Code):** dl.google.com kapalı olduğu için Android SDK indirilemez. `tools/android/setup_sdk_lite.sh`
 Godot'nun baktığı en küçük SDK'yı kurar (`~/Android/Sdk`: boş `adb` ve Maven Central'daki apksig ile çalışan `apksigner`;
@@ -98,7 +103,8 @@ yalnızca v2 imzası, Android 7+ için yeterli). Godot 4.7.2 ve şablonlar GitHu
 - Her aşama kendi dalında (`asama-N`, bir öncekinden açılır). Commit mesajları Türkçe.
 - Aşama bitince .exe derlenir, README ve GDD güncellenir, yerelde commit edilir. Oyun test edilip onaylanınca push:
   `git push -u origin asama-N`, sonra `git switch main`, `git merge --no-ff asama-N`, `git push origin main` (`gh` kurulu değil).
-- Sürüm: `main`'de etiket (`git tag -a vX.Y`, `git push origin vX.Y`) ve GitHub **Releases**'e Linux için `oyun.indir.linux.tar.gz`
+- Sürüm: `main`'de etiket (`git tag -a vX.Y`, `git push origin vX.Y`; v0.11.1'den beri etiket push'lanınca GitHub Actions üç
+  dosyayı sürüme kendisi ekler) ve GitHub **Releases**'e Linux için `oyun.indir.linux.tar.gz`
   (`make export-linux` arşivinin kopyası), Windows için `oyun.indir.zip` (`make export-windows`
   zip'inin kopyası, içinde `ZindanOyunu.exe`), Android için `oyun.indir.apk` (`make export-android` APK'sının kopyası). README'nin başındaki bağlantı (`releases/latest/download/oyun.indir.zip`) hep son sürümü
   indirir. .exe 153 MB olduğu için repoya konmaz (GitHub'ın dosya sınırı 100 MB).

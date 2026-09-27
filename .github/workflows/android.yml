@@ -1,38 +1,67 @@
-# Android APK — GitHub'ın bulut makinesinde imzalı APK derler (make export-android) ve çalıştırmanın "Artifacts"
-# bölümüne koyar: Actions → "Android APK" → son çalıştırma → ZindanOyunu-apk (zip; içinde APK).
-# main'e, claude/ dallarına ve v* etiketlerine push'ta çalışır; Actions sekmesinden elle de çalıştırılabilir (Run workflow).
-# Runner'da Android SDK ve Java hazır; Godot 4.7.2 ve Android şablonları GitHub'dan indirilir (~2-3 dk).
-name: Android APK
+# Derlemeler — GitHub'ın bulut makinesinde oyunun üç sürümünü derler: Windows (zip), Linux (tar.gz) ve imzalı Android APK
+# (make export-windows export-linux export-android). Üçü de çalıştırmanın "Artifacts" bölümüne ayrı ayrı konur:
+# Actions → "Derlemeler" → çalıştırma → ZindanOyunu-windows / ZindanOyunu-linux / ZindanOyunu-apk (her biri zip; içinde dosya).
+# Her dala ve v* etiketlerine push'ta çalışır; Actions sekmesinden elle de çalıştırılabilir (Run workflow).
+# v* etiketi push'lanınca üç dosya o etiketin GitHub sürümüne oyun.indir.zip, oyun.indir.linux.tar.gz ve oyun.indir.apk
+# adlarıyla eklenir (sürüm yoksa açılır, aynı adlı dosyalar varsa yenisiyle değiştirilir).
+# Runner'da Android SDK ve Java hazır; Godot 4.7.2 ve şablonlar GitHub'dan indirilir.
+name: Derlemeler
 
 on:
   workflow_dispatch:
   push:
-    branches: [main, 'claude/**']
+    branches: ['**']
     tags: ['v*']
 
 jobs:
-  apk:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+    permissions:
+      contents: write   # yalnızca v* etiketinde sürüme dosya eklemek için
     steps:
       - uses: actions/checkout@v4
 
-      - name: Godot 4.7.2 ve Android şablonları
+      - name: Godot 4.7.2 ve şablonlar (Windows, Linux, Android)
         run: |
           curl -sSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip
           unzip -q godot.zip && sudo mv Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot && rm godot.zip
           curl -sSL -o templates.tpz https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_export_templates.tpz
-          unzip -q templates.tpz 'templates/android_*' 'templates/version.txt' -d /tmp && rm templates.tpz
+          unzip -q templates.tpz 'templates/android_*' 'templates/linux_*.x86_64' 'templates/windows_*_x86_64*' \
+            'templates/icudt_godot.dat' 'templates/version.txt' -d /tmp && rm templates.tpz
           mkdir -p ~/.local/share/godot/export_templates
           mv /tmp/templates ~/.local/share/godot/export_templates/4.7.2.stable
+          ls ~/.local/share/godot/export_templates/4.7.2.stable
           godot --version
 
       # Godot Linux'ta Android SDK'yı ~/Android/Sdk'da arar (Editör Ayarları'nın varsayılanı)
       - name: Android SDK yolu
         run: mkdir -p ~/Android && ln -s "$ANDROID_HOME" ~/Android/Sdk && ls ~/Android/Sdk/build-tools
 
-      - name: APK
-        run: make export-android GODOT=godot
+      - name: Derle
+        run: make export-windows export-linux export-android GODOT=godot
+
+      # Dosyalar bozuk ya da eksik çıkmasın: zip ve tar.gz açılabiliyor, içlerinde oyun var; APK'nın imzası geçerli
+      - name: Denetle
+        run: |
+          unzip -l build/zindan-oyunu-windows-v*.zip | grep -q 'ZindanOyunu.exe'
+          tar tzf build/zindan-oyunu-linux-v*.tar.gz | grep -q 'ZindanOyunu/ZindanOyunu.x86_64'
+          "$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/apksigner" verify build/zindan-oyunu-android-v*.apk
+          ls -la build/*.zip build/*.tar.gz build/*.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZindanOyunu-windows
+          path: build/zindan-oyunu-windows-v*.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ZindanOyunu-linux
+          path: build/zindan-oyunu-linux-v*.tar.gz
+          retention-days: 30
+          if-no-files-found: error
 
       - uses: actions/upload-artifact@v4
         with:
@@ -40,3 +69,20 @@ jobs:
           path: build/zindan-oyunu-android-v*.apk
           retention-days: 30
           if-no-files-found: error
+
+      - name: Etiketin sürümüne ekle (oyun.indir.*)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          cp build/zindan-oyunu-windows-v*.zip dist/oyun.indir.zip
+          cp build/zindan-oyunu-linux-v*.tar.gz dist/oyun.indir.linux.tar.gz
+          cp build/zindan-oyunu-android-v*.apk dist/oyun.indir.apk
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --title "$TAG" \
+              --notes "Windows: oyun.indir.zip · Linux: oyun.indir.linux.tar.gz · Android: oyun.indir.apk"
+          fi
+          gh release upload "$TAG" dist/oyun.indir.zip dist/oyun.indir.linux.tar.gz dist/oyun.indir.apk --clobber

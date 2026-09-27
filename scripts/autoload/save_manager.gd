@@ -3,11 +3,14 @@
 ## kayıtla devam eder; tek tek bozuk kayıtlar (yanlış tipte ustalık, bilinmeyen alan) atlanır, level aralığa sıkıştırılır.
 ## Yazma önce geçici dosyaya yapılır, sonra yerine taşınır: yazarken çökerse eski kayıt bozulmaz.
 ## Aşama 6: ustalık run sonunda (Mastery.apply_run), boss ilk kesişi hemen kaydedilir.
+## v0.11.1: run kaydı (kaldığın yerden devam) ayrı dosyada, run_path (user://run.json). Yapısını RunSave kurar ve doğrular;
+## burada yalnızca okuma/yazma: aynı geçici dosya + yerine taşıma, bozuksa .bozuk yedeği alınıp silinir.
 extends Node
 
 const SAVE_VERSION := 1
 
 var save_path: String = "user://save.json"
+var run_path: String = "user://run.json"
 var mastery: Dictionary = {}          # silah tipi -> {"level": int, "xp": float}
 var boss_first_kills: Array[String] = []
 var last_load_status: String = ""     # "new", "ok", "repaired" (bazı kayıtlar atlandı), "corrupt"
@@ -73,16 +76,52 @@ func save_game() -> bool:
 		"mastery": mastery,
 		"boss_first_kills": boss_first_kills,
 	}
-	# Önce geçici dosyaya yaz, sonra yerine taşı: yazarken çökerse eski kayıt bozulmaz.
-	var tmp := save_path + ".tmp"
+	return _write_json(save_path, data, "  ")
+
+
+## Önce geçici dosyaya yaz, sonra yerine taşı: yazarken çökerse eski kayıt bozulmaz.
+func _write_json(path: String, data: Dictionary, indent: String = "") -> bool:
+	var tmp := path + ".tmp"
 	var f := FileAccess.open(tmp, FileAccess.WRITE)
 	if f == null:
 		push_error("[SaveManager] Kayıt yazılamadı: %s" % error_string(FileAccess.get_open_error()))
 		return false
-	f.store_string(JSON.stringify(data, "  "))
+	f.store_string(JSON.stringify(data, indent))
 	f.close()
-	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(save_path))
+	var err := DirAccess.rename_absolute(ProjectSettings.globalize_path(tmp), ProjectSettings.globalize_path(path))
 	return err == OK
+
+
+# --- run kaydı (v0.11.1) ---
+
+## Kurulabilir bir run kaydı var mı?
+func has_run() -> bool:
+	return not read_run().is_empty()
+
+
+## Run kaydını okur; yoksa ya da bozuksa {} (bozuk dosya .bozuk olarak yedeklenip silinir).
+func read_run() -> Dictionary:
+	if not FileAccess.file_exists(run_path):
+		return {}
+	var json := JSON.new()
+	var data: Variant = json.data if json.parse(FileAccess.get_file_as_string(run_path)) == OK else null
+	var why := "okunamayan JSON" if typeof(data) != TYPE_DICTIONARY else RunSave.check(data)
+	if why != "":
+		if report_errors:
+			push_warning("[SaveManager] Run kaydı bozuk (%s); yedeklenip siliniyor." % why)
+		DirAccess.copy_absolute(ProjectSettings.globalize_path(run_path), ProjectSettings.globalize_path(run_path + ".bozuk"))
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(run_path))
+		return {}
+	return data
+
+
+func write_run(data: Dictionary) -> bool:
+	return _write_json(run_path, data)
+
+
+func clear_run() -> void:
+	if FileAccess.file_exists(run_path):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(run_path))
 
 
 ## Boss ilk kesişi: yeni ise ekler, hemen kaydeder ve true döner.

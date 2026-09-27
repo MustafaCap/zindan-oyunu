@@ -154,16 +154,19 @@
         "_default": "v0.10.1: 3 totem savaşta YALNIZCA BİR KEZ, Mycela'nın canı %20'ye (plant_at_hp_pct) inince dikilir; kırılınca yeniden dikilmez (eskiden dövüş başında dikilir, üçü kırılınca 30 sn sonra yeniden dikilirdi). Her totem yaşadıkça Mycela'yı saniyede maks canının %0,2'si kadar iyileştirir. Spor bulutuna ateşle vurulunca bulut Zehir Patlaması'yla yok olur: 2,5 karo içindeki düşmanlara (Mycela ve totemler dahil) Mycela'nın maks canının %2,5'i kadar hasar (oyuncuya dokunmaz)."
       },
       "phase2": {
-        "description": "Arena yavaşça sporla dolar; Mycela hızla yer değiştirir",
+        "description": "Arena aralıklarla kısa süre sporla dolar (Spor Sisi); Mycela hızla yer değiştirir",
         "clean_zones": 3,
-        "clean_radius_start": 4.0,
-        "clean_radius_end": 2.0,
-        "shrink_sec": 30.0,
-        "clean_warn": 3.0,
+        "clean_radius": 4.0,
+        "fog_warn": 1.5,
+        "fog_sec": 3.0,
+        "fog_every_sec": 10.0,
+        "fog_cloud_count": 1,
+        "fog_cloud_radius": 0.9,
         "outside_damage_mult": 0.25,
         "outside_tick": 0.5,
         "relocate_sec": 6.0,
-        "relocate_warn": 0.7
+        "relocate_warn": 0.7,
+        "_default": "v0.11.1: arena artık 2. fazın sonuna kadar sporla dolu kalmıyor. Spor Sisi fog_warn sn işaretlenir (temiz hava alanları çizilir, arena hafifçe yeşillenir), sonra fog_sec sn sürer (temiz havanın dışında outside_tick sn'de bir ×outside_damage_mult zehir) ve kalkar; fog_every_sec sn sonra yeniden gelir. Temiz alanların yarıçapı sabit (eskiden 30 sn'de 4 → 2 karo küçülüyordu). Sis sürerken (işaret dahil) Kök Patlaması kullanılmaz, Spor Bulutu tek (fog_cloud_count) ve küçük (fog_cloud_radius karo) bulut bırakır; sis başlarken yerdeki spor bulutları ve kök işaretleri dağılır."
       }
     },
     "kordrak": {

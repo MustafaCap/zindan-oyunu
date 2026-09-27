@@ -147,6 +147,7 @@ const SCHEMA := {
 		"boss_back_offset": "number",
 		"secret_wall": {"hits_to_break": "number", "reach_tiles": "number"},
 		"interact_range_tiles": "number",
+		"run_save": {"autosave_sec": "number"},
 		"templates": {"_each": {"name": "string", "rows": "array"}},
 	},
 	"audio": {

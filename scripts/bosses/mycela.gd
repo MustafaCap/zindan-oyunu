@@ -6,16 +6,24 @@
 ## savaşta YALNIZCA BİR KEZ, Mycela'nın canı %20'ye (mechanic.plant_at_hp_pct) inince dikilir; kırılınca yeniden dikilmez.
 ## Ateş vuruşu (mermi, alan ya da ateşli yakın saldırı) bir spor bulutuna değerse bulut Zehir Patlaması'yla yok
 ## olur ve çevredeki düşmanlara (Mycela ve totemler dahil) hasar verir.
-## 2. faz: arena sporla dolar — yalnızca küçülen temiz hava alanları güvenli; Mycela 6 sn'de bir işaretli yere ışınlanır.
+## 2. faz: Spor Sisi — arena aralıklarla kısa süre sporla dolar, yalnızca temiz hava alanları güvenli (v0.11.1: eskiden
+## faz sonuna kadar doluydu). Sis sürerken Kök Patlaması yok, Spor Bulutu tek ve küçük. Mycela 6 sn'de bir işaretli yere ışınlanır.
 class_name Mycela
 extends Boss
+
+enum Fog { NONE, WARN, ACTIVE }
+
+const FOG_FADE_SEC := 0.4            ## sis kalkınca yeşilin sönme süresi (sn)
 
 var _clouds: Array[EnemyHazard] = []
 var totems_planted: bool = false      ## totemler bu savaşta dikildi mi (yalnızca bir kez)
 var _wander: Vector2 = Vector2.INF
 var _wander_t: float = 0.0
-var _clean: Array[Vector2] = []       ## 2. faz temiz hava merkezleri
-var _p2_t: float = 0.0
+var _clean: Array[Vector2] = []       ## Spor Sisi'nin temiz hava merkezleri
+var fog: Fog = Fog.NONE
+var _fog_t: float = 0.0               ## sisin o anki adımının (işaret / sis / ara) kalan süresi
+var _fog_fade: float = 0.0            ## sis kalktıktan sonra yeşilin sönmesi (yalnızca görüntü)
+var _fog_clouds: int = 0              ## bu sis sırasında bırakılan spor bulutu
 var _out_t: float = 0.0
 var _relocate_t: float = 0.0
 
@@ -81,20 +89,43 @@ func _check_fire_on_clouds() -> void:
 					GameState.record_damage(player().weapon().type_id, dmg)
 
 
+## Spor Sisi sürüyor mu (işareti dahil)?
+func fog_running() -> bool:
+	return fog != Fog.NONE
+
+
+## Sis sürerken oyuncunun altına kök fışkırmaz, spor bulutu da yalnızca fog_cloud_count kez bırakılır.
+func can_use(id: String) -> bool:
+	if not fog_running():
+		return true
+	match id:
+		"root_burst":
+			return false
+		"spore_cloud":
+			return _fog_clouds < int(p2()["fog_cloud_count"])
+	return true
+
+
 func start_attack(id: String) -> float:
 	var a := attack_data(id)
 	match id:
 		"spore_cloud":
-			for i: int in int(a["count"]):
+			var count := int(a["count"])
+			var radius := float(a["radius"])
+			if fog_running():
+				count = 1
+				radius = float(p2()["fog_cloud_radius"])
+				_fog_clouds += 1
+			for i: int in count:
 				var pt := arena.point_near(rng, target.global_position, float(a["spread"])) if i > 0 else target.global_position
 				_clouds.append(hazard(id, pt, "circle", float(a["warn"]), float(a["damage_mult"]),
-					{"mode": "zone", "radius": float(a["radius"]), "duration": float(a["duration"]), "tick": float(a["tick"]),
+					{"mode": "zone", "radius": radius, "duration": float(a["duration"]), "tick": float(a["tick"]),
 					"kind": "poison", "color": Color(0.45, 0.85, 0.3), "look": "fog"}))
 			return float(a["warn"])
 		"root_burst":
 			for i: int in int(a["count"]):
 				schedule(i * float(a["interval"]), func() -> void:
-					if _target_visible():
+					if _target_visible() and not fog_running():
 						hazard(id, target.global_position, "circle", float(a["warn"]), float(a["damage_mult"]),
 							{"radius": float(a["radius"]), "color": Color(0.8, 0.2, 0.1)}))
 			return int(a["count"]) * float(a["interval"]) + float(a["warn"])
@@ -120,20 +151,32 @@ func move_dir(delta: float) -> Vector2:
 
 
 func enter_phase2() -> void:
+	_relocate_t = float(p2()["relocate_sec"])
+	_start_fog()
+
+
+## Spor Sisi'ni başlatır: temiz hava alanları seçilip fog_warn sn işaretlenir. Yerdeki spor bulutları ve kök işaretleri
+## dağılır (sis sürerken yerde en fazla sisin kendi küçük bulutu olsun).
+func _start_fog() -> void:
 	var p := p2()
 	_clean.clear()
 	var base := rng.randf() * TAU
 	for i: int in int(p["clean_zones"]):
 		_clean.append(arena.clamp_inside(arena.point(Vector2.RIGHT.rotated(base + TAU * i / float(p["clean_zones"])) * arena.radius * 0.5)))
-	_p2_t = 0.0
-	_relocate_t = float(p["relocate_sec"])
-	log_telegraph("phase2_spores", float(p["clean_warn"]))
+	for n: Node in get_tree().get_nodes_in_group("enemy_hazards"):
+		if n.get("source") == self and str(n.get("label")) in ["spore_cloud", "root_burst"] and n.has_method("dismiss"):
+			n.call("dismiss")
+	_clouds.clear()
+	fog = Fog.WARN
+	_fog_t = float(p["fog_warn"])
+	_fog_clouds = 0
+	_out_t = 0.0
+	log_telegraph("phase2_spores", float(p["fog_warn"]))
+	Events.floating_text.emit(global_position + Vector2(0, -190), "SPOR SİSİ!", Color(0.7, 1.0, 0.5), 28)
 
 
 func clean_radius() -> float:
-	var p := p2()
-	var k := clampf((_p2_t - float(p["clean_warn"])) / float(p["shrink_sec"]), 0.0, 1.0)
-	return lerpf(float(p["clean_radius_start"]), float(p["clean_radius_end"]), k)
+	return float(p2()["clean_radius"])
 
 
 func in_clean_air(pos: Vector2) -> bool:
@@ -145,16 +188,30 @@ func in_clean_air(pos: Vector2) -> bool:
 
 func _tick_phase2(delta: float) -> void:
 	var p := p2()
-	_p2_t += delta
-	if _p2_t >= float(p["clean_warn"]) and _target_visible() and not in_clean_air(target.global_position):
-		_out_t -= delta
-		if _out_t <= 0.0:
-			_out_t = float(p["outside_tick"])
-			target.call("take_damage", damage * float(p["outside_damage_mult"]), Vector2.RIGHT, "poison")
-	else:
-		_out_t = 0.0
-	if _p2_t < float(p["clean_warn"]):
-		status_text = "Arena sporla doluyor — temiz hava alanlarına geç! (%.1f)" % (float(p["clean_warn"]) - _p2_t)
+	_fog_t -= delta
+	_fog_fade = maxf(_fog_fade - delta, 0.0)
+	match fog:
+		Fog.WARN:
+			status_text = "Spor sisi geliyor — temiz hava alanına geç! (%.1f)" % maxf(_fog_t, 0.0)
+			if _fog_t <= 0.0:
+				fog = Fog.ACTIVE
+				_fog_t = float(p["fog_sec"])
+		Fog.ACTIVE:
+			status_text = "Spor sisi — temiz havada kal! (%.1f)" % maxf(_fog_t, 0.0)
+			if _target_visible() and not in_clean_air(target.global_position):
+				_out_t -= delta
+				if _out_t <= 0.0:
+					_out_t = float(p["outside_tick"])
+					target.call("take_damage", damage * float(p["outside_damage_mult"]), Vector2.RIGHT, "poison")
+			else:
+				_out_t = 0.0
+			if _fog_t <= 0.0:
+				fog = Fog.NONE
+				_fog_t = float(p["fog_every_sec"])
+				_fog_fade = FOG_FADE_SEC
+		Fog.NONE:
+			if _fog_t <= 0.0:
+				_start_fog()
 	_relocate_t -= delta
 	if _relocate_t <= 0.0 and _busy_t <= 0.0:
 		_relocate_t = float(p["relocate_sec"])
@@ -166,16 +223,24 @@ func _tick_phase2(delta: float) -> void:
 			Events.area_pulse.emit(dest, 1.2, Color(0.6, 0.35, 0.9)))
 
 
+## Spor Sisi: işarette arena hafifçe yeşillenir ve temiz hava alanlarının çemberleri çizilir; sis sürerken koyu yeşil.
+## Sis kalkınca yeşil FOG_FADE_SEC'te söner.
 func draw_overlay(o: Node2D) -> void:
-	if phase != 2:
+	if phase != 2 or (fog == Fog.NONE and _fog_fade <= 0.0):
 		return
 	var p := p2()
-	var warn := _p2_t < float(p["clean_warn"])
-	var a := 0.12 + 0.18 * clampf(_p2_t / float(p["clean_warn"]), 0.0, 1.0)
+	var a := 0.3
+	match fog:
+		Fog.WARN:
+			a = lerpf(0.06, 0.2, 1.0 - clampf(_fog_t / float(p["fog_warn"]), 0.0, 1.0))
+		Fog.NONE:
+			a = 0.3 * _fog_fade / FOG_FADE_SEC
 	for c: Vector2i in arena.cells.keys():
 		var wp: Vector2 = arena.cell_to_world.call(c)
 		if not in_clean_air(wp):
-			paint_cell(o, c, Color(0.45, 0.75, 0.25, a if warn else 0.3))
+			paint_cell(o, c, Color(0.45, 0.75, 0.25, a))
+	if fog == Fog.NONE:
+		return
 	for cc: Vector2 in _clean:
 		var ring := Shapes.iso_ellipse(clean_radius(), 32)
 		var local := o.to_local(cc)

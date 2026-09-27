@@ -349,6 +349,81 @@ func test_mycela_totems_and_fire_burst() -> void:
 	GameState.reset_run()
 
 
+## Mycela'nın oyuncuya ait canlı tehlikeleri (dağıtılmamış) bu etiketle.
+func _live_hazards(b: Boss, label: String) -> Array:
+	return _tree().get_nodes_in_group("enemy_hazards").filter(func(n: Node) -> bool:
+		return n.get("source") == b and str(n.get("label")) == label and not bool(n.get("_done")))
+
+
+## v0.11.1: 2. fazdaki Spor Sisi kalıcı değil — işaretlenir, 3 sn sürer, kalkar, sonra yeniden gelir. Sis sürerken
+## oyuncunun altına kök çıkmaz, spor bulutu tek ve küçüktür.
+func test_mycela_spore_fog() -> void:
+	var rb := _boss_run(2)
+	var run: DungeonRun = rb[0]
+	var my: Mycela = rb[1]
+	var p := my.p2()
+	var pl := run.player
+	assert_almost(float(p["fog_sec"]), 3.0, 0.001, "sis 3 sn sürer")
+	assert_true(float(p["fog_warn"]) >= float(DataDB.get_value("bosses", "min_warn_sec")), "sis önceden işaretli (en az 0,4 sn)")
+	# 1. fazda bulut ve kök normal
+	my.start_attack("spore_cloud")
+	my.start_attack("root_burst")
+	my._run_schedule()
+	assert_eq(_live_hazards(my, "spore_cloud").size(), int(my.attack_data("spore_cloud")["count"]), "1. fazda 3 bulut")
+	assert_eq(_live_hazards(my, "root_burst").size(), 1, "ilk kök işareti")
+	# 2. faz sisin işaretiyle başlar; yerdeki bulutlar ve kökler dağılır, sıradaki kökler çıkmaz
+	my.phase = 2
+	my.enter_phase2()
+	assert_eq(my.fog, Mycela.Fog.WARN, "2. faz sisin işaretiyle başlar")
+	assert_eq(_live_hazards(my, "spore_cloud").size(), 0, "sis başlarken bulutlar dağılır")
+	assert_eq(_live_hazards(my, "root_burst").size(), 0, "sis başlarken kök işaretleri dağılır")
+	my._time += 2.0
+	my._run_schedule()
+	assert_eq(_live_hazards(my, "root_burst").size(), 0, "sis sürerken sıradaki kökler çıkmaz")
+	assert_true(not my.can_use("root_burst"), "sis sürerken Kök Patlaması yok")
+	assert_true(my.can_use("spore_cloud") and my.can_use("spore_shot"), "bulut ve spor oku kullanılabilir")
+	my.start_attack("spore_cloud")
+	var fog_clouds := _live_hazards(my, "spore_cloud")
+	assert_eq(fog_clouds.size(), 1, "sis sürerken tek bulut")
+	assert_almost(float(fog_clouds[0].get("radius")), float(p["fog_cloud_radius"]), 0.001, "sis bulutu küçük")
+	assert_true(float(p["fog_cloud_radius"]) < float(my.attack_data("spore_cloud")["radius"]), "normal buluttan küçük")
+	assert_true(not my.can_use("spore_cloud"), "sis başına bir bulut")
+	for i: int in 12:
+		assert_eq(my.choose_attack(), "spore_shot", "sis sürerken yalnızca Spor Oku")
+	# İşaret bitince sis: temiz havanın dışında hasar, içinde yok
+	var outside := Vector2.INF
+	for c: Vector2i in my.arena.cells.keys():
+		var wp: Vector2 = my.arena.cell_to_world.call(c)
+		if not my.in_clean_air(wp):
+			outside = wp
+			break
+	assert_true(outside != Vector2.INF, "arenada temiz hava dışında yer var")
+	my._tick_phase2(float(p["fog_warn"]) + 0.01)
+	assert_eq(my.fog, Mycela.Fog.ACTIVE, "işaretten sonra sis")
+	pl.global_position = my._clean[0]
+	pl.iframes = 0.0
+	var hp0 := pl.hp
+	my._tick_phase2(0.1)
+	assert_almost(pl.hp, hp0, 0.001, "temiz havada hasar yok")
+	pl.global_position = outside
+	my._tick_phase2(0.1)
+	assert_true(pl.hp < hp0, "sisin içinde zehir hasarı")
+	# 3 sn sonra sis kalkar, kökler döner; fog_every_sec sonra yeniden işaretlenir
+	my._tick_phase2(float(p["fog_sec"]))
+	assert_eq(my.fog, Mycela.Fog.NONE, "3 sn sonra sis kalkar")
+	assert_true(my.can_use("root_burst"), "sis kalkınca Kök Patlaması döner")
+	pl.iframes = 0.0
+	var hp1 := pl.hp
+	my._tick_phase2(0.5)
+	assert_almost(pl.hp, hp1, 0.001, "sis yokken hasar yok")
+	my._tick_phase2(float(p["fog_every_sec"]))
+	assert_eq(my.fog, Mycela.Fog.WARN, "ara bitince sis yeniden işaretlenir")
+	assert_true(my.can_use("spore_cloud"), "yeni siste yine bir bulut")
+	run.free()
+	_cleanup()
+	GameState.reset_run()
+
+
 func test_nyxthar_torches_and_abyss() -> void:
 	var rb := _boss_run(4)
 	var run: DungeonRun = rb[0]
