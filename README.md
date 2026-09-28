@@ -5,7 +5,7 @@ Tasarımın tamamı [`docs/GDD.md`](docs/GDD.md)'de, derleme ve araç notları [
 
 ## Oyunu indir
 
-Bağlantılar her zaman son sürümü indirir (oyun sürümü 0.10.3; Android 0.11.0'dan itibaren). Repo herkese açık, indirmek için GitHub hesabı gerekmez.
+Bağlantılar her zaman son sürümü indirir (oyun sürümü 0.10.3; Android 0.11.0'dan itibaren). 
 Bağlantılar yerine sağdaki **Releases** bölümünden [son sürümü](https://github.com/MustafaCap/zindan-oyunu/releases/latest) açıp dosyayı oradan da indirebilirsin. Sürüm
 sayfasındaki "Source code" arşivlerinde oyun yok, yalnızca kaynak kod var.
 
